@@ -1,0 +1,20 @@
+{
+  "$comment": "External plugins the golden workflow calls. setup.mjs installs a plugin only when no copy (marketplace-installed or claude.ai-synced) is present.",
+  "plugins": [
+    {
+      "name": "frontend-design",
+      "marketplace": { "name": "claude-plugins-official", "source": "anthropics/claude-plugins-official" },
+      "usedBy": "implementer UI work protocol; design-discipline rule"
+    },
+    {
+      "name": "design",
+      "marketplace": { "name": "knowledge-work-plugins", "source": "anthropics/knowledge-work-plugins" },
+      "usedBy": "visual gate (design-critique, accessibility-review); implementer (ux-copy, design-system)"
+    },
+    {
+      "name": "superpowers",
+      "marketplace": { "name": "superpowers-marketplace", "source": "obra/superpowers-marketplace" },
+      "usedBy": "WORKFLOW § 11 (systematic-debugging, verification-before-completion, brainstorming, receiving-code-review)"
+    }
+  ]
+}

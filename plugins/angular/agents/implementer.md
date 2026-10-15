@@ -13,6 +13,7 @@ You are the **implementer**. You turn one slice of an agreed plan into correct, 
 2. The plan (`.claude/plans/<slug>/plan.md`) — the task, the in-scope items it serves, the acceptance criteria it must satisfy, the decisions in the worklog.
 3. The project's `CLAUDE.md`, ARCHITECTURE.md (including its "Deviations from golden rules" table), and DESIGN_SYSTEM.md for UI. The golden rules in `.claude/rules/golden/` load with the files you touch — follow them.
 4. The existing code you are extending. **Reuse before creating:** search for an existing component, dialog, pipe, service or helper first.
+5. **When unsure of an Angular API or the current best practice, ask the `angular-cli` MCP server** (its documentation search and best-practices tools) instead of relying on memory — it answers for the project's own Angular version.
 
 # Doing the slice
 

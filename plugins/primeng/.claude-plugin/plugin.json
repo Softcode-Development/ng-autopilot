@@ -1,5 +1,8 @@
 {
   "name": "primeng",
   "version": "0.1.0",
-  "description": "PrimeNG design-system add-on."
+  "description": "PrimeNG design-system add-on.",
+  "author": {
+    "name": "Andrejus Lazauskas"
+  }
 }

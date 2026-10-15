@@ -74,19 +74,58 @@ export function readPlan(planPath) {
   };
 }
 
-export function findActivePlans(root) {
-  const dir = path.join(root, '.claude', 'plans');
+// Every checkbox line in the file (OpenSpec tasks.md groups tasks under
+// several `## N. Group` headings, so there is no single Tasks section).
+export function allCheckboxes(text) {
+  const items = text.split(/\r?\n/).filter((l) => CHECKBOX.test(l));
+  return { total: items.length, done: items.filter((l) => /\[(x|X)\]/.test(l)).length, open: items.filter((l) => /\[ \]/.test(l)) };
+}
+
+function readIfExists(file) {
+  return existsSync(file) ? readFileSync(file, 'utf8') : '';
+}
+
+// An OpenSpec change folder counts as an active plan until it is archived.
+// It has no draft status, so plan-ready gates it on open questions only.
+export function readOpenSpecChange(changeDir) {
+  const tasks = allCheckboxes(readIfExists(path.join(changeDir, 'tasks.md')));
+  const questions = checkboxes(readIfExists(path.join(changeDir, 'design.md')), 'Open questions');
+  const nextTask = tasks.open[0]?.replace(CHECKBOX, '').replace(/^\s*[\d.]+\s*/, '').trim() ?? '';
+  return {
+    path: path.join(changeDir, 'proposal.md'),
+    slug: path.basename(changeDir),
+    status: 'in-progress',
+    mode: 'openspec',
+    tasks: { done: tasks.done, total: tasks.total, next: nextTask },
+    openQuestions: questions.open.length,
+  };
+}
+
+function subdirs(dir) {
   if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && e.name !== 'archive')
+    .map((e) => path.join(dir, e.name));
+}
+
+export function findActivePlans(root) {
   const plans = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (!entry.isDirectory() || entry.name === 'archive') continue;
-    const planPath = path.join(dir, entry.name, 'plan.md');
+  for (const dir of subdirs(path.join(root, '.claude', 'plans'))) {
+    const planPath = path.join(dir, 'plan.md');
     if (!existsSync(planPath)) continue;
     try {
       const plan = readPlan(planPath);
       if (!INACTIVE.has(plan.status)) plans.push(plan);
     } catch {
       // An unreadable plan never blocks work; session-context reports it.
+    }
+  }
+  for (const dir of subdirs(path.join(root, 'openspec', 'changes'))) {
+    if (!existsSync(path.join(dir, 'proposal.md')) && !existsSync(path.join(dir, 'tasks.md'))) continue;
+    try {
+      plans.push(readOpenSpecChange(dir));
+    } catch {
+      // Same as above.
     }
   }
   return plans;

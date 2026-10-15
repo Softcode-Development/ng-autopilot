@@ -2,35 +2,45 @@
 
 The golden AI-driven development workspace for Angular projects: one source for agents, skills, hooks, rules, doc templates and tooling, shared by every project instead of copied.
 
+## Set up a machine
+
+```bash
+git clone <this repo> && cd claude-golden
+npm run setup              # dry run: prints what it will do
+npm run setup -- --apply   # registers the marketplace, installs the packs (disabled at user scope),
+                           # installs missing external dependencies (dependencies.json)
+```
+
+Packs are installed once per machine and **enabled per project** (the project's `.claude/settings.json`, written by sync). External plugins the workflow calls — `frontend-design`, `design`, `superpowers` — are installed only when no copy exists; a copy synced from claude.ai counts.
+
 ## Layout
 
 ```
 .claude-plugin/marketplace.json   local plugin marketplace
 plugins/
-  core/       stack-neutral: agent conduct, git safety, work modes, AI-first docs, doc templates
-  angular/    Angular 19–21 rulebook + DESIGN_SYSTEM template
-  testing/    unit / integration / e2e orchestrator → author → reviewer agents, write-*-tests skills, detect-stack
-  nestjs/     backend add-on + DATA_MODEL template
+  core/       workflow (WORKFLOW.md, /deliver, /review), agents (architect, reviewers), hooks, core rules, templates
+  angular/    Angular 19–21 rules, implementer agent, angular-cli MCP, DESIGN_SYSTEM template
+  testing/    unit / integration / e2e orchestrator → author → reviewer agents, write-*-tests skills
+  nestjs/     backend rules, db-migrator, DATA_MODEL template
   spartan/    spartan/ng + Tailwind design-system add-on
-  primeng/    PrimeNG design-system add-on
+  primeng/    PrimeNG design-system add-on + MCP
+  openspec/   OpenSpec planning format (plan/archive skills, doc-writer)
+bin/setup.mjs                     machine setup
+dependencies.json                 external plugins the workflow depends on
 docs/IMPORT-LOG.md                every imported item, its decision and destination
 ```
 
 Inside a plugin:
-- `rules/` — rule files synced into a project's `.claude/rules/golden/` (plugins cannot load rules themselves).
-- `templates/` — starting points for a project's doc set and `.claude/` files.
+- `rules/` — synced into a project's `.claude/rules/golden/` (plugins cannot load rules themselves).
+- `templates/` — starting points for a project's docs and `.claude/` files.
 - `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it.
 
 ## Tests
 
 ```bash
-npm test     # node --test over plugins/*/hooks/test
+npm test     # hooks + setup planning (node --test)
 ```
-
-## How a project uses it
-
-A project lists its packs in `.claude/golden.json`; a sync step enables the matching plugins and writes the rules and repo-side tooling into the project. A drift check reports hand-edited generated files and contradictions. (Sync and drift check are built after the harvest batches.)
 
 ## Status
 
-Harvesting from finances-app in batches; see `docs/IMPORT-LOG.md`.
+Harvesting from finances-app in batches; see `docs/IMPORT-LOG.md`. Project sync and drift check come after the harvest.

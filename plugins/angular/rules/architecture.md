@@ -56,3 +56,9 @@ src/app/
 - **`ChangeDetectionStrategy.OnPush`** on every component. — **Enforcement:** lint `prefer-on-push-component-change-detection`.
 - **Zoneless** when the project's Angular version supports it and ARCHITECTURE.md declares it; then never add `zone.js` to polyfills.
 - **Signals are the primary reactive primitive**: `signal`, `computed`, `linkedSignal`, `effect`, `resource`. RxJS only where signals cannot express the flow (debounced streams, websockets), converted with `toSignal()` at the boundary.
+
+## Refactoring and migrations
+- **Behaviour stays identical:** the same values, conditions, request payloads and timing. Anything that cannot stay identical is reported (with the reason and a proposal), never changed silently.
+  - **Why:** a refactor that "improves" behaviour on the way through hides a product change inside a no-op diff, and nobody reviews it as one.
+- **Migrations use Angular's official schematics first** (`ng generate @angular/core:<migration>` — control-flow, inject, signal-input-migration, output-migration, signal-queries-migration, standalone, …); hand edits only for what a schematic leaves behind.
+  - **Why:** the schematics handle edge cases (two-way bindings, aliases, template references) that hand edits miss.

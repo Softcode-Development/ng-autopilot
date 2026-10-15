@@ -1,13 +1,44 @@
 {
   "name": "claude-golden",
-  "owner": { "name": "Andrejus Lazauskas" },
+  "owner": {
+    "name": "Andrejus Lazauskas"
+  },
   "description": "Golden AI-driven development workspace for Angular projects: a stack-neutral core plus opt-in packs.",
   "plugins": [
-    { "name": "core", "source": "./plugins/core", "description": "Stack-neutral workflow, agent conduct, git safety, work modes, doc templates." },
-    { "name": "angular", "source": "./plugins/angular", "description": "Angular 19-21 rulebook: architecture, state, templates, forms, design discipline, security." },
-    { "name": "testing", "source": "./plugins/testing", "description": "Unit, integration and e2e test orchestration: orchestrator -> author -> reviewer agents, write-*-tests skills, detect-stack." },
-    { "name": "nestjs", "source": "./plugins/nestjs", "description": "NestJS backend add-on: layering, error taxonomy, OpenAPI, shared contracts, data model." },
-    { "name": "spartan", "source": "./plugins/spartan", "description": "spartan/ng + Tailwind design-system add-on." },
-    { "name": "primeng", "source": "./plugins/primeng", "description": "PrimeNG design-system add-on." }
+    {
+      "name": "core",
+      "source": "./plugins/core",
+      "description": "Stack-neutral workflow, agent conduct, git safety, work modes, doc templates."
+    },
+    {
+      "name": "angular",
+      "source": "./plugins/angular",
+      "description": "Angular 19-21 rulebook: architecture, state, templates, forms, design discipline, security."
+    },
+    {
+      "name": "testing",
+      "source": "./plugins/testing",
+      "description": "Unit, integration and e2e test orchestration: orchestrator -> author -> reviewer agents, write-*-tests skills, detect-stack."
+    },
+    {
+      "name": "nestjs",
+      "source": "./plugins/nestjs",
+      "description": "NestJS backend add-on: layering, error taxonomy, OpenAPI, shared contracts, data model."
+    },
+    {
+      "name": "spartan",
+      "source": "./plugins/spartan",
+      "description": "spartan/ng + Tailwind design-system add-on."
+    },
+    {
+      "name": "primeng",
+      "source": "./plugins/primeng",
+      "description": "PrimeNG design-system add-on."
+    },
+    {
+      "name": "openspec",
+      "source": "./plugins/openspec",
+      "description": "OpenSpec planning format for the golden workflow: plan and archive skills, doc-writer agent, OpenSpec rules."
+    }
   ]
 }

@@ -1,5 +1,8 @@
 {
   "name": "spartan",
   "version": "0.1.0",
-  "description": "spartan/ng + Tailwind design-system add-on."
+  "description": "spartan/ng + Tailwind design-system add-on.",
+  "author": {
+    "name": "Andrejus Lazauskas"
+  }
 }

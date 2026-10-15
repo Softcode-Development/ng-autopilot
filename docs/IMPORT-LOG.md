@@ -328,5 +328,60 @@ Source: `finances-app/AGENTIC_WORKFLOW.md`, `.claude/skills/opsx-apply/SKILL.md`
 
 ---
 
-## Batch 4 — skills, OpenSpec pack
+## Batch 4 — skills, OpenSpec pack, setup (2026-10-15)
+
+Sources: `finances-app/.claude/skills/*` (7), `fp-ecommerce-store/.claude/skills/*` (10) + `prompts/implement-feature.md`, `part-seller-web-ui/.claude/skills/*` (11).
+
+### Owner decisions
+
+| # | Decision |
+|---|---|
+| D1 | Knowledge belongs in docs and rules, not in extra skills — no `ssr` pack, no `refactor` skill, no implement-feature prompt (`/deliver` replaces it). |
+| D2 | One new skill: `core:review` — full PR/branch review with the golden reviewers. |
+| D3 | Two refactoring lines go into the golden `architecture` rule: behaviour stays identical (else report); official Angular migration schematics first. |
+| D4 | The implementer asks the angular-cli MCP for current Angular docs/best practices instead of relying on memory (covers SSR, new APIs). SSR conventions live in each SSR project's ARCHITECTURE.md. |
+| D5 | External plugins are **dependencies** (option A), not copies: a setup command installs what is missing; a claude.ai-synced copy counts as present. |
+| D6 | qualylab `e2e-writer` lessons: not needed. |
+| D7 | Dropped skills (all repos): debug-issue, front-end-design, git-commit, generate-docs, skill-creator, setup-component, write-tests, write-e2e-tests (seller-ui), i18n-translation (library-specific; projects keep theirs). |
+
+### Landed
+
+| Item | Path | Source |
+|---|---|---|
+| `openspec` pack: `plan` skill (Step 1), `archive` skill (Step 10, flag protocol), `doc-writer` agent, `openspec` rule (where things live, scenarios drive coverage, scenario ids stay in specs, `Change:` line), README with the `golden.json` keys | `plugins/openspec/` | finances `opsx-propose`, `opsx-archive`, `doc-writer`, CLAUDE § 8/§ 9/#13 |
+| Core hooks read OpenSpec changes: `openspec/changes/<slug>/` (not archived) is an active plan; tasks counted across task groups; open questions from `design.md` | `core/hooks/lib/plans.mjs` | — |
+| `/deliver` hands Step 1 / Step 10 to the openspec skills when planning is openspec | `core/skills/deliver/SKILL.md` | — |
+| `core:review` | `core/skills/review/SKILL.md` | seller-ui / fp `code-review` intent, golden reviewers |
+| Refactoring + migrations section | `angular/rules/architecture.md` | fp CLAUDE.md behaviour-preservation clause, fp `refactor-code` |
+| angular-cli MCP line | `angular/agents/implementer.md` | — |
+| Setup: dry-run by default, finds a working CLI (skips a broken npm shim, falls back to the VS Code extension binary), registers the marketplace, installs packs disabled at user scope, installs missing dependencies | `bin/setup.mjs`, `dependencies.json`, `npm run setup` | — |
+| `author` in every plugin manifest | `plugins/*/.claude-plugin/plugin.json` | `claude plugin validate` warnings |
+| Tests: OpenSpec change gating + context, task groups, setup planning (fresh / synced-present / re-run); suite 84/84 | `core/hooks/test/`, `bin/test/` | — |
+
+### Not imported
+
+| Item | Decision |
+|---|---|
+| finances `propose <NN>` + build-plan linkage (`source_build_plan:`, moving build-plan docs on archive, `change:new`/`spec:validate` wrappers) | finances-only — a thin project skill on top of the openspec pack, configured through `golden.json` → `openspec` commands |
+| finances `opsx-explore` | dropped — WORKFLOW Step 2 does it |
+| finances `opsx-apply` | dropped — `/deliver` |
+| finances `supabase`, `supabase-postgres-best-practices` (vendored, pinned in `skills-lock.json`) | finances-only |
+| fp `ssr-patterns` | not imported (D1, D4) — SSR conventions move into fp / shop ARCHITECTURE.md at alignment |
+| fp `front-end-design` | its PrimeNG/SCSS content moves into fp's DESIGN_SYSTEM.md at alignment |
+| fp `implement-feature.md` | dropped (D1) |
+
+### Verified
+
+- `claude plugin validate` on the marketplace: **passes** (the batch-1 carried item is closed).
+- `npm run setup` dry run on this machine: finds the VS Code-bundled CLI, reports all three dependencies present (`frontend-design` installed, `design` + `superpowers` synced), plans register + install/disable for the 7 packs.
+
+### Carried forward
+
+- **→ first sync:** run `npm run setup -- --apply` for real.
+- **→ new machine:** the fallback dependency marketplaces (`anthropics/knowledge-work-plugins`, `obra/superpowers-marketplace`) are only exercised where no synced copy exists; confirm on the first machine that needs them.
+- **→ remote:** give the golden repo a private remote so `--source <git-url>` works on other machines.
+
+---
+
+## Batch 5 — rules (instructions)
 *(pending)*

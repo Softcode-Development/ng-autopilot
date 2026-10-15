@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  parseFrontmatter, checkboxes, outOfScopeOffenders, postEditContent,
+  parseFrontmatter, checkboxes, allCheckboxes, outOfScopeOffenders, postEditContent,
 } from '../lib/plans.mjs';
 import { evaluatePlanReady } from '../plan-ready.mjs';
 import { evaluateOutOfScope } from '../out-of-scope.mjs';
@@ -89,6 +89,12 @@ test('out-of-scope hook only judges plan files (and configured docs), never the 
   assert.equal(evaluateOutOfScope('.claude/plans/archive/2026-10-01-x/plan.md', bad).blocked, false);
   assert.equal(evaluateOutOfScope('docs/notes.md', bad).blocked, false);
   assert.equal(evaluateOutOfScope('docs/build-plan/01.md', bad, { config: { outOfScopeDocs: ['docs/build-plan/*.md'] } }).blocked, true);
+});
+
+test('allCheckboxes counts task rows across OpenSpec task groups', () => {
+  const tasks = '## 1. Data\n- [x] 1.1 service\n- [ ] 1.2 store\n\n## 2. UI\n- [ ] 2.1 page\n';
+  const r = allCheckboxes(tasks);
+  assert.deepEqual([r.done, r.total, r.open.length], [1, 3, 2]);
 });
 
 test('session context: no plan, then an active plan with its next step', () => {

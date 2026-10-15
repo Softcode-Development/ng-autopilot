@@ -124,6 +124,30 @@ test('session-context prints the active plan from a real project folder', () => 
   }
 });
 
+test('an OpenSpec change gates source edits on design.md open questions and shows in session context', () => {
+  const dir = path.join(project, 'openspec', 'changes', 'add-export');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, 'proposal.md'), '## Why\n\nExport.\n');
+  writeFileSync(path.join(dir, 'tasks.md'), '## 1. Service\n- [x] 1.1 endpoint\n- [ ] 1.2 client\n');
+  writeFileSync(path.join(dir, 'design.md'), '## Open questions\n\n- [ ] Q: CSV or XLSX?\n');
+  mkdirSync(path.join(project, 'openspec', 'changes', 'archive', 'old'), { recursive: true });
+  try {
+    const src = edit(path.join(project, 'src', 'app', 'export.ts'));
+    const blocked = runHook('plan-ready.mjs', src);
+    assert.equal(blocked.code, 2);
+    assert.match(blocked.stderr, /add-export: 1 open question/);
+    writeFileSync(path.join(dir, 'design.md'), '## Open questions\n\n- [x] Q: CSV or XLSX? → A: CSV\n');
+    assert.equal(runHook('plan-ready.mjs', src).code, 0);
+    const ctx = spawnSync(process.execPath, [path.join(hooksDir, 'session-context.mjs')], {
+      env: { ...process.env, CLAUDE_PROJECT_DIR: project }, encoding: 'utf8',
+    });
+    assert.match(ctx.stdout, /active plan: add-export \(in-progress, openspec\) · tasks 1\/2 · next task: client/);
+    assert.doesNotMatch(ctx.stdout, /active plan: old/);
+  } finally {
+    rmSync(path.join(project, 'openspec'), { recursive: true, force: true });
+  }
+});
+
 test('hooks allow on empty or malformed input instead of crashing', () => {
   for (const script of ['guard-bash.mjs', 'guard-paths.mjs', 'plan-ready.mjs', 'out-of-scope.mjs']) {
     assert.equal(runHook(script, '').code, 0, `${script} empty`);

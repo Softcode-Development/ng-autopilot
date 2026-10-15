@@ -10,7 +10,7 @@ You are the **driver**. Read `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` now �
 ## Start
 
 - **With a request:** run Step 0. Announce in one line: `Mode: <mode> · Planning: <format> · Reason: <why>`.
-- **With no argument:** find the active plan under `.claude/plans/*/plan.md` (status `approved` or `in-progress`; or the OpenSpec change folder). Read its tasks and worklog, name the first incomplete step, and continue from it. If none is active, ask what to deliver.
+- **With no argument:** find the active plan under `.claude/plans/*/plan.md` (status `approved` or `in-progress`) or `openspec/changes/<slug>/` (not archived). Read its tasks and worklog, name the first incomplete step, and continue from it. If none is active, ask what to deliver.
 
 ## Project inputs
 
@@ -22,11 +22,12 @@ You are the **driver**. Read `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` now �
 
 | Step | Dispatch |
 |---|---|
-| 1 Plan | `core:architect` — brief: the request, mode, planning format, plan path |
+| 1 Plan | plan-file: `core:architect` — brief: the request, mode, plan path. openspec: invoke the `openspec:plan` skill |
 | 3 Implement | the stack implementer (`angular:implementer`) per slice; `nestjs:db-migrator` for schema slices |
 | 5 Test phase | `testing:unit-test-orchestrator`, then `testing:e2e-test-orchestrator`, then `testing:integration-test-orchestrator` — sequentially, only tiers the project has |
 | 7 Review | `core:plan-reviewer` + `core:code-reviewer` (+ `core:security-reviewer`) in parallel |
 | 8 Fixes | the implementer, one brief with every `fix` decision |
+| 10 Close | plan-file: archive the plan folder yourself. openspec: invoke the `openspec:archive` skill |
 
 Every brief follows WORKFLOW.md § 8. Smoke and visual gates (Step 6) and triage (Step 8) are yours — do not delegate them.
 
