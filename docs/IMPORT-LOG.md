@@ -420,6 +420,22 @@ Source: `finances-app/.claude/instructions/{typescript-angular,performance,docum
 
 - **Synced rules go to `.claude/rules/golden/<pack>/`**, not one flat folder — `angular` and `nestjs` both have `security.md` and `performance.md`. References in `security-reviewer` and `openspec:plan` updated; the protected glob `.claude/rules/golden/**` already covers subfolders (test added).
 
+### Verified: how rules reach agents (canary test, 2026-10-15)
+
+Three temporary rules in seller-ui's `.claude/rules/`: one without `paths:` (ALPHA), one scoped to `src/app/app.module.ts` (BRAVO), one scoped to `src/main.ts` (CHARLIE, never opened).
+
+| Context | ALPHA (always) | BRAVO (file read) | CHARLIE (file not read) |
+|---|---|---|---|
+| Subagent of this session, after `Read app.module.ts` | absent — file created after session start | **loaded after the Read** | absent |
+| Subagent of this session, no tools | absent — same reason | absent | absent |
+| Fresh headless session (main) | **loaded** | — | absent |
+| Subagent spawned by that fresh session | **loaded** | — | absent |
+
+Conclusions:
+- Rules without `paths:` reach the main session **and its subagents**, as long as they exist when the session starts.
+- Path-scoped rules reach a subagent **when it opens a matching file with the Read tool**. A diff read through Bash loads nothing → the code-reviewer now opens every file it reviews (`core/agents/code-reviewer.md` Load § 3). The implementer is covered by construction (Edit requires a prior Read).
+- No explicit "read the rules" step is needed in the agents; the canary files were removed afterwards.
+
 ### Not imported
 
 Non-negotiables summary and authoring checklist (restate rules; lint enforces), file-organisation recap (architecture rule), Transloco / Supabase / household / `realtime/` specifics, the LT threat model and PII table (finances-only; the pattern went to DOMAIN.md), i18n `@@key` notes (library-specific).
