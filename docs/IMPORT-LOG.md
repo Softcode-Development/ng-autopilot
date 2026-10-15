@@ -456,6 +456,7 @@ Non-negotiables summary and authoring checklist (restate rules; lint enforces), 
 | Item | Path |
 |---|---|
 | Unit / integration / e2e overrides templates — the sections the orchestrators actually read (stack pins, scoped commands, toolkit, file pattern, coverage targets, container carve-out, dev server, folder convention, selectors, real-API allowlist, hard constraints) plus a **carve-outs** table (the core references' one sanctioned way to relax a rule: name it, why, scope) | `testing/templates/<tier>-testing/overrides.md` |
+| Backlog templates (owner request) — identical shape to the orchestrators' own stub (`# <Tier> Testing Backlog` + `## Untracked`) plus the overrides link, so sync creates backlog and overrides together | `testing/templates/<tier>-testing/backlog.md` |
 | How a project connects, commands split (scoped per-spec in overrides; suite in `gates.md`) | `testing/README.md` |
 | `golden.json` → `testTiers` | `core/templates/claude/README.md` |
 | `/deliver` Step 5 dispatches only listed tiers with the overrides path; stops if a listed tier has no overrides file | `core/skills/deliver/SKILL.md` |
@@ -468,7 +469,7 @@ Sources for the template sections: the three orchestrators' overrides reads, `re
 
 ### Carried forward
 
-- **→ sync:** create missing overrides files from the templates (never overwrite); **→ drift check:** report listed tiers without an overrides file or with unfilled `<placeholders>`.
+- **→ sync:** create missing overrides and backlog files from the templates (never overwrite); **→ drift check:** report listed tiers without an overrides file or with unfilled `<placeholders>`.
 - **→ seller-ui alignment:** its overrides must carve out inline `jasmine.createSpyObj`, `xit`, and the server-platform branches (no SSR) — conflicts found in the survey.
 
 ---
