@@ -6,7 +6,7 @@ Project configuration for the workflow's gates. The `/deliver` driver reads this
 
 | Gate | Command | Notes |
 |---|---|---|
-| Affected / existing tests | `<e.g. npm run test:ci>` | env vars it needs (e.g. `CHROME_BIN`) |
+| Affected / existing tests (suite) | `<e.g. npm run test:ci>` | env vars it needs (e.g. `CHROME_BIN`). Per-spec commands for the test authors live in `.claude/<tier>-testing/overrides.md`. |
 | Lint | `<command or "none">` | |
 | Typecheck | `<command>` | |
 | Final gate | `<one command running lint + typecheck + tests (+ build)>` | |

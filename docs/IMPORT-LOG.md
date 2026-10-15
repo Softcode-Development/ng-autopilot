@@ -442,5 +442,36 @@ Non-negotiables summary and authoring checklist (restate rules; lint enforces), 
 
 ---
 
-## Batch 6 — testing redesign
+## Batch 6 — testing: overrides template, connected (2026-10-15)
+
+### Owner decisions
+
+| # | Decision |
+|---|---|
+| F1 | **The test agents are not redesigned.** The 9 agents and their references stay as imported in batch 1. The speed gains come from the workflow (one test phase per finished feature; fast mode skips the orchestrators), not from changing the agents. |
+| F2 | **An overrides template, connected end to end.** |
+
+### Landed
+
+| Item | Path |
+|---|---|
+| Unit / integration / e2e overrides templates — the sections the orchestrators actually read (stack pins, scoped commands, toolkit, file pattern, coverage targets, container carve-out, dev server, folder convention, selectors, real-API allowlist, hard constraints) plus a **carve-outs** table (the core references' one sanctioned way to relax a rule: name it, why, scope) | `testing/templates/<tier>-testing/overrides.md` |
+| How a project connects, commands split (scoped per-spec in overrides; suite in `gates.md`) | `testing/README.md` |
+| `golden.json` → `testTiers` | `core/templates/claude/README.md` |
+| `/deliver` Step 5 dispatches only listed tiers with the overrides path; stops if a listed tier has no overrides file | `core/skills/deliver/SKILL.md` |
+| WORKFLOW Step 5 reads tiers from `testTiers`, orchestrators apply the overrides | `core/workflow/WORKFLOW.md` |
+| Architect tags criteria only with listed tiers (else `[manual]` with reason) | `core/agents/architect.md` |
+| `gates.md` points per-spec commands at the overrides | `core/templates/claude/gates.md` |
+| Session context shows the test tiers | `core/hooks/session-context.mjs` (+ test) |
+
+Sources for the template sections: the three orchestrators' overrides reads, `references/core.md` (add-only + carve-out exception, container policy), finances-app `{unit,integration,e2e}-testing/overrides.md` and fp-ecommerce-store `{unit,e2e}-testing/overrides.md` (structure only).
+
+### Carried forward
+
+- **→ sync:** create missing overrides files from the templates (never overwrite); **→ drift check:** report listed tiers without an overrides file or with unfilled `<placeholders>`.
+- **→ seller-ui alignment:** its overrides must carve out inline `jasmine.createSpyObj`, `xit`, and the server-platform branches (no SSR) — conflicts found in the survey.
+
+---
+
+## Batch 7 — tooling
 *(pending)*

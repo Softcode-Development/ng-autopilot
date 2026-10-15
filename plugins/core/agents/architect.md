@@ -20,7 +20,7 @@ You are the **architect**. You turn a request into a plan an implementer can exe
 - **In scope** — concrete, checkable items. Each will need a code path.
 - **Out of scope** — everything you considered and left out, each ending `→ <destination>`. Never drop silently.
 - **Open questions** — every decision only the owner can make (product behaviour, UX choice, scope boundary, trade-off). Each with 2–4 options and a recommendation with its reason. Do not guess an answer to avoid asking.
-- **Acceptance criteria** — `WHEN … THEN …`, observable behaviour, each tagged `[unit]`, `[e2e]`, `[integration]` or `[manual]` (with a reason). These become the test phase's coverage list.
+- **Acceptance criteria** — `WHEN … THEN …`, observable behaviour, each tagged with a tier the project has (`.claude/golden.json` → `testTiers`: `[unit]`, `[e2e]`, `[integration]`) or `[manual]` with a reason. These become the test phase's coverage list. A criterion that only a missing tier could test is `[manual]` with that reason, never tagged with a tier the project doesn't run.
 - **UI surface** — every route and state touched, so the visual gate knows where to start.
 - **Tasks** — ordered slices, one commit each, small enough to review. Name the files each slice touches and the existing pattern to follow.
 - **Reuse before creating:** name the existing components, services, dialogs and pipes the implementer must use.

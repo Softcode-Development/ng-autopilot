@@ -14,7 +14,7 @@ You are the **driver**. Read `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` now �
 
 ## Project inputs
 
-- `.claude/golden.json` — packs, default planning format, protected paths.
+- `.claude/golden.json` — packs, default planning format, test tiers, protected paths.
 - `.claude/gates.md` — test, smoke, visual and final-gate commands; security trigger paths; version-bump policy. If it is missing, ask the owner for the commands once and offer to create it from the template.
 - `.claude/<tier>-testing/overrides.md` — project test rules, read by the orchestrators.
 
@@ -24,7 +24,7 @@ You are the **driver**. Read `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` now �
 |---|---|
 | 1 Plan | plan-file: `core:architect` — brief: the request, mode, plan path. openspec: invoke the `openspec:plan` skill |
 | 3 Implement | the stack implementer (`angular:implementer`) per slice; `nestjs:db-migrator` for schema slices |
-| 5 Test phase | `testing:unit-test-orchestrator`, then `testing:e2e-test-orchestrator`, then `testing:integration-test-orchestrator` — sequentially, only tiers the project has |
+| 5 Test phase | For each tier in `golden.json` → `testTiers`, in the order unit → e2e → integration, sequentially: `testing:<tier>-test-orchestrator`. Brief: the changed files, the plan's criteria for that tier, and the overrides path `.claude/<tier>-testing/overrides.md`. A listed tier without its overrides file → stop and offer to create it from the testing pack template. |
 | 7 Review | `core:plan-reviewer` + `core:code-reviewer` (+ `core:security-reviewer`) in parallel |
 | 8 Fixes | the implementer, one brief with every `fix` decision |
 | 10 Close | plan-file: archive the plan folder yourself. openspec: invoke the `openspec:archive` skill |

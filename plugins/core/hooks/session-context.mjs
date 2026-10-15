@@ -15,7 +15,8 @@ export function describeContext({ branch, lastCommit, dirty, config, plans, last
   const lines = [];
   lines.push(`[context] branch: ${branch || '(unknown)'} · last commit: ${lastCommit || '(none)'} · uncommitted files: ${dirty}`);
   const packs = Array.isArray(config.packs) ? config.packs.join(', ') : '(no .claude/golden.json)';
-  lines.push(`[context] packs: ${packs} · planning: ${config.planning || 'plan-file'} · default mode: balanced`);
+  const tiers = Array.isArray(config.testTiers) && config.testTiers.length ? config.testTiers.join(', ') : 'none declared';
+  lines.push(`[context] packs: ${packs} · planning: ${config.planning || 'plan-file'} · test tiers: ${tiers} · default mode: balanced`);
   if (plans.length === 0) {
     lines.push('[context] active plan: none — deliver changes with /deliver');
   }

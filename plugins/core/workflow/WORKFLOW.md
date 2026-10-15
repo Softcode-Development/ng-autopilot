@@ -90,10 +90,11 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - Driver runs the existing affected tests (the project's test command from `.claude/gates.md`). Failures are fixed by the implementer in the slice's scope. Worklog: `## Checkpoint`.
 
 ### Step 5 — Test phase
-- On the finished feature, dispatch in order, sequentially:
+- On the finished feature, dispatch the tiers listed in `.claude/golden.json` → `testTiers`, in this order, sequentially:
   1. `testing:unit-test-orchestrator` — new and changed code;
-  2. `testing:e2e-test-orchestrator` — mocked journeys for new and changed pages, when the project has an e2e suite;
-  3. `testing:integration-test-orchestrator` — where the project has that tier; re-run the **pre-existing** integration specs of every module touched.
+  2. `testing:e2e-test-orchestrator` — mocked journeys for new and changed pages;
+  3. `testing:integration-test-orchestrator` — re-run the **pre-existing** integration specs of every module touched, too.
+- Each orchestrator applies the project's `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs).
 - The plan's acceptance criteria are the coverage list. **Coverage contract:** every criterion has a test at its tagged tier, or a worklog deferral with a destination.
 - Worklog: `## Test phase`.
 

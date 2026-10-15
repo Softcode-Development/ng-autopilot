@@ -98,10 +98,11 @@ test('allCheckboxes counts task rows across OpenSpec task groups', () => {
 });
 
 test('session context: no plan, then an active plan with its next step', () => {
-  const base = { branch: 'feat/x', lastCommit: 'abc feat: y', dirty: 2, config: { packs: ['core', 'angular'], planning: 'plan-file' } };
+  const base = { branch: 'feat/x', lastCommit: 'abc feat: y', dirty: 2, config: { packs: ['core', 'angular'], planning: 'plan-file', testTiers: ['unit', 'e2e'] } };
   const none = describeContext({ ...base, plans: [] });
   assert.match(none, /branch: feat\/x .* uncommitted files: 2/);
-  assert.match(none, /packs: core, angular/);
+  assert.match(none, /packs: core, angular · planning: plan-file · test tiers: unit, e2e/);
+  assert.match(describeContext({ ...base, config: {}, plans: [] }), /test tiers: none declared/);
   assert.match(none, /active plan: none/);
   const one = describeContext({ ...base, plans: [plan({ openQuestions: 1, mode: 'balanced' })], lastEntry: () => 'Slice 1 — data-access' });
   assert.match(one, /orders-list \(approved, balanced\) · tasks 1\/3 · 1 open question\(s\) · next task: list page · last worklog: Slice 1/);
