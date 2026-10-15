@@ -1,0 +1,5 @@
+{
+  "name": "testing",
+  "version": "0.1.0",
+  "description": "Unit, integration and e2e test orchestration: orchestrator -> author -> reviewer agents, write-*-tests skills, detect-stack."
+}

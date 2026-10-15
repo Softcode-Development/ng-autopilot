@@ -1,0 +1,5 @@
+{
+  "name": "nestjs",
+  "version": "0.1.0",
+  "description": "NestJS backend add-on: layering, error taxonomy, OpenAPI, shared contracts, data model."
+}
