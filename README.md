@@ -18,8 +18,14 @@ docs/IMPORT-LOG.md                every imported item, its decision and destinat
 
 Inside a plugin:
 - `rules/` — rule files synced into a project's `.claude/rules/golden/` (plugins cannot load rules themselves).
-- `templates/docs/` — starting points for a project's doc set.
-- Agents, skills and hooks (later batches) load directly from the plugin.
+- `templates/` — starting points for a project's doc set and `.claude/` files.
+- `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it.
+
+## Tests
+
+```bash
+npm test     # node --test over plugins/*/hooks/test
+```
 
 ## How a project uses it
 

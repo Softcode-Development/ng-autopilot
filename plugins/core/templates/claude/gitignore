@@ -1,0 +1,13 @@
+# Synced to <project>/.claude/.gitignore.
+
+# Flag files that let a guarded flow edit a protected path. Runtime only.
+/.flags/
+
+# Review reports are per-run output. Findings that matter go into the
+# change's worklog or get fixed; the reports themselves are not history.
+/reviews/*.md
+!/reviews/.gitkeep
+
+# Personal settings and local-only notes (credentials for the visual gate, etc.).
+/settings.local.json
+*.local.md

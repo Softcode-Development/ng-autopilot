@@ -211,5 +211,53 @@ Paths below are relative to `plugins/`.
 
 ---
 
-## Batch 2 — settings + hooks
+## Batch 2 — settings, hooks, MCP (2026-10-15)
+
+Source: `finances-app/.claude/{settings.json,settings.local.json,.gitignore,mcp.json,hooks/**}`, root `.mcp.json`, `.husky/{pre-commit,commit-msg}`.
+
+### Owner decisions
+
+| # | Decision |
+|---|---|
+| B1 | Hooks are rewritten in Node (one process per call, no MSYS workarounds, `node --test`). Behaviour kept; every smoke case kept. |
+| B2 | `curl` / `wget` move from deny to ask (smoke gate and API checks need them). |
+| B3 | Hooks that enforce workflow steps (session context, plan-ready, out-of-scope destinations) wait until the workflow document exists (batch 3); they are written against its real steps. |
+| B4 | Each commit already summarises the session; the per-turn worklog stub hook is dropped. The agent-written worklog stays and becomes part of every planning format (batch 3/4). |
+| B5 | MCP servers ship inside the pack they belong to. |
+
+### Files
+
+| Source | Decision | Landed in / note |
+|---|---|---|
+| `hooks/guard-bash.sh` | generalized, Node | `core/hooks/guard-bash.mjs`. Kept: `--no-verify`, `rm -rf` absolute/home/bare `*`, force push, publish, `reset --hard`, secret reads, redirect/tee into protected paths. Added: `--force-with-lease` and `+refspec` pushes, `git clean -f`, `git checkout -- .` / `git restore .`, Windows drive paths in `rm`, `\` path separators, `.p12`/`.pfx`. Fixed: `.env.example`/`.sample`/`.template` reads allowed (the source blocked them while settings.local.json allowed them); `secrets/` rule now matches any file under `secrets/` (the source's lookahead only matched when the file was a `.pem`/`.key`). Protected paths come from `.claude/golden.json` instead of hard-coded Prisma/OpenSpec paths. |
+| `hooks/guard-paths.sh` | generalized, Node | `core/hooks/guard-paths.mjs`. Config-driven protected paths + flag files; `.claude/rules/golden/**` always protected (flag `golden-sync`); covers `MultiEdit` and `NotebookEdit`. |
+| `hooks/lib/{common.sh,extract.mjs,canonicalise-path.cjs}` | rewritten | `core/hooks/lib/hook-io.mjs` (envelope, project root incl. Git Bash `/c/` form, canonical paths, glob, config, flags). |
+| `hooks/lib/apply-edit.cjs`, `out-of-scope-offenders.cjs` | → after workflow (B3) | Needed by the post-edit-content validators |
+| `hooks/__smoke__.sh` | ported + extended | `core/hooks/test/*.test.mjs`: unit cases for both guards plus process-level tests (real stdin envelope, exit codes, `golden.json`, flag files, Git Bash paths, malformed input). `npm test` in the golden repo. |
+| `hooks/load-context.sh` | → after workflow (B3) | Will print branch, last commit, dirty count, active plan + current step, mode, planning format |
+| `hooks/summarize-session.sh` | dropped (B4) | Ran per turn (Stop), not per session: 50 identical stubs in the active worklog |
+| `hooks/assert-tasks-updated.sh` | → `openspec` pack (batch 4), simplified | Keep the git-native pre-commit + commit-msg trailer check only; drop the PostToolUse copy that tells the agent to `reset --soft` |
+| `hooks/assert-open-questions-resolved.sh` | → after workflow (B3) | Generic form: block source edits while the active plan has unresolved open questions. Build-plan linkage form → `openspec` pack |
+| `hooks/assert-out-of-scope-has-destination.sh` | → after workflow (B3) | Generic form for plan files: every out-of-scope bullet carries `→ <destination>` |
+| `hooks/regenerate-openapi.sh` | → `nestjs` pack, batch 7 | A husky pre-commit script, not a Claude hook |
+| `settings.json` permissions | generalized | `core/templates/claude/settings.json` + README. allow / ask / deny tiers. Dropped `Bash(rm -rf *:*)` (matches every `rm -rf`, contradicting the hook). curl/wget → ask (B2). Env reads denied by name so `.env.example` stays readable. |
+| `settings.json` `enabledMcpjsonServers` | dropped | Listed 9 servers that exist only in `.claude/mcp.json`, which Claude Code does not read |
+| `.claude/mcp.json` | dropped | Not a location Claude Code reads |
+| MCP: angular-cli | generalized | `angular/.mcp.json`: the project's own CLI (`node node_modules/@angular/cli/bin/ng.js mcp --read-only`), so it always matches the project's Angular version (CLI ≥ 20). Verified: answers `initialize` from seller-ui (CLI 21.2.26). |
+| MCP: primeng | from seller-ui | `primeng/.mcp.json` + `primeng/mcp/npx-launch.mjs` (pinned packages; Windows-safe launch). Verified: answers `initialize`. |
+| MCP: playwright | → batch 6 | Belongs to an e2e-runner pack (Cypress projects don't need it) |
+| MCP: filesystem, github, postgres, context7, sentry | not imported | Built-in tools / `gh` CLI cover filesystem and GitHub; postgres/sentry are project-specific; context7 → revisit if a pack needs it |
+| Root `.mcp.json` `supabase-prod` | finances-only, flagged | An agent with a production database MCP is a risk; recommend removing during finances alignment |
+| `settings.local.json` | personal | Pattern documented in `core/templates/claude/README.md` |
+| `.claude/.gitignore` | generalized | `core/templates/claude/gitignore`: `.flags/`, `reviews/*.md` (review reports are run output, not history), `settings.local.json`, `*.local.md` |
+| `.husky/pre-commit`, `commit-msg` | → batch 7 | Tooling batch (lint-staged, commitlint, spec validate) |
+
+### Carried forward
+
+- **→ first sync:** confirm plugin MCP servers start with the project root as working directory (the angular-cli entry uses a relative `node_modules` path).
+- **→ first sync:** confirm `allow: git checkout -b` vs `ask: git checkout` precedence; if ask wins, `git switch -c` is the allowed way to branch.
+
+---
+
+## Batch 3 — workflow + agents
 *(pending)*
