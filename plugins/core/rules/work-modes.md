@@ -9,7 +9,7 @@ Every task runs in one of three modes. If no mode is named, the agent picks by t
 | | `fast` | `balanced` (default) | `strict` (opt-in) |
 |---|---|---|---|
 | **For** | Bug fix, small UI change, translations, copy, config | Features and anything not fast or strict | Auth, security, payments, data model, migrations, risky refactors |
-| **Planning** | A few sentences in chat: intent, files, done-criteria | Plan file with acceptance criteria (`.claude/plans/<slug>.md`) | OpenSpec change when the `openspec` pack is enabled; otherwise the plan file with every section filled |
+| **Planning** | A few sentences in chat: intent, files, done-criteria | A planning document in the project's format (below) | A planning document in the project's format, every section filled |
 | **Commits** | One | One per feature slice | One per task |
 | **Lint + typecheck** | Pre-commit hook (automatic) | Pre-commit hook (automatic) | Pre-commit hook (automatic) |
 | **Existing tests** | Affected tests, once, before review | End of implementation + final gate | End of each task + end of implementation + final gate |
@@ -23,9 +23,20 @@ Every task runs in one of three modes. If no mode is named, the agent picks by t
 - The owner names the mode, or the agent proposes one with a one-line reason.
 - **Upgrades only.** When a `fast` task grows — more than a handful of files, a new component or route, or anything touching auth, security or the data model — the agent stops and proposes `balanced`. A `balanced` task that turns out to touch a `strict` area stops and proposes `strict`. An agent never downgrades a mode on its own.
 
+## Planning format
+
+The planning format is a second setting, independent of the mode. It decides only **what the planning document looks like**; everything after planning is the same in either format.
+
+| Format | Document | Set where |
+|---|---|---|
+| `plan-file` (default) | `.claude/plans/<slug>.md`: goal, scope, out of scope with destinations, acceptance criteria, task checklist | — |
+| `openspec` | An OpenSpec change folder (proposal, design, spec with acceptance scenarios, tasks), from the `openspec` pack | Project default in `.claude/golden.json` (`"planning": "openspec"`); or per task when the owner says "use openspec" |
+
+`fast` never writes a planning document, so the format does not apply to it. In either format, the acceptance criteria (plan file) or scenarios (`spec.md`) are the coverage list for the test phase.
+
 ## The delivery sequence (`balanced` and `strict`)
 
-1. **Plan** — goal, scope, out of scope with destinations, acceptance criteria, task checklist.
+1. **Plan** — a planning document in the project's format: goal, scope, out of scope with destinations, acceptance criteria, task checklist.
 2. **Implement** the whole feature in slices, committing each slice. No new tests yet. The pre-commit hook lints and type-checks staged files on every commit.
 3. **Checkpoint** — run the existing affected test suite; fix what the feature broke.
 4. **Test phase** — on the finished feature, never per task:

@@ -186,7 +186,8 @@ Paths below are relative to `plugins/`.
 |---|---|---|
 | D1 | Tests are written only in a **test phase after the feature is complete** — never per task, in any mode. Order: unit (orchestrated) → mocked e2e for new/changed pages → integration where the tier exists. The plan's acceptance criteria are the coverage list. | `core/rules/work-modes.md` |
 | D2 | "Per logical unit" gate removed. Lint + typecheck run automatically in the pre-commit hook; the existing test suite runs at the end of implementation and at the final gate (`strict` adds per task). | `core/rules/work-modes.md` |
-| D3 | **OpenSpec is an opt-in `openspec` pack**, used by `strict` mode where enabled. Default planning is a plan file with acceptance criteria. | `core/rules/work-modes.md`; pack → batch 4 |
+| D3 | **OpenSpec is an opt-in `openspec` pack.** Default planning is a plan file with acceptance criteria. | pack → batch 4 |
+| D3a | **Mode and planning format are independent settings.** Mode (`fast`/`balanced`/`strict`) sets ceremony; planning format (`plan-file` default / `openspec`) sets only the planning document. Project default in `.claude/golden.json`, overridable per task. Replaces the first draft where `strict` implied OpenSpec. Basis: finances-app runs OpenSpec with balanced rules today. | `core/rules/work-modes.md` § Planning format |
 | D4 | **Three modes: `fast` / `balanced` (default) / `strict`.** Fast covers bug fixes, small UI changes, translations, copy, config. Modes only upgrade. | `core/rules/work-modes.md` |
 | D5 | **Every mode has a reviewer agent** — fast mode gets one pass on the diff. The owner does not review diffs; the workflow is AI-only. | `core/rules/work-modes.md` |
 | D6 | Global test agents + skills move into a `testing` plugin, copied as-is; the speed redesign happens on the golden copy in batch 6. | `plugins/testing/` |
