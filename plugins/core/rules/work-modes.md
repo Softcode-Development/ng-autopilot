@@ -13,8 +13,8 @@ Every task runs in one of three modes. If no mode is named, the agent picks by t
 | **Commits** | One | One per feature slice | One per task |
 | **Lint + typecheck** | Pre-commit hook (automatic) | Pre-commit hook (automatic) | Pre-commit hook (automatic) |
 | **Existing tests** | Affected tests, once, before review | End of implementation + final gate | End of each task + end of implementation + final gate |
-| **New tests** | Fix tests the change broke; a bug fix adds one regression test where testable | Test phase after the feature (below) | Test phase after the feature; every acceptance criterion has a test |
-| **Review** | Reviewer agent, one pass on the diff | Reviewer agent on the whole change | Reviewer agent + security reviewer |
+| **New tests** | Fix tests the change broke; a bug fix adds one regression test where testable | Test phase after the feature; **coverage contract**: every acceptance criterion has a test at its tier, or a recorded deferral with a destination | As balanced; `[manual]` criteria only with the owner's approval |
+| **Review** | `code-reviewer`, one pass on the diff | `plan-reviewer` + `code-reviewer` on the whole change (+ `security-reviewer` when a security trigger path is touched) | `plan-reviewer` + `code-reviewer` + `security-reviewer` |
 | **Smoke gate** | If runtime wiring changed | Once, when the feature is done | Once, when the feature is done |
 | **Visual gate** | If UI changed | Once, when the feature is done | Once, when the feature is done |
 
@@ -29,25 +29,14 @@ The planning format is a second setting, independent of the mode. It decides onl
 
 | Format | Document | Set where |
 |---|---|---|
-| `plan-file` (default) | `.claude/plans/<slug>.md`: goal, scope, out of scope with destinations, acceptance criteria, task checklist | — |
+| `plan-file` (default) | `.claude/plans/<slug>/plan.md` + `worklog.md` (sections: WORKFLOW.md § 2) | — |
 | `openspec` | An OpenSpec change folder (proposal, design, spec with acceptance scenarios, tasks), from the `openspec` pack | Project default in `.claude/golden.json` (`"planning": "openspec"`); or per task when the owner says "use openspec" |
 
 `fast` never writes a planning document, so the format does not apply to it. In either format, the acceptance criteria (plan file) or scenarios (`spec.md`) are the coverage list for the test phase.
 
-## The delivery sequence (`balanced` and `strict`)
+## The delivery sequence
 
-1. **Plan** — a planning document in the project's format: goal, scope, out of scope with destinations, acceptance criteria, task checklist.
-2. **Implement** the whole feature in slices, committing each slice. No new tests yet. The pre-commit hook lints and type-checks staged files on every commit.
-3. **Checkpoint** — run the existing affected test suite; fix what the feature broke.
-4. **Test phase** — on the finished feature, never per task:
-   1. unit tests for new and changed code, through the unit-test orchestrator;
-   2. mocked e2e tests for new and changed pages, through the e2e orchestrator (when the project has an e2e suite);
-   3. integration tests where the project has that tier.
-
-   The plan's acceptance criteria are the coverage list.
-5. **Smoke + visual gates** on the finished feature.
-6. **Review** — a separate reviewer agent on the whole change; fix in scope.
-7. **Final gate** — lint, typecheck, full affected tests, build when the project requires it. Bump the version if the project versions its app. Open the PR.
+The step-by-step sequence — who does what, in what order, with which artifacts and where the owner is needed — is the core plugin's `workflow/WORKFLOW.md`, executed by `/deliver`. This rule sets the policy it runs under.
 
 **Why tests come after the feature:** a test written per task pins an intermediate shape and is rewritten when the feature settles; an author who sees the finished feature writes tests for the real behaviour, once.
 

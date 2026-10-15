@@ -69,8 +69,63 @@ test('guard-bash exit codes', () => {
   assert.equal(runHook('guard-bash.mjs', bash('git status')).code, 0);
 });
 
+function writePlan(slug, frontmatterStatus, openQuestion) {
+  const dir = path.join(project, '.claude', 'plans', slug);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, 'plan.md'), [
+    '---', `slug: ${slug}`, `status: ${frontmatterStatus}`, '---', '',
+    '## Out of scope', '', '- CSV export → FEATURES.md orders-export', '',
+    '## Open questions', '', openQuestion ? '- [ ] Q: default sort?' : '- [x] Q: default sort? → A: newest', '',
+    '## Tasks', '', '- [x] 1. service', '- [ ] 2. list page', '',
+  ].join('\n'));
+  writeFileSync(path.join(dir, 'worklog.md'), '# Worklog\n\n## Slice 1 — service (2026-10-15)\n');
+  return dir;
+}
+
+test('plan-ready blocks a source edit while the plan has an open question, allows once answered', () => {
+  const dir = writePlan('orders-list', 'approved', true);
+  try {
+    const src = edit(path.join(project, 'src', 'app', 'orders.ts'));
+    const blocked = runHook('plan-ready.mjs', src);
+    assert.equal(blocked.code, 2);
+    assert.match(blocked.stderr, /orders-list: 1 open question/);
+    writePlan('orders-list', 'approved', false);
+    assert.equal(runHook('plan-ready.mjs', src).code, 0);
+    writePlan('orders-list', 'paused', true);
+    assert.equal(runHook('plan-ready.mjs', src).code, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('out-of-scope validates the post-edit plan content', () => {
+  const dir = writePlan('orders-list', 'approved', false);
+  try {
+    const planPath = path.join(dir, 'plan.md');
+    const drop = { tool_name: 'Edit', tool_input: { file_path: planPath, old_string: '- CSV export → FEATURES.md orders-export', new_string: '- CSV export' } };
+    assert.equal(runHook('out-of-scope.mjs', drop).code, 2);
+    const keep = { tool_name: 'Edit', tool_input: { file_path: planPath, old_string: 'orders-export', new_string: 'orders-csv' } };
+    assert.equal(runHook('out-of-scope.mjs', keep).code, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('session-context prints the active plan from a real project folder', () => {
+  const dir = writePlan('orders-list', 'in-progress', false);
+  try {
+    const r = spawnSync(process.execPath, [path.join(hooksDir, 'session-context.mjs')], {
+      env: { ...process.env, CLAUDE_PROJECT_DIR: project }, encoding: 'utf8',
+    });
+    assert.equal(r.status, 0);
+    assert.match(r.stdout, /active plan: orders-list \(in-progress\) · tasks 1\/2 · next task: list page · last worklog: Slice 1 — service/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('hooks allow on empty or malformed input instead of crashing', () => {
-  for (const script of ['guard-bash.mjs', 'guard-paths.mjs']) {
+  for (const script of ['guard-bash.mjs', 'guard-paths.mjs', 'plan-ready.mjs', 'out-of-scope.mjs']) {
     assert.equal(runHook(script, '').code, 0, `${script} empty`);
     assert.equal(runHook(script, 'not json').code, 0, `${script} malformed`);
   }

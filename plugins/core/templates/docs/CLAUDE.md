@@ -37,10 +37,11 @@ Enabled packs: <core, angular, …> (see `.claude/golden.json`). Their rules are
 
 ## 4. Workflow
 
-- **Work mode:** `balanced` by default, `strict` opt-in — golden rule `work-modes`.
-- **Delivering a change:** <the loop, e.g. plan → implement → verify → review → PR, with the command names>.
-- **Gates before every commit:** smoke gate + visual gate for UI work + <project gate command>.
-- **Testing:** <runner, tiers in use, where project test rules live (`.claude/<tier>-testing/overrides.md`)>.
+- **Every change goes through `/deliver`** — the golden workflow: plan → plan gate (owner) → implement → checkpoint → test phase → smoke/visual gates → review → triage → final gate → PR (owner approves push).
+- **Mode:** `fast` / `balanced` (default) / `strict` — golden rule `work-modes`. **Planning format:** <plan-file | openspec> (`.claude/golden.json`).
+- **Gate commands, smoke map, visual-gate setup, security triggers:** [.claude/gates.md](.claude/gates.md).
+- **Testing:** <runner and tiers in use>; project test rules in `.claude/<tier>-testing/overrides.md`.
+- **Active work:** `.claude/plans/<slug>/` (plan + worklog); finished plans in `.claude/plans/archive/`.
 
 ## 5. Domain essentials
 

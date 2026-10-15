@@ -259,5 +259,74 @@ Source: `finances-app/.claude/{settings.json,settings.local.json,.gitignore,mcp.
 
 ---
 
-## Batch 3 — workflow + agents
+## Batch 3 — workflow, agents, workflow hooks (2026-10-15)
+
+Source: `finances-app/AGENTIC_WORKFLOW.md`, `.claude/skills/opsx-apply/SKILL.md`, `.claude/agents/*.md` (7), `.claude/instructions/code-review.instructions.md`, `security.instructions.md` (outline).
+
+### Owner decisions
+
+| # | Decision |
+|---|---|
+| C1 | **Two reviewers**, run in parallel: `plan-reviewer` (conformance) and `code-reviewer` (quality). Fast mode runs `code-reviewer` only. |
+| C2 | **Driver triages review findings** (fix / decline with reason / defer with destination); only product decisions go to the owner. The per-finding `review-walkthrough` mode is dropped. |
+| C3 | **The implementer commits each slice itself**; the stage-then-bundle step is gone (tests come after the feature, the tick hook lives only in the openspec pack). |
+| C4 | Step sequence approved as proposed, with the gaps below fixed. |
+| C5 | Gaps fixed: coverage contract in balanced too; review rubric imported now (not batch 5); one project file `.claude/gates.md` for gate config; handoff worklog entries. |
+
+### New in golden
+
+| Item | Path |
+|---|---|
+| Workflow — the single source of the sequence: roles, artifacts, plan sections, worklog entry formats, Steps 0–10, mode differences, owner stops, resuming, triage, briefs, DoD, failure modes, other skills in the loop | `core/workflow/WORKFLOW.md` |
+| `/deliver` — executes the workflow; resumable from plan + worklog | `core/skills/deliver/SKILL.md` |
+| Plan + worklog templates | `core/templates/plans/{plan,worklog}.md` |
+| Gate config template (commands, smoke map, visual setup, security triggers, versioning) | `core/templates/claude/gates.md` |
+| `session-context` hook (SessionStart): branch, last commit, dirty count, packs, planning, active plan with tasks / open questions / next task / last worklog entry. ~200 ms. | `core/hooks/session-context.mjs` |
+| `plan-ready` hook: blocks source edits while the active plan is `draft` or has an open question; `status: paused` steps aside; source globs configurable | `core/hooks/plan-ready.mjs` |
+| `out-of-scope` hook: every Out-of-scope bullet ends with `→ <destination>`, judged on post-edit content (Write/Edit/MultiEdit, `replace_all`); extra docs configurable | `core/hooks/out-of-scope.mjs` |
+| Shared plan parsing (frontmatter, sections, checkboxes in bullet and numbered/bold styles, offenders, post-edit content) | `core/hooks/lib/plans.mjs` |
+| Tests: 10 new (unit + process-level on a temp project with real plan files); suite 79/79 | `core/hooks/test/` |
+
+### Files
+
+| Source | Decision | Landed in / note |
+|---|---|---|
+| AGENTIC_WORKFLOW § 1 loop, lifecycle table | generalized | WORKFLOW § 3 (Steps 0–10); `/propose → /opsx:apply → /opsx:archive` becomes `/deliver` with plan-file or OpenSpec planning |
+| § 2 scaffolding tree | dropped | Superseded by the golden layout + sync |
+| § 3 CLAUDE.md sections | done in batch 1 | CLAUDE template; § 4 now points at `/deliver` and `gates.md` |
+| § 4 agent roster + models | generalized | WORKFLOW § 1; models kept (architect/reviewers opus, implementer/security sonnet) |
+| § 4 `mcp_servers` frontmatter | dropped | Not a Claude Code agent field; plugin agents ignore MCP settings |
+| § 5 skills (propose / opsx-*) | → batch 4 (openspec pack) | `/deliver` is the default entry |
+| § 5 external skills (frontend-design, design, superpowers fit) | as-is | WORKFLOW § 11; design skills in the implementer's UI protocol and the design-discipline rule |
+| § 6 hooks | done in batch 2–3 | |
+| § 7 MCP | done in batch 2 | |
+| § 8 CI gates, deploy, branch protection | → batch 8 | |
+| § 8.5.1 smoke gate + path→command map | generalized | Mechanism: work-modes + WORKFLOW Step 6; the map moves to the project's `.claude/gates.md` |
+| § 8.5.2 visual gate (1280/375, light/dark, drive interactions, console, critique, blocked-not-skipped, worklog record) | as-is | design-discipline rule + WORKFLOW Step 6 |
+| § 9 observability | finances-only | |
+| § 10 commits & branching (`Change:`/`Task:` body, release-please) | split | Branch per change → WORKFLOW Step 1; `Change:` line → openspec pack; release-please → batch 8 |
+| § 11 Definition of Done | generalized | WORKFLOW § 9 |
+| § 11.5 no silent deferral + write-down protocol | generalized | agent-conduct rule, plan Out of scope, `out-of-scope` hook, plan-reviewer check 3 |
+| § 12 failure modes | generalized | WORKFLOW § 10 |
+| § 13 what this enables | dropped | Motivation, not instruction |
+| `opsx-apply` loop | generalized | `/deliver` + WORKFLOW Steps 3–9. Dropped: stage-then-bundle (C3), per-task test dispatch, per-task `nx affected … build`. Kept: pre-flight, refusal modes, slicing, smoke/visual procedure, end-of-change integration re-run, version bump last, reviewers before the PR |
+| `architect.md` | generalized | `core/agents/architect.md` — plan-file or OpenSpec; open questions with options + recommendation; criteria tagged by tier; reuse-before-creating |
+| `fullstack-dev.md` | generalized | `angular/agents/implementer.md` — commits per slice; `free` mode → fast-mode brief; UI work protocol kept; `review-walkthrough` dropped (C2) |
+| `build-plan-reviewer.md` | generalized | `core/agents/plan-reviewer.md` — 7 checks incl. unplanned-work question; build-plan linkage → openspec pack |
+| `code-reviewer.md` | generalized | `core/agents/code-reviewer.md` — bounding, deferral context, batching thresholds, persisted report kept |
+| `build-plan-security.md` | generalized | `core/agents/security-reviewer.md` — triggers from `.claude/gates.md` |
+| `db-migrator.md` | generalized | `nestjs/agents/db-migrator.md` — flag protocol, forward + replay verification; Prisma/Supabase specifics stay in the project's DATA_MODEL.md |
+| `doc-writer.md` | → batch 4 (openspec pack) | Spec promotion; plan-file closes without it |
+| `code-review.instructions.md` | generalized | `core/review/code-review-rubric.md` — lanes, severity, pre-flight, A–H, report shape, must-nots; finances specifics (household scope, Supabase, AS-N, Karma ban, RxJS fence) removed |
+| `security.instructions.md` | generalized | `core/review/security-checklist.md` — OWASP A01–A10 patterns |
+| `performance.instructions.md`, `typescript-angular.instructions.md`, `documentation.instructions.md` | → batch 5 | Rules batch |
+
+### Carried forward
+
+- **→ first sync:** confirm `${CLAUDE_PLUGIN_ROOT}` substitution in agent bodies (the core agents read the rubric and workflow through it).
+- **→ alignment:** seller-ui's flat `.claude/plans/*.md` files move to `<slug>/plan.md` folders (or archive) so `session-context` and `plan-ready` see them.
+
+---
+
+## Batch 4 — skills, OpenSpec pack
 *(pending)*

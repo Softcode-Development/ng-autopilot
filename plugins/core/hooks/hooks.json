@@ -1,6 +1,13 @@
 {
-  "description": "Core safety hooks: shell guard and protected-path guard.",
+  "description": "Core hooks: session context, shell guard, protected paths, plan gate, out-of-scope destinations.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-context.mjs\"", "timeout": 10 }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -11,7 +18,9 @@
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-paths.mjs\"", "timeout": 10 }
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-paths.mjs\"", "timeout": 10 },
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/plan-ready.mjs\"", "timeout": 10 },
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/out-of-scope.mjs\"", "timeout": 10 }
         ]
       }
     ]
