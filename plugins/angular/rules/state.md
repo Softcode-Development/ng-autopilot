@@ -18,6 +18,15 @@ paths:
 
 **Decision rule:** *Did this data come from the API?* → server-state mechanism. No → *does it cross feature boundaries?* → store. No → component-local `signal()`.
 
+## Using signals
+- Owned state: `signal<T>(initial)`, changed with `.set()` / `.update()` (`mutate()` no longer exists).
+- Derived state: `computed()` — pure, no side effects, preferred over a method.
+- Writable derived state (edit drafts seeded from server data, resettable filters): `linkedSignal`.
+- Side effects: `effect()` — registered at field initialisation or in the constructor (injection context), never inside `ngOnInit`; DOM work belongs in `afterRenderEffect`, not `effect`.
+- Read without subscribing: `untracked(() => sig())` inside an effect or computed.
+- Observable → signal at the component edge: `toSignal(obs$, { initialValue })` (or `requireSync: true` for synchronous sources) — never leave a one-frame `undefined`.
+- One-shot async data: `resource()` / `httpResource()`; shared, cached or optimistic server data: the project's server-state library.
+
 ## Banned
 - `BehaviorSubject` / `ReplaySubject` for app state — use signals.
 - Classic NgRx (`Store` + `Actions` + `Effects` + reducers) in new code.

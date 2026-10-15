@@ -29,6 +29,9 @@ Before writing markup that looks like a primitive (spinner, progress bar, toast,
 ## Tokens
 - Colors, spacing, type, radius and motion come from design tokens (CSS custom properties), so themes swap at runtime.
 - **No raw hex/rgb literals** in component TS/HTML/SCSS. — **Enforcement:** stylelint `color-no-hex` (or the project's equivalent) on component styles.
+- **No `!important`** to beat token or library styles — if you are fighting the design system, raise it instead.
+- **No `prefers-color-scheme` media queries inside components** — tokens carry both themes.
+- Custom classes (where utilities or primitives don't fit) use BEM-like names: `.feature-element__part--modifier`.
 
 ## Accessibility minimums
 - Every interactive element has an accessible name (`aria-label`, `aria-labelledby`, or visible text).

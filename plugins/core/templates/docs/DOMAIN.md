@@ -33,6 +33,17 @@ The vocabulary and data shapes of this product, for a frontend that talks to an 
 |---|---|---|
 | <Name> | `'value_a'`, `'value_b'` | `<FEATURE>_I18N_KEY` in `<path>` |
 
-## 5. Tenancy / markets / roles
+## 5. Sensitive data
+
+What may appear in logs, analytics, error reports and URLs. The security rules and reviewers check against this table.
+
+| Class | Rule | This project's fields |
+|---|---|---|
+| Always sensitive | Never logged; returned only to its owner | <emails, tokens, passwords, national ids, payment/bank data, …> |
+| Usually sensitive | Log only as a flag or salted hash | <display names, relationships, balances, …> |
+| Flag only | Log as `hasX: !!x`, never the value | <hasEmail, hasMfa, …> |
+| Always safe | Log freely | <ids (UUIDs), error codes, correlation ids, timings, route names> |
+
+## 6. Tenancy / markets / roles
 
 <How data is scoped (tenant, market, account), what varies by market or role, and where that config lives.>

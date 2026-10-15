@@ -44,6 +44,13 @@ export const TransactionDirection = { In: 'in', Out: 'out', Transfer: 'transfer'
 export type TransactionDirection = (typeof TransactionDirection)[keyof typeof TransactionDirection];
 ```
 
+## Types
+- `interface` for object shapes; `type` for unions, intersections, mapped and conditional types. Don't mix styles inside a feature.
+- `readonly` on fields never reassigned; `readonly T[]` / `ReadonlyArray<T>` for collections crossing module boundaries.
+- Variant data as discriminated unions (`{ kind: 'ok'; value: T } | { kind: 'err'; error: E }`); exhaustive switches end with `assertUnreachable(x: never): never`.
+- No `Function`, `Object` or `{}` as types — a specific signature or `Record<string, unknown>`.
+- `satisfies` to check a literal against a type without widening it.
+
 ## Money and dates
 - **Money is never a `number`.** Floats and money do not mix. Wire format: string (or integer minor units). App code: a money value object (`{ amount: bigint /* minor units */, currency }`) with arithmetic through one helper. A project whose API sends money as numbers documents the boundary conversion in its DOMAIN.md.
 - **Dates over the wire are ISO-8601 strings.** Timestamps are UTC; display converts to the user's time zone.

@@ -5,7 +5,7 @@ description: Step 1 of the golden workflow in the OpenSpec planning format — c
 
 # OpenSpec plan
 
-Replaces only Step 1 of `/deliver`; Steps 2–10 run unchanged. Read the openspec rule (`.claude/rules/golden/openspec.md`) first.
+Replaces only Step 1 of `/deliver`; Steps 2–10 run unchanged. Read the openspec rule (`.claude/rules/golden/openspec/openspec.md`) first.
 
 ## Commands
 

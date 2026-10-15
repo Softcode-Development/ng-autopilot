@@ -23,6 +23,7 @@ paths:
 - Don't decode JWTs ad hoc (`atob`); use the project's one JWT utility.
 - Token refresh is owned by one service; features never call the refresh endpoint or start their own refresh timers.
 - Route guards gate authenticated routes; authorization is still enforced by the API — the client never trusts itself.
+- URL params and query params are user input: validate them before use; `returnUrl`-style redirects only to an internal-path allowlist.
 
 ## Secrets and config
 - No secrets in the frontend bundle — anything in `environment*.ts` is public. Public keys only (e.g. a restricted maps key).

@@ -30,6 +30,15 @@ New features add to this list, never subtract. The project's security reviewer c
 | Containers | Image scanning in CI |
 | Incident response | Error alerts routed to a channel; runbooks in `docs/runbooks/` |
 
+## Secure-by-default starting shapes
+
+New code starts from these shapes; a deviation is explained in the plan or worklog.
+
+- **Endpoint:** auth guard + resource-scope guard + schema-validated body/params + typed domain errors (never `throw new HttpException` outside the filter) + logs carrying the correlation id only.
+- **Tenant table:** `<tenant>_id … not null references … on delete cascade` + an index on it + row policies (when the project uses RLS) — all in the same migration.
+- **Webhook:** verify the signature header first, parse second; idempotency key (signature + body hash); audit every accepted event.
+- **Third-party integration:** HTTP client with timeout and redirect cap, allowlisted URL pattern, no secrets in query strings.
+
 ## Database-side rules
 - Row-level security, when used, is defense in depth; the API guard is the primary authorization.
 - `SECURITY DEFINER` helpers live in a non-exposed schema (e.g. `private`) with `EXECUTE` granted only to the authenticated role — never in a schema the REST layer exposes.

@@ -383,5 +383,48 @@ Sources: `finances-app/.claude/skills/*` (7), `fp-ecommerce-store/.claude/skills
 
 ---
 
-## Batch 5 — rules (instructions)
+## Batch 5 — instruction files → rules (2026-10-15)
+
+Source: `finances-app/.claude/instructions/{typescript-angular,performance,documentation,security}.instructions.md` (code-review was batch 3).
+
+### Owner decisions
+
+| # | Decision |
+|---|---|
+| E1 | Additions merge into the existing rules; new files only for performance and documentation. |
+| E2 | **Over-engineering** is a reviewer rule (owner's wording): flag unnecessary complexity when a significantly simpler implementation achieves the same functionality without sacrificing quality — **even when the code complies with project rules**. **More code is not automatically over-engineering:** flag complexity that brings no meaningful benefit, not deliberate architecture that solves a real problem. |
+
+### Landed
+
+| Item | Path | Source |
+|---|---|---|
+| Over-engineering (§ C2, with the benefit test, "compliance is not a defence", how to flag, severity) | `core/review/code-review-rubric.md` | owner |
+| "Simplest thing that fully works" authoring line → points at § C2 | `core/rules/readable-code.md` | owner |
+| "Mandatory artifacts per feature" → "Model files per feature" (only when the content exists; never empty files) | `angular/rules/architecture.md` | conflict with E2 found while adding it |
+| Using signals (computed pure, effect in injection context, untracked, linkedSignal, toSignal initialValue, resource/httpResource, no `mutate`) | `angular/rules/state.md` | typescript-angular § Signals |
+| Dependency injection, zoneless section, one class per file | `angular/rules/architecture.md` | § DI, § Zoneless, § Components |
+| Inputs (transforms, route params as inputs), lifecycle (toSignal over async pipe, takeUntilDestroyed, DestroyRef, afterNextRender / afterRenderEffect), deferred loading (placeholder/loading/error), `@if` over `[hidden]` | `angular/rules/components-templates.md` | § Components, § Lifecycle, § Deferred, performance § 1 |
+| Typed forms detail, validators, submit pattern; functional matchers, `withComponentInputBinding`; HttpClient only, `withFetch`, functional interceptors, services return Observable | `angular/rules/forms-routing-http.md` | § Forms, § Routing, § HTTP |
+| interface vs type, readonly, discriminated unions + assertUnreachable, no `Function`/`Object`/`{}`, `satisfies` | `angular/rules/typescript.md` | § TypeScript strict |
+| No `!important`, no component dark-mode media queries, BEM naming | `angular/rules/design-discipline.md` | § Styling |
+| Frontend performance hunting list | `angular/rules/performance.md` (new) | performance §§ 1–4, 7–9, "when you find" |
+| Backend performance hunting list | `nestjs/rules/performance.md` (new) | performance §§ 5–6 |
+| Rubric § H links the performance rules | `core/review/code-review-rubric.md` | — |
+| Six-question thinking process; reporting (CIA severity, cite the threat, show the attack); SSRF timeouts/redirect cap | `core/review/security-checklist.md` | security § thinking, § when you find, A10 |
+| Secure-by-default starting shapes (endpoint, tenant table, webhook, integration) | `nestjs/rules/security.md` | security § templates |
+| URL params are user input; redirect allowlist | `angular/rules/security.md` | security § templates, A01 |
+| Sensitive-data classes table (4 classes, per-project fields) | `core/templates/docs/DOMAIN.md` § 5 | security § PII catalog (pattern only) |
+| JSDoc, workaround links, README contents, ADR format, `BREAKING CHANGE:` | `core/rules/documentation.md` (new) | documentation |
+
+### Changed while doing this
+
+- **Synced rules go to `.claude/rules/golden/<pack>/`**, not one flat folder — `angular` and `nestjs` both have `security.md` and `performance.md`. References in `security-reviewer` and `openspec:plan` updated; the protected glob `.claude/rules/golden/**` already covers subfolders (test added).
+
+### Not imported
+
+Non-negotiables summary and authoring checklist (restate rules; lint enforces), file-organisation recap (architecture rule), Transloco / Supabase / household / `realtime/` specifics, the LT threat model and PII table (finances-only; the pattern went to DOMAIN.md), i18n `@@key` notes (library-specific).
+
+---
+
+## Batch 6 — testing redesign
 *(pending)*

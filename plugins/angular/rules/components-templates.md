@@ -29,5 +29,16 @@ paths:
 - Every interactive element carries a stable `data-cy` (or the project's test-id attribute) so e2e tests can target it without CSS selectors.
 - Every interactive element has an accessible name (see design-discipline).
 
-## Subscriptions
-- Prefer signals and the `async` pipe. A component subscription uses `takeUntilDestroyed()` (or the project's declared legacy pattern). Never subscribe in a click handler without a cleanup path.
+## Inputs
+- `input<T>()` / `input.required<T>()`; boolean and number attributes use `transform: booleanAttribute` / `numberAttribute`.
+- Route params and query params arrive as inputs (`withComponentInputBinding()`), not through `ActivatedRoute.snapshot`.
+
+## Lifecycle and cleanup
+- Convert observables with `toSignal()` at the component edge; the `async` pipe only in legacy code, never in event bindings.
+- Long-lived subscriptions: `takeUntilDestroyed()` (field-initialiser form preferred); teardown work: `inject(DestroyRef).onDestroy(…)`. Never subscribe in a click handler without a cleanup path.
+- One-shot browser/DOM work after render (focus, measuring, third-party widget init): `afterNextRender`. DOM work that re-runs with signals: `afterRenderEffect`. Never touch the DOM from a plain `effect()`.
+
+## Deferred loading
+- Non-critical sections: `@defer (on viewport | idle | interaction | when cond())`, heavy widgets (charts, editors, maps, PDF) loaded inside via dynamic `import()`.
+- Every `@defer` has `@placeholder`, `@loading (minimum …)` and `@error` blocks — the user always sees the transition.
+- Use `@if` for branches that can be absent, not `[hidden]` (hidden content still renders and holds state).

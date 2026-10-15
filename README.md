@@ -31,7 +31,7 @@ docs/IMPORT-LOG.md                every imported item, its decision and destinat
 ```
 
 Inside a plugin:
-- `rules/` — synced into a project's `.claude/rules/golden/` (plugins cannot load rules themselves).
+- `rules/` — synced into a project's `.claude/rules/golden/<pack>/` (plugins cannot load rules themselves; one folder per pack because packs share file names like `security.md`).
 - `templates/` — starting points for a project's docs and `.claude/` files.
 - `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it.
 

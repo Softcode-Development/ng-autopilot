@@ -2,7 +2,22 @@
 
 What the `security-reviewer` looks for, by OWASP Top 10 category. Stack-specific rules live in the golden security rules (`angular`, `nestjs`) and the project docs; this list is about the patterns that keep recurring.
 
-**Thinking process:** for each change, ask who can reach the new code, what data it touches, what an attacker controls in its inputs, and what is logged on the way.
+## Thinking process
+
+Walk these before writing or reviewing security-sensitive code. An unanswered question is a finding.
+
+1. **What trust boundary am I crossing?** Browser → API, API → DB, API → third party, user A → user B, tenant X → tenant Y, public → authenticated.
+2. **Whose data is this, and who may see it?** Say the predicate in one sentence ("members can read; only the creator can edit"). If you can't, the code doesn't know either.
+3. **What if the input is hostile?** Huge and negative numbers, injection fragments, oversized strings, `null`, deeply nested JSON, Unicode tricks.
+4. **What leaks if this ends up logged?** Check every log line, breadcrumb and analytics event on the path against the project's sensitive-data classes (DOMAIN.md / DATA_MODEL.md).
+5. **What does an attacker get if they own this endpoint?** Match the controls to the blast radius.
+6. **Is it enforced at two layers?** Guard + row policy, schema validation + DB constraint. One layer is one bug away from a breach.
+
+## Reporting
+
+- Severity follows confidentiality / integrity / availability impact: cross-tenant data exposure is always `BLOCKING`; a missing header on a static page already covered by other layers is a `SUGGESTION`.
+- Cite the threat, not just the rule — "tenant A can read tenant B's orders because the filter uses `req.query.tenantId` instead of the guard's context" beats "missing scope check".
+- Show the attack in one sentence when it isn't obvious.
 
 ## A01 — Broken access control
 - A route/endpoint over private data without its guard, or marked public for convenience.
@@ -59,3 +74,4 @@ What the `security-reviewer` looks for, by OWASP Top 10 category. Stack-specific
 ## A10 — Server-side request forgery
 - User-supplied URLs fetched without a domain allowlist (match the resolved host, not a string prefix).
 - Private, loopback and link-local ranges not blocked after resolution.
+- Outbound HTTP without strict timeouts and a redirect cap, or following `https → http` downgrades.

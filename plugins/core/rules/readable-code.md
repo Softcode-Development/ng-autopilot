@@ -8,6 +8,7 @@ paths:
 
 Code reads like a book. Violations are review blockers, not nits. Applies to the TypeScript and the template layer.
 
+- **Simplest thing that fully works** — no abstraction, class, interface, dependency, configuration or layer that brings no meaningful benefit for the requirement now. Structure that solves a real problem is welcome even when it adds lines; machinery that solves nothing is not. Reviewers flag over-engineering (review rubric § C2).
 - **DRY** — shared logic lives once, in a named helper.
 - **Extract methods** — a block with a distinct responsibility becomes a named private method. Triggers: distinct responsibility, a meaningful domain concept, reused logic, complexity reduction, side-effect isolation. ~20 lines is an audit heuristic, never a lint rule; use judgement.
 - **Single responsibility** — a method or class does one thing. A long `ngOnInit` / `onSubmit` that reads session, registers listeners, validates, mutates, navigates and cleans up becomes separate named methods called from the lifecycle hook.

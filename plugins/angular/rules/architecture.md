@@ -29,13 +29,17 @@ src/app/
 - **`shared/`** holds pieces with no feature-domain dependency. If it knows a feature's domain, it belongs in that feature.
 - **Shared UI libraries group components by which project types can consume them.** Universal primitives at the top level; surface-specific pieces (dashboard chrome such as page headers) under a category folder (`dashboard/`). Ask "which project types can reuse this?" before placing a shared component.
 
-## Mandatory artifacts per feature
-| File | Purpose |
+## Model files per feature
+When a feature has that kind of content, it lives in the matching file — never create an empty file to satisfy the list:
+
+| File | Holds |
 |---|---|
 | `models/<entity>.interface.ts` | Shape of a domain entity |
 | `models/<entity>.types.ts` | Discriminated unions, request/response types |
 | `models/<entity>.enums.ts` | String-literal unions / `as const` maps |
 | `models/<entity>.consts.ts` | Static configuration: limits, defaults, patterns |
+
+One file per component, directive, pipe or service; a class used by two consumers gets its own file.
 
 ## Forbidden
 - `services/`, `components/`, `models/` as **top-level** folders — always nested in a feature.
@@ -56,6 +60,18 @@ src/app/
 - **`ChangeDetectionStrategy.OnPush`** on every component. — **Enforcement:** lint `prefer-on-push-component-change-detection`.
 - **Zoneless** when the project's Angular version supports it and ARCHITECTURE.md declares it; then never add `zone.js` to polyfills.
 - **Signals are the primary reactive primitive**: `signal`, `computed`, `linkedSignal`, `effect`, `resource`. RxJS only where signals cannot express the flow (debounced streams, websockets), converted with `toSignal()` at the boundary.
+
+## Dependency injection
+- `inject()` only in injection context — field initialisers or the constructor; calling it from a lifecycle hook throws.
+- Singletons: `@Injectable({ providedIn: 'root' })`. Feature-scoped services go in the feature's route `providers`, not root.
+- Value tokens: `InjectionToken<T>` with `factory: () => …`. No string tokens.
+
+## Zoneless
+When the app runs zoneless (`provideZonelessChangeDetection()`):
+- Change detection runs on **signal writes**, Angular-bound template events, the `async` pipe and explicit `markForCheck()` — **not** on `setTimeout`, `setInterval`, `requestAnimationFrame` or promise callbacks. State a callback changes for the UI must be a signal write.
+- Third-party libraries that rely on zone.js patches (some charts, drag-drop) get an adapter that writes signals; document the adapter in a why-comment.
+- Avoid `NgZone.run()`; it is the zone-ful escape hatch, used only to adapt a library that cannot be integrated otherwise, and called out in review.
+- `OnPush` everywhere is what makes zoneless safe — the default strategy is a review blocker.
 
 ## Refactoring and migrations
 - **Behaviour stays identical:** the same values, conditions, request payloads and timing. Anything that cannot stay identical is reported (with the reason and a proposal), never changed silently.

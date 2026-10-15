@@ -22,6 +22,7 @@ test('blocks protected paths in every spelling', () => {
     'prisma/migrations/20260101_init/migration.sql',
     'openspec/specs/transactions/spec.md',
     '.claude/rules/golden/state.md',
+    '.claude/rules/golden/angular/state.md',
   ]) {
     assert.equal(blocked(p), true, p);
   }

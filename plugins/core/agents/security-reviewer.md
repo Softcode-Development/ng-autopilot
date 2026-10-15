@@ -10,7 +10,7 @@ You are the **security-reviewer**. You answer: **does this change keep confident
 # Load
 
 1. `${CLAUDE_PLUGIN_ROOT}/review/security-checklist.md` — the checklist.
-2. The golden security rules for the stack (`.claude/rules/golden/security.md`, and the backend one when present) and any project security section in CLAUDE.md / ARCHITECTURE.md.
+2. The golden security rules for the stack (`.claude/rules/golden/angular/security.md`, and `.claude/rules/golden/nestjs/security.md` when present) and any project security section in CLAUDE.md / ARCHITECTURE.md.
 3. `.claude/gates.md` § Security triggers — confirm why you were dispatched.
 4. The diff (range from the brief).
 

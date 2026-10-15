@@ -31,6 +31,7 @@ Stay in your lane. A security finding goes to the security-reviewer's lane (flag
 
 1. Confirm the diff range and the plan.
 2. Read the deferral context (plan Out of scope, answered Open questions, worklog Decisions). Items there are not findings.
+   Walk sections A, B, C, C2, D, E, F, G, H in that order.
 3. Self-review gate: if you wrote or planned this change, abort.
 
 ## A — Correctness (almost always BLOCKING)
@@ -65,6 +66,19 @@ Golden rule `readable-code`. Mostly `SUGGESTION`; `BLOCKING` only when code is g
 
 DRY (three similar lines can beat a premature abstraction) · extract methods · single responsibility · intent-named, not technology-named · guard clauses · tell-don't-ask · named predicates over boolean soup · obvious, isolated side effects · composition over giant classes · comments explain why; step-counter comments banned.
 
+## C2 — Over-engineering
+
+Flag code that introduces unnecessary complexity — abstractions, classes, interfaces, functions, dependencies, configuration, or excessive lines of code — when a significantly simpler implementation would achieve the same intended functionality without sacrificing correctness, readability, maintainability, security, performance, reliability or any other relevant quality attribute.
+
+**More code is not automatically over-engineering.** Flag complexity that provides no meaningful benefit — not deliberate architecture that solves a real problem. A feature split into data-access / UI / pages, a typed error mapping, a store that removes duplicated state, an extracted method that names a concept: these add lines and are correct. The test is the benefit, not the size: what concrete problem does this structure solve here, today? If you can name it, it is not a finding.
+
+**Compliance is not a defence either.** Code can follow every project rule and still be overdone: a generic base class for one subclass, a factory or strategy for a single case, a config option nobody sets, a wrapper that only forwards, a new dependency for a ten-line function, three layers where one carries the logic, empty files created to satisfy a convention.
+
+How to flag:
+- Name the simpler implementation concretely (what to delete or collapse, roughly how many lines it saves) — "this is complex" without the alternative is not a finding.
+- Check the plan and worklog first: complexity that serves a recorded, near-term requirement is not over-engineering; complexity "for later" with no destination is.
+- Severity: `SUGGESTION` by default; `BLOCKING` when the extra machinery adds real risk or cost — a new dependency, a new public abstraction other code will build on, or indirection that hides a bug.
+
 ## D — Hard rules
 
 Every golden rule whose Enforcement is not lint, and every project hard rule in CLAUDE.md, checked against the diff. Violations are `BLOCKING`. Lint-enforced rules: flag only escape hatches (`eslint-disable` without a reason, a rule widened to pass).
@@ -85,7 +99,7 @@ Tier reviewers own depth. Flag: tests that always pass (no assertion, unawaited 
 
 ## H — Performance (hot paths only)
 
-Lists, signals, queries, I/O. Otherwise skip — performance comments everywhere dilute the signal.
+Lists, signals, queries, I/O. Otherwise skip — performance comments everywhere dilute the signal. The full hunting list is the golden `performance` rule (frontend, and backend when the nestjs pack is on).
 
 Unbounded lists without `track` / virtualization; template method calls; eager-loaded areas that should be lazy; heavy synchronous work in constructors/`ngOnInit` that belongs behind `@defer` or off the critical path; repeated identical HTTP calls without caching/sharing; an unjustified new dependency (note the bundle impact).
 
