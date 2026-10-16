@@ -6,7 +6,22 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test \"plugins/*/hooks/test/*.test.mjs\" \"bin/test/*.test.mjs\"",
+    "test": "node --test \"plugins/*/hooks/test/*.test.mjs\" \"plugins/*/tooling/test/*.test.mjs\" \"bin/test/*.test.mjs\"",
     "setup": "node bin/setup.mjs"
+  },
+  "devDependencies": {
+    "@angular-eslint/bundled-angular-compiler": "21.4.0",
+    "@angular-eslint/template-parser": "21.4.0",
+    "angular-eslint": "21.4.0",
+    "eslint": "9.39.4",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-security": "4.0.0",
+    "eslint-plugin-unicorn": "64.0.0",
+    "stylelint": "17.11.1",
+    "stylelint-config-standard": "40.0.0",
+    "stylelint-config-standard-scss": "17.0.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3"
   }
 }

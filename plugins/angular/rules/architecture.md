@@ -8,6 +8,11 @@ paths:
 
 The project's concrete tree and any deviation from this rule live in its ARCHITECTURE.md; the project doc wins on conflict.
 
+## Lint scope
+
+`.claude/golden.json` → `lint.strictScope` (globs, default `["src/**"]`) is where the golden rules apply **in full, as errors, with no carve-outs**. A legacy repo migrating step by step sets it to its modern folders (e.g. `["src/app/features/**"]`); everything outside keeps the project's own lint until it moves in. The project's ARCHITECTURE.md deviations table may only name paths outside the strict scope.
+- **Enforcement:** the golden ESLint and stylelint presets apply every rule to `strictScope` only; reviewers treat code inside it as having no legacy carve-outs.
+
 ## Shape
 ```
 src/app/

@@ -27,7 +27,6 @@ plugins/
   openspec/   OpenSpec planning format (plan/archive skills, doc-writer)
 bin/setup.mjs                     machine setup
 dependencies.json                 external plugins the workflow depends on
-docs/IMPORT-LOG.md                every imported item, its decision and destination
 ```
 
 Inside a plugin:
@@ -43,4 +42,4 @@ npm test     # hooks + setup planning (node --test)
 
 ## Status
 
-Harvesting from finances-app in batches; see `docs/IMPORT-LOG.md`. Project sync and drift check come after the harvest.
+Packs, rules, workflow, hooks and tooling are in place. Project sync and the drift check are next.

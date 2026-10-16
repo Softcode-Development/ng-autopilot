@@ -24,11 +24,30 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
   "packs": ["core", "angular", "testing", "primeng"],
   "planning": "plan-file",
   "testTiers": ["unit", "e2e"],
+  "sourceGlobs": ["src/**"],
+  "lint": {
+    "strictScope": ["src/app/features/**"],
+    "selectorPrefix": "app",
+    "translatePipes": ["translate"],
+    "testingToolkitImports": ["src/testing"]
+  },
+  "i18n": {
+    "sets": [{ "source": "src/assets/i18n/lt.json", "locales": ["src/assets/i18n/en.json"] }],
+    "ignoreUnusedPrefixes": []
+  },
   "protectedPaths": [
     { "glob": "prisma/schema.prisma", "flag": "db-migrator-active", "reason": "owned by the db-migrator agent" }
   ]
 }
 ```
+
+`sourceGlobs` is what counts as application code for the `plan-ready` hook and the openspec tasks gate (default `src/**`, `apps/**`, `libs/**`, `projects/**`).
+
+`lint.strictScope` is where every golden lint rule applies as an error, with no carve-outs (default `["src/**"]`). A legacy repo migrating step by step sets its modern folders here (e.g. `["src/app/features/**"]`) — chosen at install time, widened as code moves in. The other `lint` keys feed the ESLint preset: component/directive selector prefix, translation pipe names, test-only toolkit import paths, the i18n allowlist file, extra template call exceptions.
+
+`i18n.sets` drives the i18n gates: each set is a source locale file and the locales that must mirror it.
+
+`nestjs.openapi` (nestjs pack) configures the OpenAPI snapshot lint and regeneration hook — see the pack's `tooling/openapi.mjs`.
 
 `testTiers` lists the test tiers the project has (`unit`, `integration`, `e2e`). Sync creates `.claude/<tier>-testing/overrides.md` and `backlog.md` from the testing pack's templates for each one; the architect tags acceptance criteria only with these tiers; `/deliver` Step 5 dispatches only their orchestrators.
 

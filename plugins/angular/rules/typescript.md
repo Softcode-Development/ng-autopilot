@@ -35,7 +35,7 @@ A project that cannot reach a setting yet lists it, with the reason, in its ARCH
 - **No `any`.** Use `unknown` and narrow. — **Enforcement:** lint `@typescript-eslint/no-explicit-any: error`.
 - **`as` casts are restricted** to `as const`, DOM narrowing, and discriminated-union narrowing after a check. — **Enforcement:** review.
 - **No `!` non-null assertion** outside a template `@if` block. Use a guard or an `assertDefined()` helper. — **Enforcement:** lint `no-non-null-assertion`.
-- **`@ts-expect-error` / `@ts-ignore` only in `*.spec.ts`**, only when deliberately exercising an invalid type, always with a same-line reason: `// @ts-expect-error invalid input under test`. — **Enforcement:** lint `ban-ts-comment` with `allow-with-description`, overridden to error outside specs.
+- **`@ts-expect-error` / `@ts-ignore` only in `*.spec.ts`**, only when deliberately exercising an invalid type, always with a same-line reason: `// @ts-expect-error invalid input under test`. — **Enforcement:** lint `@typescript-eslint/ban-ts-comment` — banned outside specs, `allow-with-description` inside them.
 - **Explicit return types on exported functions and public methods.** — **Enforcement:** lint `explicit-module-boundary-types`.
 - **No numeric `enum`.** Use string-literal unions or `as const` objects; values match the wire spelling exactly. Numeric enums leak, break tree-shaking and stringify badly.
 

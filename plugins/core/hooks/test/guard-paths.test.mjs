@@ -23,6 +23,7 @@ test('blocks protected paths in every spelling', () => {
     'openspec/specs/transactions/spec.md',
     '.claude/rules/golden/state.md',
     '.claude/rules/golden/angular/state.md',
+    'tools/golden/eslint/preset.mjs',
   ]) {
     assert.equal(blocked(p), true, p);
   }

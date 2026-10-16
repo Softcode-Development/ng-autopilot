@@ -83,6 +83,11 @@ export const BUILT_IN_PROTECTED = [
     flag: 'golden-sync',
     reason: 'synced from the golden repo — change the rule there and re-sync',
   },
+  {
+    glob: 'tools/golden/**',
+    flag: 'golden-sync',
+    reason: 'golden tooling synced from the golden repo — change it there and re-sync; project additions go in the project\'s own config files',
+  },
 ];
 
 export function protectedPaths(config) {

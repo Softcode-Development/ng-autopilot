@@ -23,7 +23,7 @@ This document is non-negotiable. Agents read it before generating code; reviewer
 
 ## 2. Deviations from the golden rules
 
-<!-- guide: every place this project does not (yet) follow a golden rule, with the reason and the folders the exception is confined to. Example: "NgModule-based — new features also stay NgModule until <milestone>, because …". -->
+<!-- guide: every place this project does not (yet) follow a golden rule, with the reason and the folders the exception is confined to. A deviation may only name paths OUTSIDE the lint strict scope (.claude/golden.json → lint.strictScope); inside it every golden rule applies. Example: "NgModule-based outside src/app/features/ until the domain moves in". -->
 
 | Golden rule | Deviation | Confined to | Why | Until |
 |---|---|---|---|---|

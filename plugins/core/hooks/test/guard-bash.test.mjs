@@ -47,7 +47,7 @@ const BLOCK = {
 
 const ALLOW = {
   'rm -rf relative': 'rm -rf .smoke-tmp',
-  'rm -rf dist': 'rm -rf dist/seller-ui',
+  'rm -rf dist': 'rm -rf dist/web-app',
   'push plain': 'git push origin feat/x',
   'push -u': 'git push -u origin feat/x',
   'reset --soft': 'git reset --soft HEAD~1',

@@ -25,7 +25,7 @@ Every HTTP endpoint, client route and user-facing page name lives once, in `core
 | Kind | Convention | Example |
 |---|---|---|
 | File | `kebab-case` | `fast-add-sheet.component.ts` |
-| Class, interface, type | `PascalCase`; no `I` prefix | `Transaction`, `HouseholdSettings` |
+| Class, interface, type | `PascalCase`; no `I` prefix | `Order`, `AccountSettings` |
 | `as const` map keys | `PascalCase`; `SCREAMING_SNAKE` for truly static constants | `TransactionDirection.In` |
 | Function | `camelCase`, verb-first | `splitTransactionEqually` |
 | Boolean | `is/has/should/can` prefix | `isPendingConfirmation` |

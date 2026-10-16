@@ -14,7 +14,7 @@ New features add to this list, never subtract. The project's security reviewer c
 | Concern | Mechanism |
 |---|---|
 | AuthN | Identity provider JWT validated by a guard in `core/security/`; **default deny** — every controller requires the guard unless explicitly `@Public()` |
-| AuthZ | Resource-scope guard/decorator on every domain resource (tenant, household, account); per-route role checks |
+| AuthZ | Resource-scope guard/decorator on every domain resource (tenant, organisation, account); per-route role checks |
 | Input validation | Schema on every controller input; strict types in every service |
 | Rate limiting | Global throttler + stricter limits on auth and write endpoints |
 | Brute force | Login throttling + captcha on signup/login |

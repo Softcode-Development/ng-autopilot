@@ -28,9 +28,10 @@ Before writing markup that looks like a primitive (spinner, progress bar, toast,
 
 ## Tokens
 - Colors, spacing, type, radius and motion come from design tokens (CSS custom properties), so themes swap at runtime.
-- **No raw hex/rgb literals** in component TS/HTML/SCSS. — **Enforcement:** stylelint `color-no-hex` (or the project's equivalent) on component styles.
-- **No `!important`** to beat token or library styles — if you are fighting the design system, raise it instead.
-- **No `prefers-color-scheme` media queries inside components** — tokens carry both themes.
+- **No raw hex/rgb literals** in component TS/HTML/SCSS. — **Enforcement:** stylelint `color-no-hex`, `color-named`, `function-disallowed-list` (rgb/hsl) on component styles.
+- **No `!important`** to beat token or library styles — if you are fighting the design system, raise it instead. — **Enforcement:** stylelint `declaration-no-important`.
+- **No `prefers-color-scheme` media queries inside components** — tokens carry both themes. — **Enforcement:** stylelint `media-feature-name-disallowed-list`.
+- Accessibility basics in templates (alt text, label association, focusable interactive elements, …) — **Enforcement:** angular-eslint `templateAccessibility` rules.
 - Custom classes (where utilities or primitives don't fit) use BEM-like names: `.feature-element__part--modifier`.
 
 ## Accessibility minimums

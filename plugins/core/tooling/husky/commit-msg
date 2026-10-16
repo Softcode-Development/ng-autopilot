@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Golden commit-msg: Conventional Commits via commitlint.
+set -e
+
+echo "[hook:commit-msg] commitlint…"
+__EXEC__ commitlint --edit "$1"
+
+# >>> golden pack steps
+# <<< golden pack steps

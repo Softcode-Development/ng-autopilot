@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Golden pre-push: the project's affected lint / typecheck / test command
+# (.claude/gates.md → final gate). A red run blocks the push; never --no-verify.
+set -e
+
+echo "[hook:pre-push] __PREPUSH__"
+__PREPUSH__

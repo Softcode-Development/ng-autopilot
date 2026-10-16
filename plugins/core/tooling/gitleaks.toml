@@ -1,0 +1,11 @@
+# Secret scanning (pre-commit when gitleaks is installed; always in CI).
+# Default rules plus project allowlists. Every allowlist entry says WHY the
+# match is not a secret, and is scoped to exact paths.
+
+[extend]
+useDefault = true
+
+# [[allowlists]]
+# description = "Public, publishable client key — safe by design (vendor docs: …)"
+# paths = ['''^src/environments/environment\.ts$''']
+# regexes = ['''pk_live_[A-Za-z0-9]+''']

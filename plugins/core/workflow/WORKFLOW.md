@@ -182,7 +182,7 @@ Every brief to a sub-agent contains:
 - **Constraints:** commit or not, no new tests (implementer), stay in scope, escalate instead of deferring.
 - When a shared contract changes: update every typed consumer in the same pass.
 
-A tight brief ran the same work about four times faster than a loose one in finances-app.
+A tight brief has been measured to run the same work about four times faster than a loose one.
 
 ## 9. Definition of done
 
