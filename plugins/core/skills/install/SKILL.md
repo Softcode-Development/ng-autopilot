@@ -45,7 +45,7 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `i18n.sets` | locale JSON files | each set: the source-of-truth locale file + the locales that mirror it |
 | `packageManager` | lockfile | `npm` / `pnpm` |
 | `commands.typecheck` | tsconfig files | incremental, e.g. `npx tsc -p tsconfig.app.json --noEmit --incremental` |
-| `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: a command that needs an env var (e.g. `CHROME_BIN`) must work on the owner's machine as it is — check, and note it in the table |
+| `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: a command that needs an env var (e.g. `CHROME_BIN`) must work on the owner's machine as it is — check, and note it in the table. Keep machine paths out of the command: when the var is unset, propose setting it once in the owner's user environment. Finding a browser on Windows: the `App Paths\chrome.exe` / `msedge.exe` registry keys (HKLM and HKCU), then `Program Files`, `Program Files (x86)` and `%LOCALAPPDATA%` — never conclude "not installed" from one folder |
 | `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | |
 | `sourceGlobs` | layout | what counts as application code (default `src/**`) |
 
