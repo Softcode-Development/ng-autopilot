@@ -3,6 +3,7 @@
 // 0 (allow) or 2 (block — Claude Code shows stderr to the model).
 
 import { readFileSync, existsSync } from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -110,8 +111,16 @@ export const BUILT_IN_PROTECTED = [
   },
 ];
 
+// The main plugin is enabled in every project (so /autopilot:install exists
+// everywhere); generated-file protection applies only once a project is
+// installed, i.e. has an autopilot.json with packs.
+export const isInstalled = (config) => Array.isArray(config?.packs);
+
 export function protectedPaths(config) {
-  return [...BUILT_IN_PROTECTED, ...(Array.isArray(config.protectedPaths) ? config.protectedPaths : [])];
+  return [
+    ...(isInstalled(config) ? BUILT_IN_PROTECTED : []),
+    ...(Array.isArray(config?.protectedPaths) ? config.protectedPaths : []),
+  ];
 }
 
 const sameCase = (s) => (process.platform === 'win32' ? s.toLowerCase() : s);
@@ -121,21 +130,37 @@ const isInside = (child, parent) => {
   return c === p || c.startsWith(p + '/');
 };
 
-// The autopilot repo (or the installed plugin copy) these hooks run from. Agents
-// in other projects must not edit it: autopilot changes happen in a session
-// opened in the autopilot repo itself.
+// The autopilot repo and the installed plugin copy these hooks run from.
+// Agents in other projects must not edit either: autopilot changes happen in a
+// session opened in the autopilot repo itself. Claude Code installs plugins as
+// cached copies, so the repo is found through its marketplace record.
 export function autopilotFence() {
+  const fences = new Set();
   const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-  for (let d = pluginRoot; ; d = path.dirname(d)) {
-    if (existsSync(path.join(d, '.claude-plugin', 'marketplace.json'))) return toPosix(d);
-    if (path.dirname(d) === d) return toPosix(pluginRoot);
+  fences.add(toPosix(pluginRoot));
+  for (let d = pluginRoot; path.dirname(d) !== d; d = path.dirname(d)) {
+    if (existsSync(path.join(d, '.claude-plugin', 'marketplace.json'))) {
+      fences.add(toPosix(d));
+      break;
+    }
   }
+  try {
+    const known = JSON.parse(readFileSync(path.join(homedir(), '.claude', 'plugins', 'known_marketplaces.json'), 'utf8'));
+    const location = known['ng-autopilot']?.installLocation;
+    if (location) fences.add(toPosix(location));
+  } catch {
+    // no marketplace record: the plugin is not installed through Claude Code
+  }
+  return [...fences];
 }
 
 export function fenceBlocks(absPath, root, fence) {
-  if (!fence || !path.isAbsolute(fromMsysPath(absPath))) return false;
-  if (isInside(fromMsysPath(root), fence)) return false;
-  return isInside(fromMsysPath(absPath), fence);
+  const fences = (Array.isArray(fence) ? fence : [fence]).filter(Boolean);
+  if (!fences.length || !path.isAbsolute(fromMsysPath(absPath))) return false;
+  const projectRoot = fromMsysPath(root);
+  // A session opened in the autopilot repo (or around a fenced folder) may edit it.
+  if (fences.some((f) => isInside(projectRoot, f) || isInside(f, projectRoot))) return false;
+  return fences.some((f) => isInside(fromMsysPath(absPath), f));
 }
 
 export const FENCE_REASON = 'is inside the ng-autopilot workspace repo — change autopilot rules, agents and tooling in a session opened in that repo, never from a project.';

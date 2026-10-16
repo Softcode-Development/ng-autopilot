@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { evaluateBash } from '../guard-bash.mjs';
 
 const config = {
+  packs: [],
   protectedPaths: [
     { glob: 'prisma/schema.prisma', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' },
     { glob: 'prisma/migrations/**', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' },
@@ -81,8 +82,11 @@ test('protected write passes when its flag is set', () => {
   assert.equal(blocked('cat a > openspec/specs/x/spec.md', opts), true);
 });
 
-test('autopilot rules protected without any project config', () => {
-  assert.equal(blocked('echo x > .claude/rules/autopilot/a.md', {}), true);
+test('generated-file protection starts once a project is installed (autopilot.json with packs)', () => {
+  assert.equal(blocked('echo x > .claude/rules/autopilot/a.md', {}), false);
+  assert.equal(blocked('echo x > CLAUDE.md', {}), false);
+  assert.equal(blocked('echo x > .claude/rules/autopilot/a.md', { config: { packs: [] } }), true);
+  assert.equal(blocked('git push -f', {}), true, 'safety rules apply everywhere');
 });
 
 test('block reason names the rule', () => {

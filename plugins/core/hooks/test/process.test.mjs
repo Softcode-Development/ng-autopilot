@@ -14,6 +14,7 @@ const hooksDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const project = mkdtempSync(path.join(tmpdir(), 'autopilot-hooks-'));
 mkdirSync(path.join(project, '.claude'), { recursive: true });
 writeFileSync(path.join(project, '.claude', 'autopilot.json'), JSON.stringify({
+  packs: [],
   protectedPaths: [{ glob: 'prisma/schema.prisma', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' }],
 }));
 

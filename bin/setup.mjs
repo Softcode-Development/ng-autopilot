@@ -64,6 +64,8 @@ function json(claude, cliArgs) {
 
 const baseName = (id) => id.split('@')[0];
 
+export const MAIN_PLUGIN = 'autopilot';
+
 export function planSteps({ installed, marketplaces, autopilotName, autopilotPlugins, deps, source }) {
   const steps = [];
   const known = new Set(marketplaces.map((m) => m.name));
@@ -74,7 +76,12 @@ export function planSteps({ installed, marketplaces, autopilotName, autopilotPlu
     const id = `${name}@${autopilotName}`;
     const p = has(id);
     if (!p) steps.push({ why: `install ${id} (user scope)`, args: ['plugin', 'install', id, '--scope', 'user'] });
-    if (!p || p.enabled) steps.push({ why: `disable ${id} at user scope — projects enable their packs`, args: ['plugin', 'disable', id, '--scope', 'user'] });
+    if (name === MAIN_PLUGIN) {
+      // The main plugin carries /autopilot:install, so it is on everywhere.
+      if (p && !p.enabled) steps.push({ why: `enable ${id} at user scope — /autopilot:install must exist in every project`, args: ['plugin', 'enable', id, '--scope', 'user'] });
+    } else if (!p || p.enabled) {
+      steps.push({ why: `disable ${id} at user scope — each project enables the packs it uses`, args: ['plugin', 'disable', id, '--scope', 'user'] });
+    }
   }
   for (const dep of deps) {
     const present = installed.find((p) => baseName(p.id) === dep.name);

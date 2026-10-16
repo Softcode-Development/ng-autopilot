@@ -5,6 +5,7 @@ import { canonicalisePath, globToRegExp, fromMsysPath } from '../lib/hook-io.mjs
 
 const root = process.platform === 'win32' ? 'C:/repo' : '/repo';
 const config = {
+  packs: [],
   protectedPaths: [
     { glob: 'prisma/schema.prisma', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' },
     { glob: 'prisma/migrations/**', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' },

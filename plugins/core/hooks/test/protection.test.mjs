@@ -12,8 +12,9 @@ import { segments, tokens, writeTargets } from '../lib/shell-writes.mjs';
 const win = process.platform === 'win32';
 const root = win ? 'C:/work/shop' : '/work/shop';
 const fence = win ? 'C:/apps/ng-autopilot' : '/apps/ng-autopilot';
-const bash = (cmd, opts = {}) => evaluateBash(cmd, { root, fence, ...opts }).blocked;
-const edit = (p, opts = {}) => evaluatePath(p, { root, fence, ...opts }).blocked;
+const INSTALLED = { packs: ['angular'] };
+const bash = (cmd, opts = {}) => evaluateBash(cmd, { root, fence, config: INSTALLED, ...opts }).blocked;
+const edit = (p, opts = {}) => evaluatePath(p, { root, fence, config: INSTALLED, ...opts }).blocked;
 
 test('parser: segments respect quotes; tokens unquote', () => {
   assert.deepEqual(segments('a && b | c; d'), ['a', 'b', 'c', 'd']);
@@ -99,5 +100,5 @@ test('fence: a session opened in the autopilot repo may edit it', () => {
 });
 
 test('fence: the real fence resolves to the repo holding the marketplace manifest', () => {
-  assert.match(autopilotFence(), /ng-autopilot$/i);
+  assert.ok(autopilotFence().some((f) => /ng-autopilot$/i.test(f)), autopilotFence().join(', '));
 });
