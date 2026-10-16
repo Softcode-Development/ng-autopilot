@@ -34,6 +34,16 @@ Inside a plugin:
 - `templates/` — starting points for a project's docs and `.claude/` files.
 - `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it.
 
+## Pacing an agent-built project
+
+Agents type the code; **the bottleneck is the owner — proposing, answering, deciding.** Plan in changes and cycle time, not calendar weeks.
+
+- **The plan gate is your main lever:** a sloppy plan costs about three times as much downstream (bad slicing, wrong questions, rework). Spend the time there.
+- **Verify in staging** before stacking more changes on top; a break found late costs the speed advantage.
+- **Optimise the slowest gate first** when feedback feels slow.
+- **Park new ideas** in the backlog instead of growing the change in flight.
+- **Keep the project rules accurate** — a wrong line there misleads every session.
+
 ## Tests
 
 ```bash
