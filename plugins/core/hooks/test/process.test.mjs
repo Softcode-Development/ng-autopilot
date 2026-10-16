@@ -148,6 +148,16 @@ test('an OpenSpec change gates source edits on design.md open questions and show
   }
 });
 
+test('fence: the real hook refuses edits to the golden repo from another project, allows them inside it', () => {
+  const goldenRoot = path.resolve(hooksDir, '..', '..', '..');
+  const target = path.join(goldenRoot, 'plugins', 'core', 'rules', 'work-modes.md');
+  const fromProject = runHook('guard-paths.mjs', edit(target));
+  assert.equal(fromProject.code, 2);
+  assert.match(fromProject.stderr, /golden workspace repo/);
+  assert.equal(runHook('guard-paths.mjs', edit(target), goldenRoot).code, 0);
+  assert.equal(runHook('guard-bash.mjs', bash(`rm "${target.replace(/\\/g, '/')}"`)).code, 2);
+});
+
 test('hooks allow on empty or malformed input instead of crashing', () => {
   for (const script of ['guard-bash.mjs', 'guard-paths.mjs', 'plan-ready.mjs', 'out-of-scope.mjs']) {
     assert.equal(runHook(script, '').code, 0, `${script} empty`);

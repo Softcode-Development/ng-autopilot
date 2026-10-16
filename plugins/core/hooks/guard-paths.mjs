@@ -2,15 +2,19 @@
 // flow has set its flag file. Synced golden rules are always protected.
 
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
 import {
   readEnvelope, projectRoot, loadGoldenConfig, protectedPaths, flagIsSet, globToRegExp,
-  canonicalisePath, finish,
+  canonicalisePath, finish, fenceBlocks, goldenFence, fromMsysPath, FENCE_REASON,
 } from './lib/hook-io.mjs';
 
 const NAME = 'guard-paths';
 
-export function evaluatePath(filePath, { root = '.', config = {}, isFlagSet = () => false } = {}) {
+export function evaluatePath(filePath, { root = '.', config = {}, isFlagSet = () => false, fence = null } = {}) {
   if (!filePath) return { blocked: false };
+  const absolute = path.isAbsolute(fromMsysPath(filePath)) ? filePath : path.resolve(fromMsysPath(root), filePath);
+  if (fenceBlocks(absolute, root, fence)) return { blocked: true, reason: `${filePath} ${FENCE_REASON}` };
   const rel = canonicalisePath(filePath, root);
   for (const p of protectedPaths(config)) {
     if (globToRegExp(p.glob).test(rel) && !isFlagSet(p.flag)) {
@@ -28,5 +32,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     root,
     config: loadGoldenConfig(root),
     isFlagSet: (flag) => flagIsSet(root, flag),
+    fence: goldenFence(),
   }));
 }

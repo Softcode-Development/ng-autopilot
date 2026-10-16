@@ -6,7 +6,9 @@
 import { fileURLToPath } from 'node:url';
 import {
   readEnvelope, projectRoot, loadGoldenConfig, protectedPaths, flagIsSet, globToRegExp, finish,
+  canonicalisePath, fenceBlocks, goldenFence, FENCE_REASON,
 } from './lib/hook-io.mjs';
+import { writeTargets } from './lib/shell-writes.mjs';
 
 const NAME = 'guard-bash';
 
@@ -68,28 +70,20 @@ function readsSecretFile(command) {
   return SECRET_FILE.test(command);
 }
 
-// A redirect counts only at a token boundary, so prose mentions of `>` inside
-// quoted text do not trip it.
-function writeTargets(command) {
-  const targets = [];
-  const redirect = /(?:^|[\s&|0-9])>{1,2}\s*([^\s|;&'"`>]+)/g;
-  const tee = /\btee\s+(?:-[A-Za-z]+\s+)*([^\s|;&'"`>]+)/g;
-  for (const m of command.matchAll(redirect)) targets.push(m[1]);
-  for (const m of command.matchAll(tee)) targets.push(m[1]);
-  return targets.map((t) => t.replace(/^\.\//, ''));
-}
-
-export function evaluateBash(command, { root = '.', config = {}, isFlagSet = () => false } = {}) {
+export function evaluateBash(command, { root = '.', config = {}, isFlagSet = () => false, fence = null } = {}) {
   if (!command) return { blocked: false };
   for (const rule of RULES) {
     if (rule.test(command)) return { blocked: true, reason: rule.reason };
   }
-  const targets = writeTargets(command);
-  for (const p of protectedPaths(config)) {
-    const re = globToRegExp(p.glob);
-    const hit = targets.find((t) => re.test(t));
-    if (hit && !isFlagSet(p.flag)) {
-      return { blocked: true, reason: `shell write into ${hit} refused: ${p.reason}. (Flag: .claude/.flags/${p.flag})` };
+  for (const target of writeTargets(command)) {
+    if (fenceBlocks(target, root, fence)) {
+      return { blocked: true, reason: `shell write to ${target} refused: it ${FENCE_REASON}` };
+    }
+    const rel = canonicalisePath(target, root);
+    for (const p of protectedPaths(config)) {
+      if (globToRegExp(p.glob).test(rel) && !isFlagSet(p.flag)) {
+        return { blocked: true, reason: `shell write to ${rel} refused: ${p.reason}. (Flag: .claude/.flags/${p.flag})` };
+      }
     }
   }
   return { blocked: false };
@@ -102,5 +96,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     root,
     config: loadGoldenConfig(root),
     isFlagSet: (flag) => flagIsSet(root, flag),
+    fence: goldenFence(),
   }));
 }

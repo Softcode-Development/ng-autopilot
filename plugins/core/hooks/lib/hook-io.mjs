@@ -4,6 +4,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export function readEnvelope() {
   try {
@@ -34,7 +35,7 @@ export function fromMsysPath(p, platform = process.platform) {
 export function canonicalisePath(input, root) {
   if (!input) return '';
   input = fromMsysPath(input);
-  root = fromMsysPath(root);
+  root = path.resolve(fromMsysPath(root));
   const abs = toPosix(path.isAbsolute(input) ? path.normalize(input) : path.resolve(root, input));
   const r = toPosix(root).replace(/\/$/, '');
   const sameCase = process.platform === 'win32' ? (s) => s.toLowerCase() : (s) => s;
@@ -43,12 +44,16 @@ export function canonicalisePath(input, root) {
   return abs;
 }
 
-// `**` crosses folders, `*` stays inside one segment.
+// `**` crosses folders, `*` stays inside one segment, `{a,b}` alternates.
 export function globToRegExp(glob) {
   let re = '';
   for (let i = 0; i < glob.length; i++) {
     const c = glob[i];
-    if (c === '*') {
+    if (c === '{') {
+      const end = glob.indexOf('}', i);
+      re += `(?:${glob.slice(i + 1, end).split(',').map((alt) => alt.replace(/[\\^$+?.()|[\]]/g, '\\$&')).join('|')})`;
+      i = end;
+    } else if (c === '*') {
       if (glob[i + 1] === '*') {
         re += '.*';
         i++;
@@ -89,6 +94,16 @@ export const BUILT_IN_PROTECTED = [
     reason: 'generated index — project-specific rules go in .claude/rules/project.md',
   },
   {
+    glob: '.husky/{pre-commit,commit-msg,pre-push}',
+    flag: 'golden-sync',
+    reason: 'generated git hooks — project steps go in .husky/pre-commit.local',
+  },
+  {
+    glob: '.claude/golden{.json,.lock.json}',
+    flag: 'golden-sync',
+    reason: 'install answers and generated-file fingerprints — change them through /core:install or sync',
+  },
+  {
     glob: 'tools/golden/**',
     flag: 'golden-sync',
     reason: 'golden tooling synced from the golden repo — change it there and re-sync; project additions go in the project\'s own config files',
@@ -98,6 +113,32 @@ export const BUILT_IN_PROTECTED = [
 export function protectedPaths(config) {
   return [...BUILT_IN_PROTECTED, ...(Array.isArray(config.protectedPaths) ? config.protectedPaths : [])];
 }
+
+const sameCase = (s) => (process.platform === 'win32' ? s.toLowerCase() : s);
+const isInside = (child, parent) => {
+  const c = sameCase(toPosix(child)).replace(/\/$/, '');
+  const p = sameCase(toPosix(parent)).replace(/\/$/, '');
+  return c === p || c.startsWith(p + '/');
+};
+
+// The golden repo (or the installed plugin copy) these hooks run from. Agents
+// in other projects must not edit it: golden changes happen in a session
+// opened in the golden repo itself.
+export function goldenFence() {
+  const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+  for (let d = pluginRoot; ; d = path.dirname(d)) {
+    if (existsSync(path.join(d, '.claude-plugin', 'marketplace.json'))) return toPosix(d);
+    if (path.dirname(d) === d) return toPosix(pluginRoot);
+  }
+}
+
+export function fenceBlocks(absPath, root, fence) {
+  if (!fence || !path.isAbsolute(fromMsysPath(absPath))) return false;
+  if (isInside(fromMsysPath(root), fence)) return false;
+  return isInside(fromMsysPath(absPath), fence);
+}
+
+export const FENCE_REASON = 'is inside the golden workspace repo — change golden rules, agents and tooling in a session opened in that repo, never from a project.';
 
 export function flagIsSet(root, flag) {
   return existsSync(path.join(root, '.claude', '.flags', flag));
