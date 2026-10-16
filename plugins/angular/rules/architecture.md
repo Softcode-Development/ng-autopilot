@@ -10,8 +10,14 @@ The project's concrete tree and any deviation from this rule live in the project
 
 ## Lint scope
 
-`.claude/autopilot.json` → `lint.strictScope` (globs, default `["src/**"]`) is where the autopilot rules apply **in full, as errors, with no carve-outs**. A legacy repo migrating step by step sets it to its modern folders (e.g. `["src/app/features/**"]`); everything outside keeps the project's own lint until it moves in. The Legacy carve-outs table in the project rules may only name paths outside the strict scope.
-- **Enforcement:** the autopilot ESLint and stylelint presets apply every rule to `strictScope` only; reviewers treat code inside it as having no legacy carve-outs.
+`.claude/autopilot.json` → `lint.strictScope` (globs, default `["src/**"]`) is where the autopilot rules apply **in full, as errors, with no exceptions**. A legacy repo sets it to its modern folders (e.g. `["src/app/features/**"]`).
+
+## Legacy stays legacy
+
+Code outside `lint.strictScope` is legacy. It is never developed further: bug fixes only, made in the file's existing style; no new features, no in-place modernisation. New work, and every replacement of a legacy screen, is built inside the strict scope. Legacy conventions, the legacy design system and legacy UI libraries are never written into the project rules and never reach new code.
+- **Why:** a half-modernised legacy file is worse than either state, and every new feature built on legacy patterns extends what has to be replaced.
+- **Enforcement:** the autopilot ESLint and stylelint presets apply every rule to `strictScope` only; the plan gate puts new work inside it; reviewers flag new features or rewrites outside it.
+- **Exempt:** the one-line wiring that mounts a new feature (a lazy route, a menu entry) in the legacy shell.
 
 ## Shape
 ```

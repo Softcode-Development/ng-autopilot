@@ -20,4 +20,5 @@ This project runs on the **ng-autopilot AI workspace**. Development is AI-only: 
 
 - **Every change goes through `/deliver`**: plan → plan gate (owner) → implement → checkpoint → test phase → smoke/visual gates → review → triage → final gate → PR (owner approves the push). `/review` reviews any branch or PR.
 - **Mode:** `fast` / `balanced` (default) / `strict`. **Planning format:** __PLANNING__.
-- **Packs:** __PACKS__. **Test tiers:** __TEST_TIERS__. **Lint strict scope:** __STRICT_SCOPE__ — every autopilot rule applies there with no carve-outs.
+- **Packs:** __PACKS__. **Test tiers:** __TEST_TIERS__. **Lint strict scope:** __STRICT_SCOPE__ — every autopilot rule applies there with no exceptions. Code outside it is legacy: bug fixes only, in the file's existing style; new work goes inside the scope.
+- **API:** __API__

@@ -46,6 +46,7 @@ test('after sync: no errors; warnings name what the owner still has to do', () =
   assert.match(text, /legacy AI file\/folder still present: \.claude\/agents/);
   assert.match(text, /unexpected rule file \.claude\/rules\/old-rules\.md/);
   assert.match(text, /git hooks not active/);
+  assert.match(text, /api\.baseUrl \/ api\.docsUrl not set/);
   assert.doesNotMatch(text, /not enabled/);
 });
 

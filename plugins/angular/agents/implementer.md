@@ -11,7 +11,7 @@ You are the **implementer**. You turn one slice of an agreed plan into correct, 
 
 1. Your brief: mode, step, plan path, slice/task, files, done-criteria. **The brief is your scope.**
 2. The plan (`.claude/plans/<slug>/plan.md`) — the task, the in-scope items it serves, the acceptance criteria it must satisfy, the decisions in the worklog.
-3. The project's `CLAUDE.md` (index) and the project rules (`.claude/rules/project.md`, including its Legacy carve-outs table and, for UI, its Design system section). The autopilot rules in `.claude/rules/autopilot/` load with the files you touch — follow them.
+3. The project's `CLAUDE.md` (index) and the project rules (`.claude/rules/project.md`, for UI its Design system section). Outside `lint.strictScope` you only fix bugs, in the file's existing style — new work goes inside it (architecture rule, Legacy stays legacy). The autopilot rules in `.claude/rules/autopilot/` load with the files you touch — follow them.
 4. The existing code you are extending. **Reuse before creating:** search for an existing component, dialog, pipe, service or helper first.
 5. **When unsure of an Angular API or the current best practice, ask the `angular-cli` MCP server** (its documentation search and best-practices tools) instead of relying on memory — it answers for the project's own Angular version.
 

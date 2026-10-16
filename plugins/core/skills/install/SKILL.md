@@ -37,7 +37,7 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `packs` | `package.json` dependencies | **Always** `core`, `angular`, `testing`, `openspec`. **UI library pack** — PrimeNG in use → `primeng`; spartan/ng in use → `spartan`; both → both; **neither → ask the owner which UI library the project will use** (PrimeNG or spartan/ng + Tailwind) and install that pack. **Backend pack** — `nestjs` only when the repo has a NestJS app; without a backend there is nothing for it to do. |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
 | `testTiers` | runner + spec files; e2e framework config | **`["unit", "integration", "e2e"]` — always all three.** A tier the repo does not run yet still gets its overrides and backlog (placeholders); the first `/write-<tier>-tests` sets the tier up (framework choice — Playwright for a new e2e suite — config, scripts) and fills the overrides. Note in the table which tiers start from zero. |
-| `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside, legacy code keeps its current lint |
+| `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside is legacy: bug fixes only, never developed further (architecture rule, Legacy stays legacy) |
 | `lint.selectorPrefix` | `angular.json` → `prefix` | |
 | `lint.translatePipes` | i18n library | `translate` (ngx-translate), `transloco`, … |
 | `lint.testingToolkit` | existing shared test-helper folder | **`src/testing`** unless one already exists. Sync creates it with its README; specs import it, production code can't (ESLint, by relative path and alias); it is linted with the spec rules even outside `strictScope` |
@@ -48,6 +48,7 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: it must work on the owner's machine as it is, with no setup step. Don't add env vars or machine paths because a doc says "set X": tools usually find what they need themselves (karma-chrome-launcher finds Chrome in `%LOCALAPPDATA%`, `Program Files` and `Program Files (x86)` when `CHROME_BIN` is unset). Verify by asking the tool what it resolves, and never conclude "not installed" from one folder |
 | `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | |
 | `sourceGlobs` | layout | what counts as application code (default `src/**`) |
+| `api.baseUrl`, `api.docsUrl` | environment files (`apiUrl`, `baseUrl`, proxy config), README / docs / old AI files / your memory for Swagger / OpenAPI / `api-docs` links | the dev API base and its Swagger/OpenAPI docs URL. **Not found → ask the owner; never guess.** A project with no backend API: `api.none: true`. Sync writes them into the generated `CLAUDE.md`, so every session has them |
 
 ## Phase 2 — Inventory the existing AI setup (owner decides)
 
@@ -57,7 +58,7 @@ Present one table, a row per file or folder, with a decision:
 
 | Decision | Meaning |
 |---|---|
-| **extract → delete** | holds project knowledge — extracted into `.claude/rules/project.md` (or gates.md / an overrides file) in Phase 3, then deleted |
+| **extract → delete** | holds knowledge **new work needs** — extracted into `.claude/rules/project.md` (or gates.md / an overrides file) in Phase 3, then deleted. Files that only describe legacy code (its conventions, design system, UI-library rules, scaffolding) are **delete**, not extract |
 | **delete** | replaced by the ng-autopilot workspace (generic agents, skills, instructions, Copilot copies, old review reports) |
 | **archive** | finished plans → `.claude/plans/archive/` |
 | **keep** | genuinely project-specific and not expressible as a rule (rare — say why) |
@@ -67,12 +68,13 @@ Nothing is touched until the owner approves the table.
 ## Phase 3 — Extract project knowledge (owner reviews)
 
 1. Write `.claude/rules/project.md` from `${CLAUDE_PLUGIN_ROOT}/templates/project/project.md`, filled with what the extracted files say. Follow the autopilot `ai-first-docs` rule:
-   - **only what is specific to this project or differs from the autopilot rules** — never restate a autopilot rule;
+   - **only what new work needs and the autopilot rules don't already say** — the test for every line: "would an agent building a new feature inside `lint.strictScope` go wrong without it?" Typical keepers: API and auth/session facts, markets/tenants and their config, i18n source-of-truth workflow, security fields, frozen packages new code must not bump, do-not-modify list, how a new feature is mounted in the legacy shell;
+   - **legacy stays legacy:** no legacy conventions, no legacy design system, no legacy UI-library rules, no legacy component idioms — legacy code is only bug-fixed, in its own style, and the file itself shows that style;
    - each rule keeps its why, enforcement and precedent;
-   - legacy carve-outs only for paths **outside** `lint.strictScope`;
    - nothing stale (old versions, finished migrations, superseded advice).
+   - Also extract project facts from the owner's auto-memory for this repo (`~/.claude/projects/<repo>/memory/`) by the same test — it exists on one machine only.
 2. Draft `.claude/gates.md` (commands, smoke map, visual-gate setup, security triggers) and, per test tier, `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs) from the same sources and `package.json`.
-3. Show the owner `project.md` and list anything you deliberately left out and why. The owner approves.
+3. Show the owner `project.md` with a coverage map: every section of every extract → delete file → where it went (`project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
 4. Commit: `docs: extract project knowledge into project rules`.
 
 ## Phase 4 — Remove the old setup

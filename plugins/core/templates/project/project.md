@@ -10,9 +10,11 @@ paths:
 
 # <Project> — project rules
 
-<!-- guide: everything specific to THIS project, and only that. The autopilot rules (.claude/rules/autopilot/) already cover
+<!-- guide: what NEW work in this project needs, and only that. The autopilot rules (.claude/rules/autopilot/) already cover
      Angular, TypeScript, state, templates, forms, i18n, security, design discipline, testing and the workflow — never
      restate them here; record only what differs, what is unique, or what the autopilot rules leave to the project.
+     Legacy stays legacy: no legacy conventions, legacy design system or legacy UI-library rules here — legacy code is
+     only bug-fixed, in its own style, and is replaced inside lint.strictScope.
      Every rule follows the autopilot ai-first-docs anatomy: Rule / Why / Enforcement / Exempt / Precedent.
      Loaded on demand (paths above): agents get it when they open project files. Owned by the project — sync never
      overwrites it. This is the project's only agent-facing doc. -->
@@ -30,25 +32,20 @@ paths:
 ## Architecture specifics
 
 - **Where things live:** <the project's concrete folders for core services, shared dialogs/components, constants, test toolkit, …>.
-- **Patterns to reuse:** <the HTTP/API layer, error handling, market/tenant config, auth flow, logging — each with its path and a correct-shape example>.
-- **Legacy carve-outs** — only for paths OUTSIDE `lint.strictScope` (autopilot.json); inside it every autopilot rule applies:
-
-  | Autopilot rule | Legacy pattern allowed | Confined to | Why | Until |
-  |---|---|---|---|---|
-  | <rule> | <pattern> | <paths> | <reason> | <milestone> |
+- **Patterns to reuse:** <the HTTP/API layer, error handling, market/tenant config, auth flow, logging — what new code calls, each with its path and a correct-shape example>.
+- **Mounting new features in the legacy shell:** <where a new feature's lazy route and menu entry go — the only legacy edits new work makes>.
 
 ## Domain and API
 
 - **Glossary:** <terms, local-language words, what they are not>.
-- **API source of truth:** <Swagger/OpenAPI URL>; verify params and enum spellings there before wiring.
 - **Auth / session facts:** <token lifetimes, refresh behaviour, error codes the client must handle>.
 - **Known API behaviours:** <quirks an agent must know>.
 - **Enums (wire spelling):** <enum → values → i18n key map location>.
 
 ## Design system
 
-The UI law for this project — the autopilot design-discipline rule defers to this section.
-- **Primitive library:** <library + version; what is legacy and must not be extended>.
+The UI law for NEW code — the autopilot design-discipline rule defers to this section. Never the legacy design system.
+- **Primitive library:** <library + version new screens are built with>.
 - **Catalog:** <the primitives in use and their imports; what to add when needed>.
 - **Tokens and theme:** <token source, how components consume them, dark mode>.
 - **Layout:** <containers, breakpoints, navigation, overlays, toasts>.

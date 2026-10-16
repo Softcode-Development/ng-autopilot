@@ -36,4 +36,4 @@ paths:
 
 **Enforcement:** review; lint `no-restricted-imports` for `BehaviorSubject` outside allowed folders where a project opts in.
 
-**Legacy carve-out:** a project mid-migration lists its legacy state pattern and the folders it is confined to in the Legacy carve-outs table in the project rules; new code follows this rule.
+**Legacy:** state code outside `lint.strictScope` keeps its pattern until it is replaced (architecture rule, Legacy stays legacy); new code follows this rule.

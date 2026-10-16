@@ -42,7 +42,16 @@ export function normaliseConfig(raw) {
   c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
   c.stylelint = { scss: false, tailwind: false, ...(c.stylelint ?? {}) };
+  c.api ??= {};
   return c;
+}
+
+export const apiMissing = (c) => !c.api.none && (!c.api.baseUrl || !c.api.docsUrl);
+
+function apiLine(c) {
+  if (c.api.none) return 'none — the project calls no backend API.';
+  if (apiMissing(c)) return '**not set** — before wiring any endpoint, ask the owner for the API base and docs URLs, then record them with `/autopilot:install` (reconfigure).';
+  return `base \`${c.api.baseUrl}\` · docs ${c.api.docsUrl} — verify every endpoint, param and enum spelling in the docs before wiring; the docs win over existing code.`;
 }
 
 const exec = (c) => (c.packageManager === 'pnpm' ? 'pnpm exec' : 'npx --no-install');
@@ -100,6 +109,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     __PACKS__: c.packs.join(', '),
     __TEST_TIERS__: c.testTiers.length ? c.testTiers.join(', ') : 'none',
     __STRICT_SCOPE__: c.lint.strictScope.map((g) => `\`${g}\``).join(', '),
+    __API__: apiLine(c),
   }), 'generated');
   const steps = huskySteps(c);
   const values = { __EXEC__: exec(c), __TYPECHECK__: c.commands.typecheck, __PREPUSH__: c.commands.prePush };

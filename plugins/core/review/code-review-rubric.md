@@ -87,7 +87,7 @@ Common: `any`; template method calls; `*ngIf`/`*ngFor` or decorator inputs in ne
 
 ## E — Architecture
 
-The project rules (§ Architecture specifics) + autopilot `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, the project's declared legacy carve-outs respected (new code doesn't extend a legacy pattern outside its confined folders).
+The project rules (§ Architecture specifics) + autopilot `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, legacy stays legacy (outside `lint.strictScope`: bug fixes only, in the file's existing style — a new feature, a rewrite or a modernised fragment there is a finding; new code never extends a legacy pattern).
 
 ## F — Design system (UI diffs only)
 

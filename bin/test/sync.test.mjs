@@ -99,6 +99,11 @@ test('the generated lint-staged config loads and covers only the lint scope, the
   ]);
 });
 
+test('CLAUDE.md carries the API line: "not set" until the owner gives the URLs', () => {
+  assert.match(read('CLAUDE.md'), /\*\*API:\*\* \*\*not set\*\* — before wiring any endpoint, ask the owner/);
+  assert.match(read('CLAUDE.md'), /Code outside it is legacy: bug fixes only/);
+});
+
 test('second sync changes nothing', () => {
   const r = sync(root);
   assert.deepEqual([r.written, r.created, r.merged, r.removed], [[], [], [], []]);
@@ -157,6 +162,19 @@ test('openspec pack: with openspec planning, the git gate runs in pre-commit and
   sync(root);
   assert.match(read('.husky/pre-commit'), /tasks-gate\.mjs --pre-commit/);
   assert.match(read('.husky/commit-msg'), /tasks-gate\.mjs --commit-msg "\$1"/);
+  config();
+  sync(root);
+  git('add', '-A');
+  git('commit', '-q', '-m', 'back to the base config');
+});
+
+test('API URLs from autopilot.json reach CLAUDE.md; api.none says there is no API', () => {
+  config({ api: { baseUrl: 'https://dev.api.example.test', docsUrl: 'https://dev.api.example.test/api/docs' } });
+  sync(root);
+  assert.match(read('CLAUDE.md'), /\*\*API:\*\* base `https:\/\/dev\.api\.example\.test` · docs https:\/\/dev\.api\.example\.test\/api\/docs — verify every endpoint/);
+  config({ api: { none: true } });
+  sync(root);
+  assert.match(read('CLAUDE.md'), /\*\*API:\*\* none — the project calls no backend API/);
   config();
   sync(root);
   git('add', '-A');
