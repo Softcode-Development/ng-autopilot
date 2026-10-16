@@ -24,13 +24,14 @@ test('blocks protected paths in every spelling', () => {
     '.claude/rules/golden/state.md',
     '.claude/rules/golden/angular/state.md',
     'tools/golden/eslint/preset.mjs',
+    'CLAUDE.md',
   ]) {
     assert.equal(blocked(p), true, p);
   }
 });
 
 test('allows ordinary paths', () => {
-  for (const p of ['src/app/app.ts', 'prisma/seed.ts', 'openspec/changes/x/proposal.md', '.claude/rules/project/a.md', '']) {
+  for (const p of ['src/app/app.ts', 'prisma/seed.ts', 'openspec/changes/x/proposal.md', '.claude/rules/project.md', 'docs/CLAUDE.md', '']) {
     assert.equal(blocked(p), false, p);
   }
 });

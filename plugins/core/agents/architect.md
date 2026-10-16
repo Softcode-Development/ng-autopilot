@@ -10,7 +10,7 @@ You are the **architect**. You turn a request into a plan an implementer can exe
 # Read first
 
 1. `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` — § 2 (plan sections) and § 3 Steps 1–2.
-2. The project's `CLAUDE.md`, then the docs it points to that the change touches: ARCHITECTURE.md, FEATURES.md, DOMAIN.md or DATA_MODEL.md, DESIGN_SYSTEM.md for UI.
+2. The project's `CLAUDE.md` (index) and the project rules (`.claude/rules/project.md`), and the backlog (`.claude/plans/backlog.md`).
 3. The code the change touches — enough to name real files, routes, services and patterns to reuse. Code wins over older docs.
 4. The plan template: `${CLAUDE_PLUGIN_ROOT}/templates/plans/plan.md` (plan-file format). For `openspec`, follow the openspec pack's instructions instead.
 

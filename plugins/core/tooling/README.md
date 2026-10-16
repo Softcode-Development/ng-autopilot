@@ -13,7 +13,7 @@ What sync writes into a project. Golden-owned files go under `tools/golden/` (pr
 | `core/tooling/husky/*` | `.husky/pre-commit`, `commit-msg`, `pre-push` | golden (regenerated); project steps in `.husky/pre-commit.local` |
 | — | `eslint.config.mjs` → `...goldenAngular({ tsconfigRootDir: import.meta.dirname, ...golden.lint })` + project blocks | project |
 | — | `stylelint.config.mjs` → `goldenStylelint({ scss, tailwind, strictScope })` | project |
-| — | `commitlint.config.cjs` → extends the golden base + `scope-enum` from FEATURES.md slugs | project |
+| — | `commitlint.config.cjs` → extends the golden base + `scope-enum` from the project's capability slugs (the project rules' Product section) | project |
 | `core/tooling/lint-staged/lintstagedrc.json` | `.lintstagedrc.json` | project (created once) |
 | `core/tooling/prettier/*` | `.prettierrc.json`, `.prettierignore` | project (created once) |
 | `core/tooling/editorconfig` | `.editorconfig` | project (created once) |

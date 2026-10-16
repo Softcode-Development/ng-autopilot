@@ -8,7 +8,7 @@ paths:
 
 # PrimeNG
 
-Library-specific half of the design discipline; the project's DESIGN_SYSTEM.md holds the catalog and theme preset.
+Library-specific half of the design discipline; the project rules' Design system section holds the catalog and theme preset.
 
 - **Upstream catalog:** https://primeng.org (and the PrimeNG MCP server when configured) is the audit authority for "does a primitive exist".
 - **Theme package licence:** `@primeuix/themes` 3.x is commercial. Pin `@primeuix/themes` below 3.0 (and PrimeNG to the matching free line). `@primeng/themes` is deprecated. — **Enforcement:** static check on `package.json`.

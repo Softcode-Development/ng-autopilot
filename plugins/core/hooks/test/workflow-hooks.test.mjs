@@ -21,7 +21,7 @@ mode: balanced
 
 ## Out of scope
 
-- CSV export → FEATURES.md orders-export
+- CSV export → backlog: orders-export
 - Bulk delete → not doing: no user need yet
 - None
 

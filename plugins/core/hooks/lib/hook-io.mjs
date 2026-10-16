@@ -84,6 +84,11 @@ export const BUILT_IN_PROTECTED = [
     reason: 'synced from the golden repo — change the rule there and re-sync',
   },
   {
+    glob: 'CLAUDE.md',
+    flag: 'golden-sync',
+    reason: 'generated index — project-specific rules go in .claude/rules/project.md',
+  },
+  {
     glob: 'tools/golden/**',
     flag: 'golden-sync',
     reason: 'golden tooling synced from the golden repo — change it there and re-sync; project additions go in the project\'s own config files',

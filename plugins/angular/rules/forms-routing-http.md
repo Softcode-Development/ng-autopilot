@@ -24,4 +24,4 @@ paths:
 - Interceptors are functional (`HttpInterceptorFn`) and live in `core/http/interceptors/`: auth header, correlation id, error mapping, retry policy, telemetry. Global concerns are never duplicated per service.
 - HTTP services return `Observable<T>`; components convert at their edge (`toSignal()`), or the server-state layer consumes them.
 - Feature code calls a typed API layer (a generated client, or one service method per endpoint) — no raw URL strings at call sites (see constants rule).
-- Response types reuse the domain interfaces; verify real endpoint params and enum spellings against the API docs named in DOMAIN.md before wiring.
+- Response types reuse the domain interfaces; verify real endpoint params and enum spellings against the API docs named in the project rules' Domain and API section before wiring.

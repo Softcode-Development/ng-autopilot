@@ -19,9 +19,9 @@ Packs are installed once per machine and **enabled per project** (the project's 
 .claude-plugin/marketplace.json   local plugin marketplace
 plugins/
   core/       workflow (WORKFLOW.md, /deliver, /review), agents (architect, reviewers), hooks, core rules, templates
-  angular/    Angular 19–21 rules, implementer agent, angular-cli MCP, DESIGN_SYSTEM template
+  angular/    Angular 19–21 rules, implementer agent, angular-cli MCP
   testing/    unit / integration / e2e orchestrator → author → reviewer agents, write-*-tests skills
-  nestjs/     backend rules, db-migrator, DATA_MODEL template
+  nestjs/     backend rules, db-migrator
   spartan/    spartan/ng + Tailwind design-system add-on
   primeng/    PrimeNG design-system add-on + MCP
   openspec/   OpenSpec planning format (plan/archive skills, doc-writer)

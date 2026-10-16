@@ -5,7 +5,7 @@ paths:
 
 # State management
 
-**State is split by origin, not by feature. Each origin has exactly one mechanism**, declared in the project's ARCHITECTURE.md state table.
+**State is split by origin, not by feature. Each origin has exactly one mechanism**, declared in the project rules' Architecture specifics section (`.claude/rules/project.md`).
 
 | Origin | Mechanism | Used for |
 |---|---|---|
@@ -36,4 +36,4 @@ paths:
 
 **Enforcement:** review; lint `no-restricted-imports` for `BehaviorSubject` outside allowed folders where a project opts in.
 
-**Legacy carve-out:** a project mid-migration lists its legacy state pattern and the folders it is confined to in ARCHITECTURE.md; new code follows this rule.
+**Legacy carve-out:** a project mid-migration lists its legacy state pattern and the folders it is confined to in the Legacy carve-outs table in the project rules; new code follows this rule.

@@ -25,7 +25,7 @@ export function evaluateOutOfScope(rel, content, { config = {} } = {}) {
   const list = offenders.map((o) => `  - ${o.length > 160 ? o.slice(0, 159) + '…' : o}`).join('\n');
   return {
     blocked: true,
-    reason: `${offenders.length} "Out of scope" bullet(s) in ${rel} have no destination:\n${list}\nEnd each with "→ <plan slug | FEATURES.md entry | not doing: reason>".`,
+    reason: `${offenders.length} "Out of scope" bullet(s) in ${rel} have no destination:\n${list}\nEnd each with "→ <plan slug | backlog: item | not doing: reason>".`,
   };
 }
 

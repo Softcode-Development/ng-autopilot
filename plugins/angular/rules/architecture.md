@@ -6,11 +6,11 @@ paths:
 
 # Angular architecture
 
-The project's concrete tree and any deviation from this rule live in its ARCHITECTURE.md; the project doc wins on conflict.
+The project's concrete tree and any deviation from this rule live in the project rules' Architecture specifics section (`.claude/rules/project.md`); the project rules win on conflict.
 
 ## Lint scope
 
-`.claude/golden.json` → `lint.strictScope` (globs, default `["src/**"]`) is where the golden rules apply **in full, as errors, with no carve-outs**. A legacy repo migrating step by step sets it to its modern folders (e.g. `["src/app/features/**"]`); everything outside keeps the project's own lint until it moves in. The project's ARCHITECTURE.md deviations table may only name paths outside the strict scope.
+`.claude/golden.json` → `lint.strictScope` (globs, default `["src/**"]`) is where the golden rules apply **in full, as errors, with no carve-outs**. A legacy repo migrating step by step sets it to its modern folders (e.g. `["src/app/features/**"]`); everything outside keeps the project's own lint until it moves in. The Legacy carve-outs table in the project rules may only name paths outside the strict scope.
 - **Enforcement:** the golden ESLint and stylelint presets apply every rule to `strictScope` only; reviewers treat code inside it as having no legacy carve-outs.
 
 ## Shape
@@ -63,7 +63,7 @@ One file per component, directive, pipe or service; a class used by two consumer
 - **Standalone everything.** No `NgModule` in new code. Providers in `app.config.ts` (`provideRouter`, `provideHttpClient(withInterceptors([...]))`, …).
 - **`inject()`** for DI in new code.
 - **`ChangeDetectionStrategy.OnPush`** on every component. — **Enforcement:** lint `prefer-on-push-component-change-detection`.
-- **Zoneless** when the project's Angular version supports it and ARCHITECTURE.md declares it; then never add `zone.js` to polyfills.
+- **Zoneless** when the project's Angular version supports it and the project rules (§ Architecture specifics) declare it; then never add `zone.js` to polyfills.
 - **Signals are the primary reactive primitive**: `signal`, `computed`, `linkedSignal`, `effect`, `resource`. RxJS only where signals cannot express the flow (debounced streams, websockets), converted with `toSignal()` at the boundary.
 
 ## Dependency injection

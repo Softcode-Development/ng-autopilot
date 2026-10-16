@@ -74,7 +74,7 @@ function writePlan(slug, frontmatterStatus, openQuestion) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, 'plan.md'), [
     '---', `slug: ${slug}`, `status: ${frontmatterStatus}`, '---', '',
-    '## Out of scope', '', '- CSV export → FEATURES.md orders-export', '',
+    '## Out of scope', '', '- CSV export → backlog: orders-export', '',
     '## Open questions', '', openQuestion ? '- [ ] Q: default sort?' : '- [x] Q: default sort? → A: newest', '',
     '## Tasks', '', '- [x] 1. service', '- [ ] 2. list page', '',
   ].join('\n'));
@@ -102,7 +102,7 @@ test('out-of-scope validates the post-edit plan content', () => {
   const dir = writePlan('orders-list', 'approved', false);
   try {
     const planPath = path.join(dir, 'plan.md');
-    const drop = { tool_name: 'Edit', tool_input: { file_path: planPath, old_string: '- CSV export → FEATURES.md orders-export', new_string: '- CSV export' } };
+    const drop = { tool_name: 'Edit', tool_input: { file_path: planPath, old_string: '- CSV export → backlog: orders-export', new_string: '- CSV export' } };
     assert.equal(runHook('out-of-scope.mjs', drop).code, 2);
     const keep = { tool_name: 'Edit', tool_input: { file_path: planPath, old_string: 'orders-export', new_string: 'orders-csv' } };
     assert.equal(runHook('out-of-scope.mjs', keep).code, 0);

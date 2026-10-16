@@ -30,6 +30,8 @@ Development here is AI-only. The owner decides — scope, open questions, produc
 | Worklog | `.claude/plans/<slug>/worklog.md` | yes | driver (gates, triage, handoff), implementer (slice notes) |
 | Review reports | `.claude/reviews/<date>-<slug>-<reviewer>.md` | no (run output) | reviewers |
 | Gate config | `.claude/gates.md` | yes | owner / once per project |
+| Project rules | `.claude/rules/project.md` | yes | owner (created once by install) |
+| Backlog | `.claude/plans/backlog.md` | yes | driver/architect |
 | Finished plans | `.claude/plans/archive/<YYYY-MM-DD>-<slug>/` | yes | driver at close |
 
 With the `openspec` planning format, the plan is the OpenSpec change folder (`openspec/changes/<slug>/`: proposal, design, spec deltas, tasks) and the worklog lives in it; everything else is identical.
@@ -40,7 +42,7 @@ Frontmatter: `slug`, `title`, `mode`, `planning`, `status` (`draft` → `approve
 
 1. **Goal** — the outcome, in the owner's words where possible.
 2. **In scope** — bullets; each one must end up with a code path.
-3. **Out of scope** — every bullet ends with `→ <destination>` (a later plan, a FEATURES.md entry, or `→ not doing: <reason>`).
+3. **Out of scope** — every bullet ends with `→ <destination>` (a later plan, `→ backlog: <item>` in `.claude/plans/backlog.md`, or `→ not doing: <reason>`).
 4. **Open questions** — `- [ ] Q: …` with options and a recommendation; answered as `- [x] Q: … → A: … (YYYY-MM-DD)`.
 5. **Acceptance criteria** — `WHEN … THEN …`, each tagged with its test tier: `[unit]`, `[e2e]`, `[integration]`, or `[manual]` with a reason.
 6. **UI surface** — routes and states the change touches (empty, loading, error, filled, dialog open, validation shown); where the visual gate starts looking.
@@ -69,7 +71,7 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - **Owner:** only to override the mode or format.
 
 ### Step 1 — Plan
-- **architect** writes `.claude/plans/<slug>/plan.md` (status `draft`) from the request, the project docs (CLAUDE.md, ARCHITECTURE.md, FEATURES.md, DOMAIN.md/DATA_MODEL.md, DESIGN_SYSTEM.md) and the code.
+- **architect** writes `.claude/plans/<slug>/plan.md` (status `draft`) from the request, the project's CLAUDE.md (index) and the project rules (`.claude/rules/project.md`), and the code.
 - Every question only the owner can answer goes into **Open questions** with options and a recommendation — never guessed.
 - Scope that does not fit goes into **Out of scope** with a destination. Never silently dropped.
 - Driver creates the branch `<type>/<slug>` and commits the plan.
@@ -165,12 +167,12 @@ For each finding the driver picks exactly one:
 |---|---|---|
 | **fix** | A real defect, or a cheap improvement a rule backs | `fix` (+ commit sha after) |
 | **decline** | The reviewer is wrong or the gain is not worth it | `decline: <one-line reason>` |
-| **defer** | Valid but outside this change's scope | `defer → <destination>` (plan, FEATURES.md entry, backlog) |
+| **defer** | Valid but outside this change's scope | `defer → <destination>` (plan, backlog item in `.claude/plans/backlog.md`) |
 | **owner** | A product or UX decision with more than one reasonable answer | the question, options, recommendation, and the owner's answer |
 
 Bugs and rule violations are never declined. A declined BLOCKING needs a reason that cites a rule or the plan.
 
-**Example:** *B1 double submit on save* → fix. *S2 use a Map for a 10-item list* → decline: no measurable gain. *S3 add CSV export* → defer → FEATURES.md `orders-export`. *Q1 show archived orders by default?* → owner, options (a) hidden (b) shown (c) toggle defaulting to hidden; recommend (c).
+**Example:** *B1 double submit on save* → fix. *S2 use a Map for a 10-item list* → decline: no measurable gain. *S3 add CSV export* → defer → backlog: `orders-export`. *Q1 show archived orders by default?* → owner, options (a) hidden (b) shown (c) toggle defaulting to hidden; recommend (c).
 
 ## 8. Dispatch briefs
 

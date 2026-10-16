@@ -9,7 +9,7 @@ paths:
 
 # spartan/ng + Tailwind
 
-Library-specific half of the design discipline; the project's DESIGN_SYSTEM.md holds the catalog ("Available now" / "Add when needed") and its token names.
+Library-specific half of the design discipline; the project rules' Design system section holds the catalog ("Available now" / "Add when needed") and its token names.
 
 - **Two layers:** `@spartan-ng/brain` (`brn-*`) — headless, a11y-correct primitives; helm (`hlm-*`) — Tailwind-styled wrappers generated into the shared UI library. Every interactive element uses a `brn-*`/`hlm-*` pair.
 - **Upstream catalog:** https://www.spartan.ng/components is the audit authority. `ls node_modules/@spartan-ng/brain/` undersells it (brain is a strict subset of the helm catalog), and so does listing the local generated folder.

@@ -1,6 +1,6 @@
 # Code-review rubric
 
-The rubric the `code-reviewer` agent applies. It cites the golden rules (`.claude/rules/golden/*`) and the project's CLAUDE.md / ARCHITECTURE.md instead of restating them, so each rule lives in one place; this file is about **how to look**.
+The rubric the `code-reviewer` agent applies. It cites the golden rules (`.claude/rules/golden/*`) and the project rules (`.claude/rules/project.md`) instead of restating them, so each rule lives in one place; this file is about **how to look**.
 
 ## Lanes
 
@@ -81,17 +81,17 @@ How to flag:
 
 ## D — Hard rules
 
-Every golden rule whose Enforcement is not lint, and every project hard rule in CLAUDE.md, checked against the diff. Violations are `BLOCKING`. Lint-enforced rules: flag only escape hatches (`eslint-disable` without a reason, a rule widened to pass).
+Every golden rule whose Enforcement is not lint, and every project hard rule in the project rules, checked against the diff. Violations are `BLOCKING`. Lint-enforced rules: flag only escape hatches (`eslint-disable` without a reason, a rule widened to pass).
 
 Common: `any`; template method calls; `*ngIf`/`*ngFor` or decorator inputs in new code; `@for` without a stable `track`; hardcoded routes/API paths/page-name keys (especially HTML attribute literals lint can't see); `console.log`; PII in logs; `[innerHTML]` without sanitising; a raw interactive element where a design-system primitive exists; inline template over 15 lines.
 
 ## E — Architecture
 
-Project ARCHITECTURE.md + golden `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, the project's declared legacy carve-outs respected (new code doesn't extend a legacy pattern outside its confined folders).
+The project rules (§ Architecture specifics) + golden `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, the project's declared legacy carve-outs respected (new code doesn't extend a legacy pattern outside its confined folders).
 
 ## F — Design system (UI diffs only)
 
-Project DESIGN_SYSTEM.md + golden `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
+The project rules' Design system section + golden `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
 
 ## G — Tests (gross level only)
 
