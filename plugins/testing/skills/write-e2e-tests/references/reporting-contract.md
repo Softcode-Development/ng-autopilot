@@ -10,7 +10,7 @@ The `e2e-test-author` subagent must return this exact structure at the end of ev
 - **Subject components / files**: absolute paths to the production components, services, effects, and routes the spec exercises (the source-of-truth files the author read to map the behaviour surface)
 - **Detected framework**: e.g. `cypress`, `playwright` (from the `detect-stack` skill in `e2e` mode)
 - **Detected stack**: e.g. `angular`, `react`, `react-native`, `vue` (from `detect-stack`)
-- **Mode**: `mock-first` or `real-api` — and if `real-api`, the explicit reason it was chosen (`golden-path`, `contract-verification`, `known-regression`, `user-requested`)
+- **Mode**: `mock-first` or `real-api` — and if `real-api`, the explicit reason it was chosen (`autopilot-path`, `contract-verification`, `known-regression`, `user-requested`)
 - **Behaviours covered**: bulleted list (`verb + object + condition` per line)
 - **Behaviours skipped (§6 forbid list)**: list of `<would-have-been-line> — §6: <reason>` for behaviours not tested because `core.md` §6 forbids it (third-party widget internals, translated text, visual concern, etc.), or "none"
 - **Behaviours marked unreachable / out-of-scope (§5.1)**: list of `<bullet> — unreachable: <reason>` for behaviours not tested because they are gated off in this env, removed from product, or reachable only via a code path that was deleted. Document the gate or invariant. Not-the-same-thing as §6.

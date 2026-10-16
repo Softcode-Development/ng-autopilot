@@ -28,7 +28,7 @@ export function activeChanges(root) {
 
 function sourcePrefixes(root) {
   try {
-    const cfg = JSON.parse(readFileSync(path.join(root, '.claude', 'golden.json'), 'utf8'));
+    const cfg = JSON.parse(readFileSync(path.join(root, '.claude', 'autopilot.json'), 'utf8'));
     const globs = cfg.sourceGlobs ?? [];
     return globs.length ? globs.map((g) => g.replace(/\*.*$/, '')) : DEFAULT_SOURCE_GLOBS;
   } catch {

@@ -11,13 +11,13 @@ Development here is AI-only. The owner decides — scope, open questions, produc
 | Role | Who | Writes | Never |
 |---|---|---|---|
 | **Driver** | The main session running `/deliver` | Branch, commits of plan/worklog, gate records, triage decisions | Reviews its own implementation; skips a gate |
-| **architect** | `core:architect` (opus) | The plan | Writes application code |
-| **implementer** | the stack pack's implementer (e.g. `angular:implementer`, sonnet) | Production code, one commit per slice; fixes from review | Writes new test files; edits protected paths; reviews its own code |
-| **db-migrator** | `nestjs:db-migrator` (when the pack is enabled) | Schema + migrations (flag-protected paths) | Edits application code |
-| **Test orchestrators** | `testing:<tier>-test-orchestrator` | Specs, `test(...)` commits | Edits production code |
-| **plan-reviewer** | `core:plan-reviewer` (opus, read-only) | Review report | Judges code quality; patches anything |
-| **code-reviewer** | `core:code-reviewer` (opus, read-only) | Review report | Re-checks plan conformance; patches anything |
-| **security-reviewer** | `core:security-reviewer` (sonnet, read-only) | Review report | Weakens a control to make something pass |
+| **architect** | `autopilot:architect` (opus) | The plan | Writes application code |
+| **implementer** | the stack pack's implementer (e.g. `autopilot-angular:implementer`, sonnet) | Production code, one commit per slice; fixes from review | Writes new test files; edits protected paths; reviews its own code |
+| **db-migrator** | `autopilot-nestjs:db-migrator` (when the pack is enabled) | Schema + migrations (flag-protected paths) | Edits application code |
+| **Test orchestrators** | `autopilot-testing:<tier>-test-orchestrator` | Specs, `test(...)` commits | Edits production code |
+| **plan-reviewer** | `autopilot:plan-reviewer` (opus, read-only) | Review report | Judges code quality; patches anything |
+| **code-reviewer** | `autopilot:code-reviewer` (opus, read-only) | Review report | Re-checks plan conformance; patches anything |
+| **security-reviewer** | `autopilot:security-reviewer` (sonnet, read-only) | Review report | Weakens a control to make something pass |
 | **Owner** | You | Answers, approvals | — |
 
 **No self-review:** the agent that wrote code never reviews it; reviewers abort if asked to review their own output.
@@ -66,7 +66,7 @@ Append-only, newest last, one `##` heading per entry:
 Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 
 ### Step 0 — Intake
-- **Driver:** read the request; pick the mode (work-modes rule) and the planning format (project default from `.claude/golden.json`, or the owner's override). Say both in one line.
+- **Driver:** read the request; pick the mode (work-modes rule) and the planning format (project default from `.claude/autopilot.json`, or the owner's override). Say both in one line.
 - **Pre-flight:** working tree clean (or only this change's files); no other plan `in-progress` unless the owner says to run in parallel.
 - **Owner:** only to override the mode or format.
 
@@ -92,10 +92,10 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - Driver runs the existing affected tests (the project's test command from `.claude/gates.md`). Failures are fixed by the implementer in the slice's scope. Worklog: `## Checkpoint`.
 
 ### Step 5 — Test phase
-- On the finished feature, dispatch the tiers listed in `.claude/golden.json` → `testTiers`, in this order, sequentially:
-  1. `testing:unit-test-orchestrator` — new and changed code;
-  2. `testing:e2e-test-orchestrator` — mocked journeys for new and changed pages;
-  3. `testing:integration-test-orchestrator` — re-run the **pre-existing** integration specs of every module touched, too.
+- On the finished feature, dispatch the tiers listed in `.claude/autopilot.json` → `testTiers`, in this order, sequentially:
+  1. `autopilot-testing:unit-test-orchestrator` — new and changed code;
+  2. `autopilot-testing:e2e-test-orchestrator` — mocked journeys for new and changed pages;
+  3. `autopilot-testing:integration-test-orchestrator` — re-run the **pre-existing** integration specs of every module touched, too.
 - Each orchestrator applies the project's `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs).
 - The plan's acceptance criteria are the coverage list. **Coverage contract:** every criterion has a test at its tagged tier, or a worklog deferral with a destination.
 - Worklog: `## Test phase`.

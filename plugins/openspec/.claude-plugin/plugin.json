@@ -1,6 +1,8 @@
 {
-  "name": "openspec",
+  "name": "autopilot-openspec",
   "version": "0.1.0",
-  "description": "OpenSpec planning format for the golden workflow: plan and archive skills, doc-writer agent, OpenSpec rules.",
-  "author": { "name": "Andrejus Lazauskas" }
+  "description": "OpenSpec planning format for the autopilot workflow: plan and archive skills, doc-writer agent, OpenSpec rules.",
+  "author": {
+    "name": "Andrejus Lazauskas"
+  }
 }

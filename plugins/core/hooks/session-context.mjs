@@ -3,7 +3,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { projectRoot, loadGoldenConfig } from './lib/hook-io.mjs';
+import { projectRoot, loadAutopilotConfig } from './lib/hook-io.mjs';
 import { findActivePlans, lastWorklogHeading } from './lib/plans.mjs';
 
 function git(root, args) {
@@ -14,7 +14,7 @@ function git(root, args) {
 export function describeContext({ branch, lastCommit, dirty, config, plans, lastEntry = () => '' }) {
   const lines = [];
   lines.push(`[context] branch: ${branch || '(unknown)'} · last commit: ${lastCommit || '(none)'} · uncommitted files: ${dirty}`);
-  const packs = Array.isArray(config.packs) ? config.packs.join(', ') : '(no .claude/golden.json)';
+  const packs = Array.isArray(config.packs) ? config.packs.join(', ') : '(no .claude/autopilot.json)';
   const tiers = Array.isArray(config.testTiers) && config.testTiers.length ? config.testTiers.join(', ') : 'none declared';
   lines.push(`[context] packs: ${packs} · planning: ${config.planning || 'plan-file'} · test tiers: ${tiers} · default mode: balanced`);
   if (plans.length === 0) {
@@ -39,7 +39,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     branch: git(root, ['rev-parse', '--abbrev-ref', 'HEAD']),
     lastCommit: git(root, ['log', '-1', '--pretty=format:%h %s']),
     dirty: status ? status.split('\n').length : 0,
-    config: loadGoldenConfig(root),
+    config: loadAutopilotConfig(root),
     plans: findActivePlans(root),
     lastEntry: (p) => lastWorklogHeading(p.path),
   }) + '\n');

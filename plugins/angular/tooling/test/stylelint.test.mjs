@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 
 import stylelint from 'stylelint';
 
-import { goldenStylelint } from '../stylelint/preset.mjs';
+import { autopilotStylelint } from '../stylelint/preset.mjs';
 
 const lint = async (code, codeFilename, options) => {
-  const { results } = await stylelint.lint({ code, codeFilename, config: goldenStylelint(options) });
+  const { results } = await stylelint.lint({ code, codeFilename, config: autopilotStylelint(options) });
   return results[0].warnings.map((w) => w.rule);
 };
 

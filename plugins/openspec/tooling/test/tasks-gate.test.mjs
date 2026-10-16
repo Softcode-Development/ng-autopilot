@@ -15,7 +15,7 @@ const write = (rel, text) => {
 };
 
 beforeEach(() => {
-  root = mkdtempSync(path.join(tmpdir(), 'golden-tasks-'));
+  root = mkdtempSync(path.join(tmpdir(), 'autopilot-tasks-'));
   git('init', '-q');
   git('config', 'user.email', 't@example.com');
   git('config', 'user.name', 't');

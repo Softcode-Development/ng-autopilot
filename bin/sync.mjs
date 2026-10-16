@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Golden sync: bring a project in line with the golden repo, driven by the
-// project's .claude/golden.json (written by /core:install).
+// Autopilot sync: bring a project in line with the autopilot repo, driven by the
+// project's .claude/autopilot.json (written by /autopilot:install).
 //
 //   node bin/sync.mjs <project-dir>             apply
 //   node bin/sync.mjs <project-dir> --dry-run   show what would change
 //
-// Generated files are rewritten and fingerprinted (.claude/golden.lock.json);
+// Generated files are rewritten and fingerprinted (.claude/autopilot.lock.json);
 // project-owned files are created once and never overwritten; settings.json is
 // merged. Idempotent: a second run changes nothing.
 
@@ -15,32 +15,32 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
-import { MARKETPLACE, PACKS, renderFiles, requiredDevDependencies } from './lib/render.mjs';
+import { PACKS, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
 
-export const GOLDEN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const AUTOPILOT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const readJson = (file, fallback) => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : fallback);
 const union = (a = [], b = []) => [...a, ...b.filter((x) => !a.includes(x))];
 
-export function mergeSettings(existing, golden, packs) {
+export function mergeSettings(existing, autopilot, packs) {
   const merged = structuredClone(existing ?? {});
-  merged.$schema ??= golden.$schema;
+  merged.$schema ??= autopilot.$schema;
   merged.permissions ??= {};
-  for (const list of ['allow', 'ask', 'deny']) merged.permissions[list] = union(merged.permissions[list], golden.permissions[list]);
+  for (const list of ['allow', 'ask', 'deny']) merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]);
   merged.enabledPlugins ??= {};
-  for (const p of PACKS) merged.enabledPlugins[`${p}@${MARKETPLACE}`] = packs.includes(p);
+  for (const p of PACKS) merged.enabledPlugins[pluginId(p)] = packs.includes(p);
   return merged;
 }
 
-function goldenCommit() {
-  const r = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: GOLDEN_ROOT, encoding: 'utf8' });
+function autopilotCommit() {
+  const r = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: AUTOPILOT_ROOT, encoding: 'utf8' });
   return r.status === 0 ? r.stdout.trim() : 'unknown';
 }
 
 export function sync(projectRoot, { dryRun = false } = {}) {
-  const configFile = path.join(projectRoot, '.claude', 'golden.json');
-  if (!existsSync(configFile)) throw new Error(`${configFile} not found — run /core:install first.`);
-  const { config, files } = renderFiles(GOLDEN_ROOT, JSON.parse(readFileSync(configFile, 'utf8')));
+  const configFile = path.join(projectRoot, '.claude', 'autopilot.json');
+  if (!existsSync(configFile)) throw new Error(`${configFile} not found — run /autopilot:install first.`);
+  const { config, files } = renderFiles(AUTOPILOT_ROOT, JSON.parse(readFileSync(configFile, 'utf8')));
   const previousLock = readJson(path.join(projectRoot, LOCK_PATH), { files: {} });
   const report = { written: [], unchanged: [], created: [], kept: [], merged: [], removed: [], conflicts: [] };
   const write = (rel, content) => {
@@ -61,7 +61,7 @@ export function sync(projectRoot, { dryRun = false } = {}) {
         continue;
       }
       const lockedHash = previousLock.files[f.path];
-      if (current !== null && lockedHash && fingerprint(current) !== lockedHash) report.conflicts.push(`${f.path}: was hand-edited — overwritten with the golden version`);
+      if (current !== null && lockedHash && fingerprint(current) !== lockedHash) report.conflicts.push(`${f.path}: was hand-edited — overwritten with the autopilot version`);
       write(f.path, f.content);
       report.written.push(f.path);
     } else if (f.kind === 'once') {
@@ -93,7 +93,7 @@ export function sync(projectRoot, { dryRun = false } = {}) {
     report.removed.push(rel);
   }
 
-  const lock = { golden: { commit: goldenCommit() }, files: Object.fromEntries(Object.entries(lockFiles).sort()) };
+  const lock = { autopilot: { commit: autopilotCommit() }, files: Object.fromEntries(Object.entries(lockFiles).sort()) };
   const lockText = `${JSON.stringify(lock, null, 2)}\n`;
   const lockFull = path.join(projectRoot, LOCK_PATH);
   const previousLockText = existsSync(lockFull) ? readFileSync(lockFull, 'utf8') : '';
@@ -118,7 +118,7 @@ function print(report, dryRun) {
   section(`Project files ${verb}created`, report.created);
   section(`Merged (${verb}update)`, report.merged);
   section(`Generated files ${verb}removed`, report.removed);
-  section('Project files kept (already exist — check they use the golden presets)', report.kept.filter((p) => /config|lintstaged|prettier|editorconfig|gitleaks/.test(p)));
+  section('Project files kept (already exist — check they use the autopilot presets)', report.kept.filter((p) => /config|lintstaged|prettier|editorconfig|gitleaks/.test(p)));
   section('Conflicts', report.conflicts);
   section('devDependencies to install', report.missingDevDependencies);
   console.log(`\nUnchanged: ${report.unchanged.length}. Fingerprints ${report.lockChanged ? `${verb}updated` : 'unchanged'}.`);

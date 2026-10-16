@@ -14,7 +14,7 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 const tester = new RuleTester({ languageOptions: { parser: templateParser } });
 
-const dir = mkdtempSync(path.join(tmpdir(), 'golden-tpl-'));
+const dir = mkdtempSync(path.join(tmpdir(), 'autopilot-tpl-'));
 after(() => rmSync(dir, { recursive: true, force: true }));
 
 writeFileSync(path.join(dir, 'orders.component.ts'), `
@@ -54,7 +54,7 @@ describe('component analysis', () => {
   });
 });
 
-tester.run('golden/template-no-method-calls', noMethodCalls, {
+tester.run('autopilot/template-no-method-calls', noMethodCalls, {
   valid: [
     { filename: orders, code: '<p>{{ count() }} / {{ total() }} / {{ title() }} / {{ selected() }}</p>' },
     { filename: orders, code: '@if (count() > 0) { <span>{{ store.items().length }}</span> }' },
@@ -74,7 +74,7 @@ tester.run('golden/template-no-method-calls', noMethodCalls, {
   ],
 });
 
-tester.run('golden/template-no-hardcoded-text', noHardcodedText, {
+tester.run('autopilot/template-no-hardcoded-text', noHardcodedText, {
   valid: [
     { code: "<h1>{{ 'orders.title' | translate }}</h1>" },
     { code: '<span>{{ count }} · 42 € — %</span>' },

@@ -1,44 +1,44 @@
 {
-  "name": "claude-golden",
+  "name": "ng-autopilot",
   "owner": {
     "name": "Andrejus Lazauskas"
   },
-  "description": "Golden AI-driven development workspace for Angular projects: a stack-neutral core plus opt-in packs.",
+  "description": "ng-autopilot — AI-driven development workspace for Angular projects: a workflow core plus opt-in packs.",
   "plugins": [
     {
-      "name": "core",
+      "name": "autopilot",
       "source": "./plugins/core",
       "description": "Stack-neutral workflow, agent conduct, git safety, work modes, doc templates."
     },
     {
-      "name": "angular",
+      "name": "autopilot-angular",
       "source": "./plugins/angular",
       "description": "Angular 19-21 rulebook: architecture, state, templates, forms, design discipline, security."
     },
     {
-      "name": "testing",
+      "name": "autopilot-testing",
       "source": "./plugins/testing",
       "description": "Unit, integration and e2e test orchestration: orchestrator -> author -> reviewer agents, write-*-tests skills, detect-stack."
     },
     {
-      "name": "nestjs",
+      "name": "autopilot-nestjs",
       "source": "./plugins/nestjs",
       "description": "NestJS backend add-on: layering, error taxonomy, OpenAPI, shared contracts, data model."
     },
     {
-      "name": "spartan",
+      "name": "autopilot-spartan",
       "source": "./plugins/spartan",
       "description": "spartan/ng + Tailwind design-system add-on."
     },
     {
-      "name": "primeng",
+      "name": "autopilot-primeng",
       "source": "./plugins/primeng",
       "description": "PrimeNG design-system add-on."
     },
     {
-      "name": "openspec",
+      "name": "autopilot-openspec",
       "source": "./plugins/openspec",
-      "description": "OpenSpec planning format for the golden workflow: plan and archive skills, doc-writer agent, OpenSpec rules."
+      "description": "OpenSpec planning format for the autopilot workflow: plan and archive skills, doc-writer agent, OpenSpec rules."
     }
   ]
 }

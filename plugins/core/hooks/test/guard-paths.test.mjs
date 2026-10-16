@@ -21,9 +21,9 @@ test('blocks protected paths in every spelling', () => {
     'apps/../prisma/schema.prisma',
     'prisma/migrations/20260101_init/migration.sql',
     'openspec/specs/transactions/spec.md',
-    '.claude/rules/golden/state.md',
-    '.claude/rules/golden/angular/state.md',
-    'tools/golden/eslint/preset.mjs',
+    '.claude/rules/autopilot/state.md',
+    '.claude/rules/autopilot/angular/state.md',
+    'tools/autopilot/eslint/preset.mjs',
     'CLAUDE.md',
   ]) {
     assert.equal(blocked(p), true, p);
@@ -42,8 +42,8 @@ test('flag unlocks only its own paths', () => {
   assert.equal(blocked('openspec/specs/x/spec.md', db), true);
 });
 
-test('golden-sync flag unlocks synced rules', () => {
-  assert.equal(blocked('.claude/rules/golden/a.md', (f) => f === 'golden-sync'), false);
+test('autopilot-sync flag unlocks synced rules', () => {
+  assert.equal(blocked('.claude/rules/autopilot/a.md', (f) => f === 'autopilot-sync'), false);
 });
 
 test('backslash paths are normalised', () => {

@@ -6,9 +6,9 @@ import path from 'node:path';
 
 import { ESLint } from 'eslint';
 
-import { goldenAngular } from '../eslint/preset.mjs';
+import { autopilotAngular } from '../eslint/preset.mjs';
 
-const root = mkdtempSync(path.join(tmpdir(), 'golden-preset-'));
+const root = mkdtempSync(path.join(tmpdir(), 'autopilot-preset-'));
 after(() => rmSync(root, { recursive: true, force: true }));
 
 const write = (rel, text) => {
@@ -57,7 +57,7 @@ write('src/app/features/core/constants/route-paths.ts', `export const go = (r: {
 const eslint = new ESLint({
   cwd: root,
   overrideConfigFile: true,
-  overrideConfig: goldenAngular({ tsconfigRootDir: root, strictScope: ['src/app/features/**'], constantsGlobs: ['**/core/constants/**'] }),
+  overrideConfig: autopilotAngular({ tsconfigRootDir: root, strictScope: ['src/app/features/**'], constantsGlobs: ['**/core/constants/**'] }),
 });
 
 const rulesIn = async (rel) => {
@@ -65,7 +65,7 @@ const rulesIn = async (rel) => {
   return new Set(result.messages.map((m) => m.ruleId ?? `fatal: ${m.message}`));
 };
 
-test('in scope: every golden rule fires on the component', async () => {
+test('in scope: every autopilot rule fires on the component', async () => {
   const rules = await rulesIn('src/app/features/orders/orders.component.ts');
   for (const r of [
     'no-restricted-syntax', // enum, @Input, BehaviorSubject
@@ -78,13 +78,13 @@ test('in scope: every golden rule fires on the component', async () => {
 
 test('in scope: template rules fire on the external template', async () => {
   const rules = await rulesIn('src/app/features/orders/orders.component.html');
-  for (const r of ['golden/template-no-method-calls', 'golden/template-no-hardcoded-text', '@angular-eslint/template/prefer-control-flow']) {
+  for (const r of ['autopilot/template-no-method-calls', 'autopilot/template-no-hardcoded-text', '@angular-eslint/template/prefer-control-flow']) {
     assert.ok(rules.has(r), `expected ${r}, got ${[...rules].join(', ')}`);
   }
 });
 
-test('out of scope: legacy code is untouched by golden rules', async () => {
-  // Files outside the scope match no golden config block; ESLint reports them
+test('out of scope: legacy code is untouched by autopilot rules', async () => {
+  // Files outside the scope match no autopilot config block; ESLint reports them
   // as "no matching configuration" (a warning), never as a rule error.
   for (const rel of ['src/app/legacy/legacy.component.ts', 'src/app/legacy/legacy.component.html']) {
     const [result] = await eslint.lintFiles([path.join(root, rel)]);
@@ -105,5 +105,5 @@ test('constants files may hold route literals', async () => {
 });
 
 test('tsconfigRootDir is required', () => {
-  assert.throws(() => goldenAngular({}), /tsconfigRootDir is required/);
+  assert.throws(() => autopilotAngular({}), /tsconfigRootDir is required/);
 });

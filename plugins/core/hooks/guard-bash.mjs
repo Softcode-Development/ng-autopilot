@@ -5,8 +5,8 @@
 
 import { fileURLToPath } from 'node:url';
 import {
-  readEnvelope, projectRoot, loadGoldenConfig, protectedPaths, flagIsSet, globToRegExp, finish,
-  canonicalisePath, fenceBlocks, goldenFence, FENCE_REASON,
+  readEnvelope, projectRoot, loadAutopilotConfig, protectedPaths, flagIsSet, globToRegExp, finish,
+  canonicalisePath, fenceBlocks, autopilotFence, FENCE_REASON,
 } from './lib/hook-io.mjs';
 import { writeTargets } from './lib/shell-writes.mjs';
 
@@ -94,8 +94,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = projectRoot();
   finish(NAME, evaluateBash(envelope?.tool_input?.command ?? '', {
     root,
-    config: loadGoldenConfig(root),
+    config: loadAutopilotConfig(root),
     isFlagSet: (flag) => flagIsSet(root, flag),
-    fence: goldenFence(),
+    fence: autopilotFence(),
   }));
 }

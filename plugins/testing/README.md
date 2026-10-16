@@ -1,6 +1,6 @@
 # testing pack
 
-Test orchestration for the golden workflow's test phase (WORKFLOW Step 5) and for direct use (`/write-unit-tests`, `/write-integration-tests`, `/write-e2e-tests`).
+Test orchestration for the autopilot workflow's test phase (WORKFLOW Step 5) and for direct use (`/write-unit-tests`, `/write-integration-tests`, `/write-e2e-tests`).
 
 | Piece | Role |
 |---|---|
@@ -14,7 +14,7 @@ Test orchestration for the golden workflow's test phase (WORKFLOW Step 5) and fo
 
 ## How a project connects
 
-1. `.claude/golden.json` lists the tiers the project has: `"testTiers": ["unit", "e2e"]`.
+1. `.claude/autopilot.json` lists the tiers the project has: `"testTiers": ["unit", "e2e"]`.
 2. Sync writes `.claude/<tier>-testing/overrides.md` and `backlog.md` from the templates for each listed tier (never overwriting existing ones); the project fills the overrides placeholders. The backlog is the orchestrator's: it adds and ticks rows, and `/write-<tier>-tests` with no argument continues from the top unchecked row.
 3. The architect tags acceptance criteria only with listed tiers; `/deliver` Step 5 dispatches only those orchestrators, passing the overrides path.
 4. The orchestrators read the overrides file on every run; authors and reviewers receive its path in their brief.

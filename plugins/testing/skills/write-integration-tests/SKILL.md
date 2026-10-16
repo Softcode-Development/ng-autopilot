@@ -5,6 +5,6 @@ description: Write integration tests for a feature or continue the integration b
 
 # Write Integration Tests
 
-Dispatch the `testing:integration-test-orchestrator` agent with the user's argument. The orchestrator owns runner/framework detection, queue building, per-feature authoring and review, backlog tracking, and the run-level summary.
+Dispatch the `autopilot-testing:integration-test-orchestrator` agent with the user's argument. The orchestrator owns runner/framework detection, queue building, per-feature authoring and review, backlog tracking, and the run-level summary.
 
 Pass through any argument the user provided (spec path, feature name, integer count, area, `audit <path>`, `rework <path>`, `all`, etc.) unchanged.

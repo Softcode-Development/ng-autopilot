@@ -1,6 +1,6 @@
 # Security checklist
 
-What the `security-reviewer` looks for, by OWASP Top 10 category. Stack-specific rules live in the golden security rules (`angular`, `nestjs`) and the project docs; this list is about the patterns that keep recurring.
+What the `security-reviewer` looks for, by OWASP Top 10 category. Stack-specific rules live in the autopilot security rules (`angular`, `nestjs`) and the project docs; this list is about the patterns that keep recurring.
 
 ## Thinking process
 

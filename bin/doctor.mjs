@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Golden drift check for a project.
+// Autopilot drift check for a project.
 //
 //   node bin/doctor.mjs <project-dir>
 //
-// Errors (exit 1): invalid golden.json, generated files edited/deleted/added,
-// generated files out of date with the golden repo. Warnings: plugins not
+// Errors (exit 1): invalid autopilot.json, generated files edited/deleted/added,
+// generated files out of date with the autopilot repo. Warnings: plugins not
 // enabled, tiers without overrides, unfilled placeholders, missing
 // devDependencies, legacy AI files, inactive git hooks.
 
@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
-import { MARKETPLACE, normaliseConfig, renderFiles, requiredDevDependencies } from './lib/render.mjs';
-import { GOLDEN_ROOT } from './sync.mjs';
+import { normaliseConfig, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
+import { AUTOPILOT_ROOT } from './sync.mjs';
 
 const PLACEHOLDER = /<(?![!/]|https?:)[A-Za-z…][^<>\n]{2,}>/g;
 const LEGACY = [
@@ -30,32 +30,32 @@ const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 export function doctor(projectRoot) {
   const errors = [];
   const warnings = [];
-  const configFile = path.join(projectRoot, '.claude', 'golden.json');
-  if (!existsSync(configFile)) return { errors: ['.claude/golden.json missing — run /core:install'], warnings };
+  const configFile = path.join(projectRoot, '.claude', 'autopilot.json');
+  if (!existsSync(configFile)) return { errors: ['.claude/autopilot.json missing — run /autopilot:install'], warnings };
 
   let config;
   try {
     config = normaliseConfig(readJson(configFile));
   } catch (e) {
-    return { errors: [`.claude/golden.json: ${e.message}`], warnings };
+    return { errors: [`.claude/autopilot.json: ${e.message}`], warnings };
   }
 
   // Generated files vs their fingerprints.
   errors.push(...verifyAll(projectRoot));
 
-  // Generated files vs what the golden repo would generate now.
-  const { files } = renderFiles(GOLDEN_ROOT, readJson(configFile));
+  // Generated files vs what the autopilot repo would generate now.
+  const { files } = renderFiles(AUTOPILOT_ROOT, readJson(configFile));
   const lockFile = path.join(projectRoot, LOCK_PATH);
   const lock = existsSync(lockFile) ? readJson(lockFile) : { files: {} };
   const expected = Object.fromEntries(files.filter((f) => f.kind === 'generated').map((f) => [f.path, fingerprint(f.content)]));
   const stale = Object.keys(expected).filter((f) => lock.files[f] !== expected[f]);
   const extra = Object.keys(lock.files).filter((f) => !expected[f]);
-  if (stale.length || extra.length) errors.push(`golden repo has changed since the last sync (${stale.length + extra.length} file(s)) — run sync`);
+  if (stale.length || extra.length) errors.push(`autopilot repo has changed since the last sync (${stale.length + extra.length} file(s)) — run sync`);
 
   // Plugins enabled for this project.
   const settingsFile = path.join(projectRoot, '.claude', 'settings.json');
   const enabled = existsSync(settingsFile) ? readJson(settingsFile).enabledPlugins ?? {} : {};
-  for (const p of config.packs) if (enabled[`${p}@${MARKETPLACE}`] !== true) warnings.push(`plugin ${p}@${MARKETPLACE} not enabled in .claude/settings.json`);
+  for (const p of config.packs) if (enabled[pluginId(p)] !== true) warnings.push(`plugin ${pluginId(p)} not enabled in .claude/settings.json`);
 
   // Test tiers.
   for (const tier of config.testTiers) {
@@ -91,7 +91,7 @@ export function doctor(projectRoot) {
   const rulesDir = path.join(projectRoot, '.claude', 'rules');
   if (existsSync(rulesDir)) {
     for (const entry of readdirSync(rulesDir)) {
-      if (entry !== 'golden' && entry !== 'project.md') warnings.push(`unexpected rule file .claude/rules/${entry} — project rules belong in .claude/rules/project.md`);
+      if (entry !== 'autopilot' && entry !== 'project.md') warnings.push(`unexpected rule file .claude/rules/${entry} — project rules belong in .claude/rules/project.md`);
     }
   }
 
@@ -111,6 +111,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { errors, warnings } = doctor(path.resolve(target));
   for (const e of errors) console.log(`ERROR    ${e}`);
   for (const w of warnings) console.log(`warning  ${w}`);
-  if (!errors.length && !warnings.length) console.log('ok — the project matches the golden workspace');
+  if (!errors.length && !warnings.length) console.log('ok — the project matches the ng-autopilot workspace');
   process.exit(errors.length ? 1 : 0);
 }

@@ -97,7 +97,7 @@ For each spec in the queue, in order:
 
 **B. Resolve the framework reference for this spec.** Inspect the subject's imports / location (per Step 0's resolution rules). Pick `framework-<framework>.md`. If `overrides.md` has a `FRAMEWORK[...]` mapping that covers this subject, use that.
 
-**C. Dispatch a fresh `testing:integration-test-author` subagent.** Pass in the brief:
+**C. Dispatch a fresh `autopilot-testing:integration-test-author` subagent.** Pass in the brief:
 - Mode (`author` / `rework`; audit mode skips this step — go to D directly with the existing spec)
 - Subject seam description + subject file paths + spec file path
 - Absolute paths of all five references:
@@ -116,7 +116,7 @@ For each spec in the queue, in order:
 
 **E. Dispatch a fresh reviewer subagent.**
 - If `<project>/.claude/agents/integration-test-reviewer.md` exists → use that project-specific reviewer.
-- Otherwise → use the plugin's `testing:integration-test-reviewer` agent.
+- Otherwise → use the plugin's `autopilot-testing:integration-test-reviewer` agent.
 
 Pass to reviewer:
 - Spec path + subject file paths (from author report)

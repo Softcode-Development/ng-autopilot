@@ -1,7 +1,7 @@
 # E2E testing — project overrides (<project>)
 
-<!-- Synced to .claude/e2e-testing/overrides.md when "e2e" is in golden.json testTiers.
-     Read by testing:e2e-test-orchestrator. Overrides only ADD rules, except documented
+<!-- Synced to .claude/e2e-testing/overrides.md when "e2e" is in autopilot.json testTiers.
+     Read by autopilot-testing:e2e-test-orchestrator. Overrides only ADD rules, except documented
      carve-outs (e.g. the folder convention). Replace every <placeholder>. -->
 
 ## Stack pins

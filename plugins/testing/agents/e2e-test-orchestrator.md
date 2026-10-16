@@ -67,7 +67,7 @@ For each feature in the queue, in order:
 
 **A. Re-read the backlog.** Confirm the next feature is still unchecked before dispatch.
 
-**B. Dispatch a fresh `testing:e2e-test-author` subagent.** Pass in the brief:
+**B. Dispatch a fresh `autopilot-testing:e2e-test-author` subagent.** Pass in the brief:
 - Mode (`mock-first` / `real-api` / `audit` / `rework`)
 - Feature name + (if known) target spec path
 - Absolute paths of all six references:
@@ -87,7 +87,7 @@ For each feature in the queue, in order:
 
 **D. Dispatch a fresh reviewer subagent.**
 - If `<project>/.claude/agents/e2e-test-reviewer.md` exists → use that project-specific reviewer.
-- Otherwise → use the plugin's `testing:e2e-test-reviewer` agent.
+- Otherwise → use the plugin's `autopilot-testing:e2e-test-reviewer` agent.
 
 Pass to reviewer:
 - Spec path + subject component/file paths (from author report)

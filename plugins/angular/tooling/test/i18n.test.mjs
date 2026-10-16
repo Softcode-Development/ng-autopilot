@@ -8,14 +8,14 @@ import { flatten, params, bracesBalanced } from '../i18n/lib.mjs';
 import { validate } from '../i18n/i18n-validate.mjs';
 import { findUnused } from '../i18n/i18n-unused.mjs';
 
-const root = mkdtempSync(path.join(tmpdir(), 'golden-i18n-'));
+const root = mkdtempSync(path.join(tmpdir(), 'autopilot-i18n-'));
 after(() => rmSync(root, { recursive: true, force: true }));
 const write = (rel, data) => {
   mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
   writeFileSync(path.join(root, rel), typeof data === 'string' ? data : JSON.stringify(data));
 };
 
-write('.claude/golden.json', {
+write('.claude/autopilot.json', {
   i18n: {
     sets: [
       { source: 'src/assets/i18n/market-a/lt.json', locales: ['src/assets/i18n/market-a/en.json'] },

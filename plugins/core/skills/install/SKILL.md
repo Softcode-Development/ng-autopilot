@@ -1,29 +1,41 @@
 ---
 name: install
-description: Install the golden AI workspace into a project, or adopt an existing AI setup into it — inspects the repo, asks the setup questions (packs, planning format, test tiers, lint strict scope, i18n), extracts project-specific knowledge from old AI files into .claude/rules/project.md, removes the old AI setup, then syncs the golden files. Works on a new branch in three reviewable commits. Use on "/core:install", "install the golden workspace", "adopt golden in this repo".
+description: Install the ng-autopilot AI workspace into a project, or adopt an existing AI setup into it — inspects the repo, asks the setup questions (packs, planning format, test tiers, lint strict scope, i18n), extracts project-specific knowledge from old AI files into .claude/rules/project.md, removes the old AI setup, then syncs the autopilot files. On a project that already has .claude/autopilot.json it reconfigures instead (change any answer — widen the lint scope, add a test tier or pack — then sync). Use on "/autopilot:install", "install the ng-autopilot workspace", "adopt autopilot in this repo", "reconfigure autopilot", "widen the lint scope", "add the e2e tier".
 ---
 
-# Install the golden workspace
+# Install the ng-autopilot workspace
 
-You are installing into the project at the current working directory. Run every phase in order; **stop where a phase says the owner decides**. Never push, merge or delete a branch.
+You are installing into the project at the current working directory. **stop where a phase says the owner decides**. Never push, merge or delete a branch.
 
-Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/golden.mjs"`.
+Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs"`.
+
+## Which mode
+
+- **No `.claude/autopilot.json`** → **install**: run Phases 0–6 below.
+- **`.claude/autopilot.json` exists** → **reconfigure**:
+  1. The working tree must be clean; work on the current branch unless the owner asks for a new one.
+  2. Show the current answers as the Phase 1 table (current value + what the repo shows now — e.g. new modern folders that could join `lint.strictScope`, a newly configured e2e framework). The owner changes any of them.
+  3. Write the new `.claude/autopilot.json` with the flag protocol (Phase 5 step 1).
+  4. Sync dry run → show the summary (what gets added, removed, rewritten) → on the owner's go, apply → run doctor.
+  5. Commit: `chore: reconfigure autopilot (<what changed>)`.
+
+  Reconfigure never touches project-owned files (project.md, gates.md, overrides, plans) except creating the ones a new tier or pack needs.
 
 ## Phase 0 — Branch
 
 1. The working tree must be clean (`git status --porcelain` empty). If not: stop and ask the owner to commit or stash.
-2. **Ask the owner which branch to start from** (show the current branch and the default branch). Create `chore/golden-install` from it.
+2. **Ask the owner which branch to start from** (show the current branch and the default branch). Create `chore/autopilot-install` from it.
 
 ## Phase 1 — Setup questions (owner decides)
 
 Inspect the repo, then present **one** table with a proposed answer per question, each with the evidence. The owner confirms or corrects.
 
-| Key in `.claude/golden.json` | Inspect | Notes |
+| Key in `.claude/autopilot.json` | Inspect | Notes |
 |---|---|---|
 | `packs` | `package.json` dependencies | `core` always; `angular`; `testing`; `primeng` / `spartan` by UI library; `nestjs` when the repo has a NestJS app; `openspec` only if the owner wants that planning format |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
 | `testTiers` | runner + spec files; e2e framework config | only tiers the project actually runs |
-| `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every golden rule is an error; outside, legacy code keeps its current lint |
+| `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside, legacy code keeps its current lint |
 | `lint.selectorPrefix` | `angular.json` → `prefix` | |
 | `lint.translatePipes` | i18n library | `translate` (ngx-translate), `transloco`, … |
 | `lint.testingToolkitImports` | test helper folders | import paths production code must never use |
@@ -43,7 +55,7 @@ Present one table, a row per file or folder, with a decision:
 | Decision | Meaning |
 |---|---|
 | **extract → delete** | holds project knowledge — extracted into `.claude/rules/project.md` (or gates.md / an overrides file) in Phase 3, then deleted |
-| **delete** | replaced by the golden workspace (generic agents, skills, instructions, Copilot copies, old review reports) |
+| **delete** | replaced by the ng-autopilot workspace (generic agents, skills, instructions, Copilot copies, old review reports) |
 | **archive** | finished plans → `.claude/plans/archive/` |
 | **keep** | genuinely project-specific and not expressible as a rule (rare — say why) |
 
@@ -51,8 +63,8 @@ Nothing is touched until the owner approves the table.
 
 ## Phase 3 — Extract project knowledge (owner reviews)
 
-1. Write `.claude/rules/project.md` from `${CLAUDE_PLUGIN_ROOT}/templates/project/project.md`, filled with what the extracted files say. Follow the golden `ai-first-docs` rule:
-   - **only what is specific to this project or differs from the golden rules** — never restate a golden rule;
+1. Write `.claude/rules/project.md` from `${CLAUDE_PLUGIN_ROOT}/templates/project/project.md`, filled with what the extracted files say. Follow the autopilot `ai-first-docs` rule:
+   - **only what is specific to this project or differs from the autopilot rules** — never restate a autopilot rule;
    - each rule keeps its why, enforcement and precedent;
    - legacy carve-outs only for paths **outside** `lint.strictScope`;
    - nothing stale (old versions, finished migrations, superseded advice).
@@ -62,18 +74,18 @@ Nothing is touched until the owner approves the table.
 
 ## Phase 4 — Remove the old setup
 
-1. Delete everything the table marked delete / extract → delete; move archive items. The old `CLAUDE.md` and any existing `.husky/pre-commit|commit-msg|pre-push` are protected paths (sync will regenerate them): set the flag for their removal — `mkdir -p .claude/.flags && touch .claude/.flags/golden-sync` — and remove it right after.
+1. Delete everything the table marked delete / extract → delete; move archive items. The old `CLAUDE.md` and any existing `.husky/pre-commit|commit-msg|pre-push` are protected paths (sync will regenerate them): set the flag for their removal — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync` — and remove it right after.
 2. Remove old hooks and permissions from `.claude/settings.json` that point at deleted scripts.
 3. Commit: `chore: remove legacy AI setup`.
 
 ## Phase 5 — Install
 
-1. Write `.claude/golden.json` with the Phase 1 answers. It is a protected file: create the flag first and remove it after — `mkdir -p .claude/.flags && touch .claude/.flags/golden-sync`, write, then `rm .claude/.flags/golden-sync`.
+1. Write `.claude/autopilot.json` with the Phase 1 answers. It is a protected file: create the flag first and remove it after — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync`, write, then `rm .claude/.flags/autopilot-sync`.
 2. Dry run: launcher `sync <project-dir> --dry-run`; show the summary. Then apply: launcher `sync <project-dir>`.
 3. Run launcher `doctor <project-dir>`.
 4. Ask the owner before installing the missing devDependencies and before running `npx husky` to activate the git hooks.
-5. Commit: `chore: install golden workspace`.
+5. Commit: `chore: install autopilot workspace`.
 
 ## Phase 6 — Hand-back
 
-The branch name and its three commits; the doctor output; what the owner still fills in (placeholders in gates.md / overrides); how to update later (`/core:sync`) and check drift (`/core:doctor`).
+The branch name and its three commits; the doctor output; what the owner still fills in (placeholders in gates.md / overrides); how to update later (`/autopilot:sync`) and check drift (`/autopilot:doctor`).

@@ -4,19 +4,19 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { findGoldenRoot } from '../../plugins/core/scripts/golden.mjs';
+import { findAutopilotRoot } from '../../plugins/core/scripts/autopilot.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const launcher = path.join(repo, 'plugins', 'core', 'scripts', 'golden.mjs');
+const launcher = path.join(repo, 'plugins', 'core', 'scripts', 'autopilot.mjs');
 
-test('the launcher finds the golden repo from inside the plugin', () => {
-  assert.equal(path.resolve(findGoldenRoot()), repo);
+test('the launcher finds the autopilot repo from inside the plugin', () => {
+  assert.equal(path.resolve(findAutopilotRoot()), repo);
 });
 
 test('the launcher forwards to doctor and passes its exit code through', () => {
   const r = spawnSync(process.execPath, [launcher, 'doctor', repo], { encoding: 'utf8' });
   assert.equal(r.status, 1);
-  assert.match(r.stdout, /golden\.json missing/);
+  assert.match(r.stdout, /autopilot\.json missing/);
 });
 
 test('unknown commands are rejected', () => {

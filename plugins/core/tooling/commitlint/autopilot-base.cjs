@@ -1,8 +1,8 @@
-// Golden commitlint base. The project's commitlint.config.cjs extends it and
+// Autopilot commitlint base. The project's commitlint.config.cjs extends it and
 // adds its own scope list (the capability slugs from FEATURES.md):
 //
 //   module.exports = {
-//     extends: ['./tools/golden/commitlint/golden-base.cjs'],
+//     extends: ['./tools/autopilot/commitlint/autopilot-base.cjs'],
 //     rules: { 'scope-enum': [2, 'always', ['orders', 'auth', 'deps', 'ci']] },
 //   };
 

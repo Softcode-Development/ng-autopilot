@@ -1,7 +1,7 @@
 # Integration testing — project overrides (<project>)
 
-<!-- Synced to .claude/integration-testing/overrides.md when "integration" is in golden.json testTiers.
-     Read by testing:integration-test-orchestrator. Overrides only ADD rules, except
+<!-- Synced to .claude/integration-testing/overrides.md when "integration" is in autopilot.json testTiers.
+     Read by autopilot-testing:integration-test-orchestrator. Overrides only ADD rules, except
      documented carve-outs (including the container carve-out below).
      Replace every <placeholder>. -->
 

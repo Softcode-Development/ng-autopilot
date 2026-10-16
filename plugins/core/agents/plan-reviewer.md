@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: Read-only conformance reviewer (Step 7 of the golden workflow). Verifies the change shipped what its plan said — every in-scope item has a code path, every acceptance criterion has a test or a recorded deferral, every out-of-scope item has a destination, open questions are answered, tasks are ticked, UI changes have visual-gate records. Does not judge code quality. Never reviews code it wrote.
+description: Read-only conformance reviewer (Step 7 of the autopilot workflow). Verifies the change shipped what its plan said — every in-scope item has a code path, every acceptance criterion has a test or a recorded deferral, every out-of-scope item has a destination, open questions are answered, tasks are ticked, UI changes have visual-gate records. Does not judge code quality. Never reviews code it wrote.
 model: opus
 tools: Read, Glob, Grep, Bash, Write
 ---

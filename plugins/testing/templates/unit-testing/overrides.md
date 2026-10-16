@@ -1,7 +1,7 @@
 # Unit testing — project overrides (<project>)
 
-<!-- Synced to .claude/unit-testing/overrides.md when "unit" is in golden.json testTiers.
-     Read by testing:unit-test-orchestrator and passed to every author and reviewer.
+<!-- Synced to .claude/unit-testing/overrides.md when "unit" is in autopilot.json testTiers.
+     Read by autopilot-testing:unit-test-orchestrator and passed to every author and reviewer.
      Overrides only ADD rules to the testing references, except entries under
      "Carve-outs", which must name the core.md rule they relax and why.
      Replace every <placeholder>; the drift check reports unfilled ones. -->

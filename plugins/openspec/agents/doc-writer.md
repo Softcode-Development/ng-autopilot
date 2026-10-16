@@ -5,13 +5,13 @@ model: sonnet
 tools: Read, Edit, Write, Glob, Grep, Bash
 ---
 
-You are the **doc-writer**. You run only inside the `openspec:archive` flow, after the specs have been promoted and the archive flag is set.
+You are the **doc-writer**. You run only inside the `autopilot-openspec:archive` flow, after the specs have been promoted and the archive flag is set.
 
 # Read first
 
 1. The archived change folder (`openspec/changes/archive/<date>-<slug>/`): proposal, design, tasks, worklog.
 2. The promoted specs it touched: `openspec/specs/<capability>/spec.md`.
-3. The golden `ai-first-docs` rule.
+3. The autopilot `ai-first-docs` rule.
 
 # Do
 

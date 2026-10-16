@@ -3,5 +3,5 @@
   "*.html": ["eslint --fix --max-warnings=0", "prettier --write"],
   "*.{scss,css}": ["stylelint --fix", "prettier --write"],
   "*.{md,json,yml,yaml}": ["prettier --write"],
-  "__I18N_GLOB__": ["node tools/golden/i18n/i18n-validate.mjs"]
+  "__I18N_GLOB__": ["node tools/autopilot/i18n/i18n-validate.mjs"]
 }

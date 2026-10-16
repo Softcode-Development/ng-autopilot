@@ -70,43 +70,43 @@ export function globToRegExp(glob) {
   return new RegExp('^' + re + '$');
 }
 
-// Project config written by sync: .claude/golden.json.
-export function loadGoldenConfig(root) {
+// Project config written by sync: .claude/autopilot.json.
+export function loadAutopilotConfig(root) {
   try {
-    return JSON.parse(readFileSync(path.join(root, '.claude', 'golden.json'), 'utf8'));
+    return JSON.parse(readFileSync(path.join(root, '.claude', 'autopilot.json'), 'utf8'));
   } catch {
     return {};
   }
 }
 
-// Protected paths: synced golden rules are always protected; projects add
-// their own in golden.json. A flow that may edit one creates the flag file
+// Protected paths: synced autopilot rules are always protected; projects add
+// their own in autopilot.json. A flow that may edit one creates the flag file
 // `.claude/.flags/<flag>` before its first write and removes it after.
 export const BUILT_IN_PROTECTED = [
   {
-    glob: '.claude/rules/golden/**',
-    flag: 'golden-sync',
-    reason: 'synced from the golden repo — change the rule there and re-sync',
+    glob: '.claude/rules/autopilot/**',
+    flag: 'autopilot-sync',
+    reason: 'synced from the autopilot repo — change the rule there and re-sync',
   },
   {
     glob: 'CLAUDE.md',
-    flag: 'golden-sync',
+    flag: 'autopilot-sync',
     reason: 'generated index — project-specific rules go in .claude/rules/project.md',
   },
   {
     glob: '.husky/{pre-commit,commit-msg,pre-push}',
-    flag: 'golden-sync',
+    flag: 'autopilot-sync',
     reason: 'generated git hooks — project steps go in .husky/pre-commit.local',
   },
   {
-    glob: '.claude/golden{.json,.lock.json}',
-    flag: 'golden-sync',
-    reason: 'install answers and generated-file fingerprints — change them through /core:install or sync',
+    glob: '.claude/autopilot{.json,.lock.json}',
+    flag: 'autopilot-sync',
+    reason: 'install answers and generated-file fingerprints — change them through /autopilot:install or sync',
   },
   {
-    glob: 'tools/golden/**',
-    flag: 'golden-sync',
-    reason: 'golden tooling synced from the golden repo — change it there and re-sync; project additions go in the project\'s own config files',
+    glob: 'tools/autopilot/**',
+    flag: 'autopilot-sync',
+    reason: 'autopilot tooling synced from the autopilot repo — change it there and re-sync; project additions go in the project\'s own config files',
   },
 ];
 
@@ -121,10 +121,10 @@ const isInside = (child, parent) => {
   return c === p || c.startsWith(p + '/');
 };
 
-// The golden repo (or the installed plugin copy) these hooks run from. Agents
-// in other projects must not edit it: golden changes happen in a session
-// opened in the golden repo itself.
-export function goldenFence() {
+// The autopilot repo (or the installed plugin copy) these hooks run from. Agents
+// in other projects must not edit it: autopilot changes happen in a session
+// opened in the autopilot repo itself.
+export function autopilotFence() {
   const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
   for (let d = pluginRoot; ; d = path.dirname(d)) {
     if (existsSync(path.join(d, '.claude-plugin', 'marketplace.json'))) return toPosix(d);
@@ -138,7 +138,7 @@ export function fenceBlocks(absPath, root, fence) {
   return isInside(fromMsysPath(absPath), fence);
 }
 
-export const FENCE_REASON = 'is inside the golden workspace repo — change golden rules, agents and tooling in a session opened in that repo, never from a project.';
+export const FENCE_REASON = 'is inside the ng-autopilot workspace repo — change autopilot rules, agents and tooling in a session opened in that repo, never from a project.';
 
 export function flagIsSet(root, flag) {
   return existsSync(path.join(root, '.claude', '.flags', flag));

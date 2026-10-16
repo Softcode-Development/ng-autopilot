@@ -30,13 +30,13 @@ The planning format is a second setting, independent of the mode. It decides onl
 | Format | Document | Set where |
 |---|---|---|
 | `plan-file` (default) | `.claude/plans/<slug>/plan.md` + `worklog.md` (sections: WORKFLOW.md § 2) | — |
-| `openspec` | An OpenSpec change folder (proposal, design, spec with acceptance scenarios, tasks), from the `openspec` pack | Project default in `.claude/golden.json` (`"planning": "openspec"`); or per task when the owner says "use openspec" |
+| `openspec` | An OpenSpec change folder (proposal, design, spec with acceptance scenarios, tasks), from the `openspec` pack | Project default in `.claude/autopilot.json` (`"planning": "openspec"`); or per task when the owner says "use openspec" |
 
 `fast` never writes a planning document, so the format does not apply to it. In either format, the acceptance criteria (plan file) or scenarios (`spec.md`) are the coverage list for the test phase.
 
 ## The delivery sequence
 
-The step-by-step sequence — who does what, in what order, with which artifacts and where the owner is needed — is the core plugin's `workflow/WORKFLOW.md`, executed by `/deliver`. This rule sets the policy it runs under.
+The step-by-step sequence — who does what, in what order, with which artifacts and where the owner is needed — is the autopilot plugin's `workflow/WORKFLOW.md`, executed by `/deliver`. This rule sets the policy it runs under.
 
 **Why tests come after the feature:** a test written per task pins an intermediate shape and is rewritten when the feature settles; an author who sees the finished feature writes tests for the real behaviour, once.
 

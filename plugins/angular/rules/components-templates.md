@@ -9,7 +9,7 @@ paths:
 ## Template purity
 - **No function, getter or method calls bound in templates**, except signal reads (`count()`) and pipes. Compute with `computed()` (or once in `ngOnInit` for legacy code) and bind the result. Forbidden: `{{ service.getX() }}`, `{{ form.get('x') }}`, inline key building like `{{ 'facets.' + value | translate }}`.
   - **Why:** a method in a template runs on every change-detection pass, and it hides logic from tests.
-  - **Enforcement:** lint `golden/template-no-method-calls` — reads the component class and allows only zero-argument signal reads (and members of injected `*Store`s) plus output handlers. A call it cannot prove is a signal read is an error; add a genuine exception to its `allowList`, never disable it.
+  - **Enforcement:** lint `autopilot/template-no-method-calls` — reads the component class and allows only zero-argument signal reads (and members of injected `*Store`s) plus output handlers. A call it cannot prove is a signal read is an error; add a genuine exception to its `allowList`, never disable it.
 
 ## Control flow and APIs
 - **Block control flow** — `@if`, `@for`, `@switch`, `@defer`, `@let`. No `*ngIf` / `*ngFor` in new code.

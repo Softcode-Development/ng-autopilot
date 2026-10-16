@@ -1,5 +1,5 @@
 {
-  "$comment": "External plugins the golden workflow calls. setup.mjs installs a plugin only when no copy (marketplace-installed or claude.ai-synced) is present.",
+  "$comment": "External plugins the autopilot workflow calls. setup.mjs installs a plugin only when no copy (marketplace-installed or claude.ai-synced) is present.",
   "plugins": [
     {
       "name": "frontend-design",

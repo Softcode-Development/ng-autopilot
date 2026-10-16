@@ -9,7 +9,7 @@ paths:
 
 # OpenSpec
 
-Applies when the project's planning format is `openspec` (or a task opted into it). The sequence is the golden workflow; this rule covers what differs.
+Applies when the project's planning format is `openspec` (or a task opted into it). The sequence is the autopilot workflow; this rule covers what differs.
 
 ## Where things live
 - A change: `openspec/changes/<slug>/` — `proposal.md`, `design.md`, `specs/<capability>/spec.md`, `tasks.md`, `worklog.md`.

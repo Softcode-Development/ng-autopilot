@@ -11,9 +11,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const hooksDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const project = mkdtempSync(path.join(tmpdir(), 'golden-hooks-'));
+const project = mkdtempSync(path.join(tmpdir(), 'autopilot-hooks-'));
 mkdirSync(path.join(project, '.claude'), { recursive: true });
-writeFileSync(path.join(project, '.claude', 'golden.json'), JSON.stringify({
+writeFileSync(path.join(project, '.claude', 'autopilot.json'), JSON.stringify({
   protectedPaths: [{ glob: 'prisma/schema.prisma', flag: 'db-migrator-active', reason: 'owned by the db-migrator agent' }],
 }));
 
@@ -33,12 +33,12 @@ const bash = (command) => ({ tool_name: 'Bash', tool_input: { command } });
 test.after(() => rmSync(project, { recursive: true, force: true }));
 
 test('guard-paths blocks an absolute path into synced rules (exit 2, stderr names the hook)', () => {
-  const r = runHook('guard-paths.mjs', edit(path.join(project, '.claude', 'rules', 'golden', 'x.md')));
+  const r = runHook('guard-paths.mjs', edit(path.join(project, '.claude', 'rules', 'autopilot', 'x.md')));
   assert.equal(r.code, 2);
-  assert.match(r.stderr, /^\[hook:guard-paths\] BLOCKED: \.claude\/rules\/golden\/x\.md/);
+  assert.match(r.stderr, /^\[hook:guard-paths\] BLOCKED: \.claude\/rules\/autopilot\/x\.md/);
 });
 
-test('guard-paths reads project protectedPaths from golden.json', () => {
+test('guard-paths reads project protectedPaths from autopilot.json', () => {
   assert.equal(runHook('guard-paths.mjs', edit(path.join(project, 'prisma', 'schema.prisma'))).code, 2);
   assert.equal(runHook('guard-paths.mjs', edit(path.join(project, 'src', 'main.ts'))).code, 0);
 });
@@ -54,13 +54,13 @@ test('guard-paths honours a flag file', () => {
 });
 
 test('guard-paths covers NotebookEdit (notebook_path)', () => {
-  const r = runHook('guard-paths.mjs', { tool_name: 'NotebookEdit', tool_input: { notebook_path: '.claude/rules/golden/n.ipynb' } });
+  const r = runHook('guard-paths.mjs', { tool_name: 'NotebookEdit', tool_input: { notebook_path: '.claude/rules/autopilot/n.ipynb' } });
   assert.equal(r.code, 2);
 });
 
 test('Git Bash style CLAUDE_PROJECT_DIR (/c/...) resolves on Windows', { skip: process.platform !== 'win32' }, () => {
   const msys = '/' + project[0].toLowerCase() + project.slice(2).replace(/\\/g, '/');
-  const r = runHook('guard-paths.mjs', edit(path.join(project, '.claude', 'rules', 'golden', 'x.md')), msys);
+  const r = runHook('guard-paths.mjs', edit(path.join(project, '.claude', 'rules', 'autopilot', 'x.md')), msys);
   assert.equal(r.code, 2);
 });
 
@@ -148,13 +148,13 @@ test('an OpenSpec change gates source edits on design.md open questions and show
   }
 });
 
-test('fence: the real hook refuses edits to the golden repo from another project, allows them inside it', () => {
-  const goldenRoot = path.resolve(hooksDir, '..', '..', '..');
-  const target = path.join(goldenRoot, 'plugins', 'core', 'rules', 'work-modes.md');
+test('fence: the real hook refuses edits to the autopilot repo from another project, allows them inside it', () => {
+  const autopilotRoot = path.resolve(hooksDir, '..', '..', '..');
+  const target = path.join(autopilotRoot, 'plugins', 'core', 'rules', 'work-modes.md');
   const fromProject = runHook('guard-paths.mjs', edit(target));
   assert.equal(fromProject.code, 2);
-  assert.match(fromProject.stderr, /golden workspace repo/);
-  assert.equal(runHook('guard-paths.mjs', edit(target), goldenRoot).code, 0);
+  assert.match(fromProject.stderr, /autopilot workspace repo/);
+  assert.equal(runHook('guard-paths.mjs', edit(target), autopilotRoot).code, 0);
   assert.equal(runHook('guard-bash.mjs', bash(`rm "${target.replace(/\\/g, '/')}"`)).code, 2);
 });
 

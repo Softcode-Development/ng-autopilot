@@ -4,7 +4,7 @@ Sync writes these into a project:
 
 | Template | Written to | Notes |
 |---|---|---|
-| `settings.json` | `.claude/settings.json` | Merged, not overwritten: project-specific allow/ask/deny entries are kept; golden entries are added. Lists both npm and pnpm forms; sync drops the unused package manager. |
+| `settings.json` | `.claude/settings.json` | Merged, not overwritten: project-specific allow/ask/deny entries are kept; autopilot entries are added. Lists both npm and pnpm forms; sync drops the unused package manager. |
 | `gitignore` | `.claude/.gitignore` | |
 
 ## Why the permission lists look like this
@@ -17,7 +17,7 @@ The settings deny list matches command **prefixes** only. The core `guard-bash` 
 
 Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-relative cleanups the hook deliberately allows.
 
-## `.claude/golden.json` (written by sync)
+## `.claude/autopilot.json` (written by sync)
 
 ```json
 {
@@ -43,7 +43,7 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
 
 `sourceGlobs` is what counts as application code for the `plan-ready` hook and the openspec tasks gate (default `src/**`, `apps/**`, `libs/**`, `projects/**`).
 
-`lint.strictScope` is where every golden lint rule applies as an error, with no carve-outs (default `["src/**"]`). A legacy repo migrating step by step sets its modern folders here (e.g. `["src/app/features/**"]`) — chosen at install time, widened as code moves in. The other `lint` keys feed the ESLint preset: component/directive selector prefix, translation pipe names, test-only toolkit import paths, the i18n allowlist file, extra template call exceptions.
+`lint.strictScope` is where every autopilot lint rule applies as an error, with no carve-outs (default `["src/**"]`). A legacy repo migrating step by step sets its modern folders here (e.g. `["src/app/features/**"]`) — chosen at install time, widened as code moves in. The other `lint` keys feed the ESLint preset: component/directive selector prefix, translation pipe names, test-only toolkit import paths, the i18n allowlist file, extra template call exceptions.
 
 `i18n.sets` drives the i18n gates: each set is a source locale file and the locales that must mirror it.
 
@@ -51,4 +51,4 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
 
 `testTiers` lists the test tiers the project has (`unit`, `integration`, `e2e`). Sync creates `.claude/<tier>-testing/overrides.md` and `backlog.md` from the testing pack's templates for each one; the architect tags acceptance criteria only with these tiers; `/deliver` Step 5 dispatches only their orchestrators.
 
-`protectedPaths` are guarded by `guard-paths` (Write/Edit) and `guard-bash` (shell redirects). `.claude/rules/golden/**` is always protected (flag `golden-sync`). A flow allowed to edit a protected path creates `.claude/.flags/<flag>` before its first write and removes it after its last.
+`protectedPaths` are guarded by `guard-paths` (Write/Edit) and `guard-bash` (shell redirects). `.claude/rules/autopilot/**` is always protected (flag `autopilot-sync`). A flow allowed to edit a protected path creates `.claude/.flags/<flag>` before its first write and removes it after its last.

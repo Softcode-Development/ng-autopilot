@@ -1,6 +1,6 @@
 # openspec pack
 
-Opt-in planning format. Enable it in a project's `.claude/golden.json`:
+Opt-in planning format. Enable it in a project's `.claude/autopilot.json`:
 
 ```json
 {
@@ -25,5 +25,5 @@ Sync writes the `protectedPaths` and `outOfScopeDocs` entries when the pack is e
 | `skills/plan` | Workflow Step 1 in OpenSpec form |
 | `skills/archive` | Workflow Step 10 in OpenSpec form |
 | `agents/doc-writer` | Polishes promoted specs; ADRs |
-| `rules/openspec.md` | Synced into `.claude/rules/golden/` |
+| `rules/openspec.md` | Synced into `.claude/rules/autopilot/` |
 | git hooks (tasks tick, `Change:` line, bypass trailer) | Repo-side tooling, built with the tooling batch |

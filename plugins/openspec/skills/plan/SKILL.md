@@ -1,15 +1,15 @@
 ---
 name: plan
-description: Step 1 of the golden workflow in the OpenSpec planning format — create an OpenSpec change folder and have the architect fill proposal, design (with open questions), spec deltas (acceptance scenarios) and tasks, then validate. Used by /deliver when the project's planning format is openspec or the owner says "use openspec".
+description: Step 1 of the autopilot workflow in the OpenSpec planning format — create an OpenSpec change folder and have the architect fill proposal, design (with open questions), spec deltas (acceptance scenarios) and tasks, then validate. Used by /deliver when the project's planning format is openspec or the owner says "use openspec".
 ---
 
 # OpenSpec plan
 
-Replaces only Step 1 of `/deliver`; Steps 2–10 run unchanged. Read the openspec rule (`.claude/rules/golden/openspec/openspec.md`) first.
+Replaces only Step 1 of `/deliver`; Steps 2–10 run unchanged. Read the openspec rule (`.claude/rules/autopilot/openspec/openspec.md`) first.
 
 ## Commands
 
-From `.claude/golden.json` → `openspec`, else the defaults:
+From `.claude/autopilot.json` → `openspec`, else the defaults:
 
 | Key | Default |
 |---|---|
@@ -22,7 +22,7 @@ A project with its own wrapper (e.g. one that also links a build-plan doc) sets 
 
 1. Pick the slug: lower-kebab `<verb>-<noun>` from the request.
 2. Run `newChange`. It creates `openspec/changes/<slug>/`. Create `worklog.md` there from the core template.
-3. Dispatch `core:architect` with: the request, mode, `planning: openspec`, the change folder path, and this mapping of plan sections to OpenSpec files:
+3. Dispatch `autopilot:architect` with: the request, mode, `planning: openspec`, the change folder path, and this mapping of plan sections to OpenSpec files:
 
    | Plan section | OpenSpec file |
    |---|---|

@@ -2,8 +2,8 @@
 // Backstop for generated files: whatever path an edit took, a generated file
 // whose content no longer matches its fingerprint cannot be committed.
 //
-//   node tools/golden/lock/verify.mjs --staged   (pre-commit) staged changes vs the staged lock
-//   node tools/golden/lock/verify.mjs --all      (drift check) working tree vs the lock
+//   node tools/autopilot/lock/verify.mjs --staged   (pre-commit) staged changes vs the staged lock
+//   node tools/autopilot/lock/verify.mjs --all      (drift check) working tree vs the lock
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -65,9 +65,9 @@ export function verifyAll(root) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = git(process.cwd(), ['rev-parse', '--show-toplevel']).out.trim() || process.cwd();
   const problems = process.argv.includes('--all') ? verifyAll(root) : verifyStaged(root);
-  for (const p of problems) console.error(`[golden-lock] ${p}`);
+  for (const p of problems) console.error(`[autopilot-lock] ${p}`);
   if (problems.length) {
-    console.error('[golden-lock] Generated files change only through golden sync: fix the rule in the golden repo and re-sync, or put the project-specific part in .claude/rules/project.md / the project config files.');
+    console.error('[autopilot-lock] Generated files change only through autopilot sync: fix the rule in the autopilot repo and re-sync, or put the project-specific part in .claude/rules/project.md / the project config files.');
     process.exit(1);
   }
 }

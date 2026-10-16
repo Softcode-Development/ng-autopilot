@@ -15,22 +15,22 @@ const write = (rel, text) => {
 };
 
 before(() => {
-  root = mkdtempSync(path.join(tmpdir(), 'golden-doctor-'));
+  root = mkdtempSync(path.join(tmpdir(), 'autopilot-doctor-'));
   spawnSync('git', ['init', '-q'], { cwd: root });
   write('package.json', JSON.stringify({ name: 'app' }));
-  write('.claude/golden.json', JSON.stringify({ packs: ['angular', 'testing'], testTiers: ['unit'] }));
+  write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing'], testTiers: ['unit'] }));
 });
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test('not installed', () => {
-  const bare = mkdtempSync(path.join(tmpdir(), 'golden-bare-'));
-  assert.match(doctor(bare).errors[0], /golden\.json missing/);
+  const bare = mkdtempSync(path.join(tmpdir(), 'autopilot-bare-'));
+  assert.match(doctor(bare).errors[0], /autopilot\.json missing/);
   rmSync(bare, { recursive: true, force: true });
 });
 
-test('before the first sync: fingerprints missing and the golden repo is ahead', () => {
+test('before the first sync: fingerprints missing and the autopilot repo is ahead', () => {
   const { errors } = doctor(root);
-  assert.ok(errors.some((e) => /golden\.lock\.json missing/.test(e)));
+  assert.ok(errors.some((e) => /autopilot\.lock\.json missing/.test(e)));
   assert.ok(errors.some((e) => /run sync/.test(e)));
 });
 
@@ -57,6 +57,6 @@ test('a hand-edited generated file is an error', () => {
 });
 
 test('a config change not yet synced is an error', () => {
-  write('.claude/golden.json', JSON.stringify({ packs: ['angular', 'testing', 'primeng'], testTiers: ['unit'] }));
+  write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing', 'primeng'], testTiers: ['unit'] }));
   assert.ok(doctor(root).errors.some((e) => /run sync/.test(e)));
 });

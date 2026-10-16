@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// OpenAPI tooling, configured in .claude/golden.json → nestjs.openapi:
+// OpenAPI tooling, configured in .claude/autopilot.json → nestjs.openapi:
 // {
 //   "snapshot": "apps/api/openapi.json",
 //   "triggers": ["^apps/api/src/.*\\.(controller|dto|schema|module)\\.ts$"],
@@ -7,8 +7,8 @@
 //   "stage": ["apps/api/openapi.json", "libs/api-client/src/openapi-schema.ts"]
 // }
 //
-//   node tools/golden/nestjs/openapi.mjs regenerate   (husky pre-commit) — regenerate + stage when API sources are staged
-//   node tools/golden/nestjs/openapi.mjs lint [file]  (pre-push / CI)   — every operation carries the golden metadata
+//   node tools/autopilot/nestjs/openapi.mjs regenerate   (husky pre-commit) — regenerate + stage when API sources are staged
+//   node tools/autopilot/nestjs/openapi.mjs lint [file]  (pre-push / CI)   — every operation carries the autopilot metadata
 
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -19,13 +19,13 @@ const BODY_METHODS = new Set(['post', 'put', 'patch']);
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
 export function loadOpenApiConfig(root) {
-  const file = path.join(root, '.claude', 'golden.json');
+  const file = path.join(root, '.claude', 'autopilot.json');
   const cfg = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).nestjs?.openapi : undefined;
-  if (!cfg?.snapshot) throw new Error('No nestjs.openapi.snapshot in .claude/golden.json');
+  if (!cfg?.snapshot) throw new Error('No nestjs.openapi.snapshot in .claude/autopilot.json');
   return { triggers: [], regenerate: [], stage: [], ...cfg };
 }
 
-// Golden rule errors-and-contracts: summary, a typed success response,
+// Autopilot rule errors-and-contracts: summary, a typed success response,
 // 401 unless public (`security: []`), 422 when the operation takes a body.
 export function lintDocument(doc) {
   const findings = [];

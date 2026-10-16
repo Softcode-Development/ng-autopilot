@@ -1,4 +1,4 @@
-// Shared helpers for the i18n gates. Config comes from .claude/golden.json → i18n:
+// Shared helpers for the i18n gates. Config comes from .claude/autopilot.json → i18n:
 // {
 //   "sets": [ { "source": "src/assets/i18n/market-a/lt.json",
 //               "locales": ["src/assets/i18n/market-a/en.json"] } ],
@@ -10,9 +10,9 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 export function loadI18nConfig(root) {
-  const file = path.join(root, '.claude', 'golden.json');
+  const file = path.join(root, '.claude', 'autopilot.json');
   const config = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).i18n : undefined;
-  if (!config?.sets?.length) throw new Error('No i18n sets in .claude/golden.json → i18n.sets');
+  if (!config?.sets?.length) throw new Error('No i18n sets in .claude/autopilot.json → i18n.sets');
   return {
     scanDirs: ['src'],
     scanExtensions: ['.ts', '.html'],

@@ -10,10 +10,10 @@ paths:
 
 # <Project> — project rules
 
-<!-- guide: everything specific to THIS project, and only that. The golden rules (.claude/rules/golden/) already cover
+<!-- guide: everything specific to THIS project, and only that. The autopilot rules (.claude/rules/autopilot/) already cover
      Angular, TypeScript, state, templates, forms, i18n, security, design discipline, testing and the workflow — never
-     restate them here; record only what differs, what is unique, or what the golden rules leave to the project.
-     Every rule follows the golden ai-first-docs anatomy: Rule / Why / Enforcement / Exempt / Precedent.
+     restate them here; record only what differs, what is unique, or what the autopilot rules leave to the project.
+     Every rule follows the autopilot ai-first-docs anatomy: Rule / Why / Enforcement / Exempt / Precedent.
      Loaded on demand (paths above): agents get it when they open project files. Owned by the project — sync never
      overwrites it. This is the project's only agent-facing doc. -->
 
@@ -31,9 +31,9 @@ paths:
 
 - **Where things live:** <the project's concrete folders for core services, shared dialogs/components, constants, test toolkit, …>.
 - **Patterns to reuse:** <the HTTP/API layer, error handling, market/tenant config, auth flow, logging — each with its path and a correct-shape example>.
-- **Legacy carve-outs** — only for paths OUTSIDE `lint.strictScope` (golden.json); inside it every golden rule applies:
+- **Legacy carve-outs** — only for paths OUTSIDE `lint.strictScope` (autopilot.json); inside it every autopilot rule applies:
 
-  | Golden rule | Legacy pattern allowed | Confined to | Why | Until |
+  | Autopilot rule | Legacy pattern allowed | Confined to | Why | Until |
   |---|---|---|---|---|
   | <rule> | <pattern> | <paths> | <reason> | <milestone> |
 
@@ -47,7 +47,7 @@ paths:
 
 ## Design system
 
-The UI law for this project — the golden design-discipline rule defers to this section.
+The UI law for this project — the autopilot design-discipline rule defers to this section.
 - **Primitive library:** <library + version; what is legacy and must not be extended>.
 - **Catalog:** <the primitives in use and their imports; what to add when needed>.
 - **Tokens and theme:** <token source, how components consume them, dark mode>.
@@ -56,7 +56,7 @@ The UI law for this project — the golden design-discipline rule defers to this
 ## i18n
 
 - **Library and files:** <library; locale files; source-of-truth locale>.
-- **Key conventions:** <naming beyond the golden `feature.section.key`>.
+- **Key conventions:** <naming beyond the autopilot `feature.section.key`>.
 - **Brand strings:** <where they live (config), never in translation files>.
 
 ## Security specifics

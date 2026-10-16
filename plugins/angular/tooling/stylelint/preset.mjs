@@ -1,17 +1,17 @@
-// Golden stylelint preset. Component styles inside `strictScope` get the
+// Autopilot stylelint preset. Component styles inside `strictScope` get the
 // design-discipline rules (tokens, no !important, no component dark-mode
 // media queries); everything stylelint-config-standard checks applies there too.
 //
 // Usage in the project's stylelint.config.mjs:
-//   import { goldenStylelint } from './tools/golden/stylelint/preset.mjs';
-//   export default goldenStylelint({ scss: true, strictScope: ['src/app/features/**'] });
+//   import { autopilotStylelint } from './tools/autopilot/stylelint/preset.mjs';
+//   export default autopilotStylelint({ scss: true, strictScope: ['src/app/features/**'] });
 
 const TAILWIND_AT_RULES = [
   'tailwind', 'apply', 'layer', 'config', 'theme', 'source', 'utility', 'variant',
   'custom-variant', 'plugin', 'reference', 'screen', 'responsive', 'variants', 'import',
 ];
 
-export function goldenStylelint(options = {}) {
+export function autopilotStylelint(options = {}) {
   const o = { scss: false, tailwind: false, strictScope: ['src/**'], ignoreFiles: [], ...options };
   const ext = o.scss ? '{scss,css}' : 'css';
   const files = o.strictScope.map((g) => (g.endsWith('/**') ? `${g}/*.${ext}` : `${g}/**/*.${ext}`));

@@ -5,6 +5,6 @@ description: Write end-to-end tests for a feature or continue the e2e backlog. T
 
 # Write E2E Tests
 
-Dispatch the `testing:e2e-test-orchestrator` agent with the user's argument. The orchestrator owns framework/stack detection, queue building, per-feature authoring and review, backlog tracking, and the run-level summary.
+Dispatch the `autopilot-testing:e2e-test-orchestrator` agent with the user's argument. The orchestrator owns framework/stack detection, queue building, per-feature authoring and review, backlog tracking, and the run-level summary.
 
 Pass through any argument the user provided (spec path, feature name, integer count, area, "all", etc.) unchanged.

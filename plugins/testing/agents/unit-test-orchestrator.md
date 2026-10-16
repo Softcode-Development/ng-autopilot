@@ -59,7 +59,7 @@ For each subject in the queue, in order:
 
 **A. Re-read the backlog.** Confirm the next subject is still unchecked before dispatch.
 
-**B. Dispatch a fresh `testing:unit-test-author` subagent.** Pass in the brief:
+**B. Dispatch a fresh `autopilot-testing:unit-test-author` subagent.** Pass in the brief:
 - Absolute path of the subject file
 - Absolute paths of all five references:
   - `${CLAUDE_PLUGIN_ROOT}/skills/write-unit-tests/references/core.md`
@@ -76,7 +76,7 @@ For each subject in the queue, in order:
 
 **D. Dispatch a fresh reviewer subagent.**
 - If `<project>/.claude/agents/unit-test-reviewer.md` exists → use that project-specific reviewer.
-- Otherwise → use the plugin's `testing:unit-test-reviewer` agent.
+- Otherwise → use the plugin's `autopilot-testing:unit-test-reviewer` agent.
 
 Pass to reviewer:
 - Spec path + subject path

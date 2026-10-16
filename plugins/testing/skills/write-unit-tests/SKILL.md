@@ -5,6 +5,6 @@ description: Write unit tests for a file or continue the backlog. Triggers on "w
 
 # Write Unit Tests
 
-Dispatch the `testing:unit-test-orchestrator` agent with the user's argument. The orchestrator owns stack detection, queue building, per-file authoring and review, backlog tracking, and the run-level summary.
+Dispatch the `autopilot-testing:unit-test-orchestrator` agent with the user's argument. The orchestrator owns stack detection, queue building, per-file authoring and review, backlog tracking, and the run-level summary.
 
 Pass through any argument the user provided (file path, integer count, area name, "all", etc.) unchanged.

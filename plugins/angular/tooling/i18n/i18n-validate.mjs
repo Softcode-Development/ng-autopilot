@@ -2,8 +2,8 @@
 // i18n gate: every locale mirrors its source file — same keys, no empty
 // values, the same interpolation parameters, balanced braces.
 //
-//   node tools/golden/i18n/i18n-validate.mjs            all sets
-//   node tools/golden/i18n/i18n-validate.mjs <files…>   only sets containing these files (lint-staged)
+//   node tools/autopilot/i18n/i18n-validate.mjs            all sets
+//   node tools/autopilot/i18n/i18n-validate.mjs <files…>   only sets containing these files (lint-staged)
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

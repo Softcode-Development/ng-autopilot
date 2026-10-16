@@ -1,13 +1,16 @@
-// Turns a project's .claude/golden.json into the exact set of files sync
-// writes. Pure: reads golden sources, returns { path, content, kind } items.
-//   kind 'generated' — golden-owned, rewritten every sync, fingerprinted, protected
+// Turns a project's .claude/autopilot.json into the exact set of files sync
+// writes. Pure: reads autopilot sources, returns { path, content, kind } items.
+//   kind 'generated' — autopilot-owned, rewritten every sync, fingerprinted, protected
 //   kind 'once'      — project-owned, created when missing, never overwritten
 //   kind 'merge'     — merged into an existing file (settings.json)
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-export const MARKETPLACE = 'claude-golden';
+export const MARKETPLACE = 'ng-autopilot';
+
+// Pack keys in autopilot.json are short; plugin ids carry the product name.
+export const pluginId = (pack) => `${pack === 'core' ? 'autopilot' : `autopilot-${pack}`}@${MARKETPLACE}`;
 export const PACKS = ['core', 'angular', 'testing', 'nestjs', 'spartan', 'primeng', 'openspec'];
 export const TIERS = ['unit', 'integration', 'e2e'];
 
@@ -31,7 +34,7 @@ function walk(dir, base = dir) {
 export function normaliseConfig(raw) {
   const c = structuredClone(raw ?? {});
   c.packs = [...new Set(['core', ...(c.packs ?? [])])];
-  for (const p of c.packs) if (!PACKS.includes(p)) throw new Error(`Unknown pack "${p}" in golden.json (known: ${PACKS.join(', ')})`);
+  for (const p of c.packs) if (!PACKS.includes(p)) throw new Error(`Unknown pack "${p}" in autopilot.json (known: ${PACKS.join(', ')})`);
   c.planning ??= 'plan-file';
   c.testTiers ??= [];
   for (const t of c.testTiers) if (!TIERS.includes(t)) throw new Error(`Unknown test tier "${t}"`);
@@ -45,19 +48,19 @@ export function normaliseConfig(raw) {
 const exec = (c) => (c.packageManager === 'pnpm' ? 'pnpm exec' : 'npx --no-install');
 
 function huskySteps(c) {
-  const pre = ['echo "[hook:pre-commit] golden fingerprints…"', 'node tools/golden/lock/verify.mjs --staged'];
+  const pre = ['echo "[hook:pre-commit] autopilot fingerprints…"', 'node tools/autopilot/lock/verify.mjs --staged'];
   const msg = [];
   if (c.packs.includes('openspec')) {
-    pre.push('node tools/golden/openspec/tasks-gate.mjs --pre-commit');
-    msg.push('node tools/golden/openspec/tasks-gate.mjs --commit-msg "$1"');
+    pre.push('node tools/autopilot/openspec/tasks-gate.mjs --pre-commit');
+    msg.push('node tools/autopilot/openspec/tasks-gate.mjs --commit-msg "$1"');
   }
-  if (c.packs.includes('nestjs') && c.nestjs?.openapi) pre.push('node tools/golden/nestjs/openapi.mjs regenerate');
+  if (c.packs.includes('nestjs') && c.nestjs?.openapi) pre.push('node tools/autopilot/nestjs/openapi.mjs regenerate');
   return { pre, msg };
 }
 
 const fillSteps = (template, steps) => template.replace(
-  /# >>> golden pack steps\n# <<< golden pack steps/,
-  ['# >>> golden pack steps', ...steps, '# <<< golden pack steps'].join('\n'),
+  /# >>> autopilot pack steps\n# <<< autopilot pack steps/,
+  ['# >>> autopilot pack steps', ...steps, '# <<< autopilot pack steps'].join('\n'),
 );
 
 function i18nGlob(c) {
@@ -69,33 +72,33 @@ function i18nGlob(c) {
 
 const fill = (s, values) => Object.entries(values).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 
-export function renderFiles(goldenRoot, rawConfig) {
+export function renderFiles(autopilotRoot, rawConfig) {
   const c = normaliseConfig(rawConfig);
-  const read = (rel) => readFileSync(path.join(goldenRoot, rel), 'utf8');
+  const read = (rel) => readFileSync(path.join(autopilotRoot, rel), 'utf8');
   const files = [];
   const add = (p, content, kind) => files.push({ path: p, content, kind });
 
-  // Golden rules, one folder per pack.
+  // Autopilot rules, one folder per pack.
   for (const pack of c.packs) {
-    for (const f of walk(path.join(goldenRoot, 'plugins', pack, 'rules'))) {
-      add(`.claude/rules/golden/${pack}/${f}`, read(`plugins/${pack}/rules/${f}`), 'generated');
+    for (const f of walk(path.join(autopilotRoot, 'plugins', pack, 'rules'))) {
+      add(`.claude/rules/autopilot/${pack}/${f}`, read(`plugins/${pack}/rules/${f}`), 'generated');
     }
   }
 
-  // Golden tooling.
+  // Autopilot tooling.
   const tooling = [
-    ['core', 'tooling/commitlint/golden-base.cjs', 'commitlint/golden-base.cjs'],
+    ['core', 'tooling/commitlint/autopilot-base.cjs', 'commitlint/autopilot-base.cjs'],
     ['core', 'tooling/lock/verify.mjs', 'lock/verify.mjs'],
     ['core', 'tooling/lock/fingerprint.mjs', 'lock/fingerprint.mjs'],
   ];
   if (c.packs.includes('angular')) {
-    for (const f of walk(path.join(goldenRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
+    for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
     tooling.push(['angular', 'tooling/stylelint/preset.mjs', 'stylelint/preset.mjs']);
     if (c.i18n?.sets?.length) for (const f of ['lib.mjs', 'i18n-validate.mjs', 'i18n-unused.mjs']) tooling.push(['angular', `tooling/i18n/${f}`, `i18n/${f}`]);
   }
   if (c.packs.includes('openspec')) tooling.push(['openspec', 'tooling/tasks-gate.mjs', 'openspec/tasks-gate.mjs']);
   if (c.packs.includes('nestjs') && c.nestjs?.openapi) tooling.push(['nestjs', 'tooling/openapi.mjs', 'nestjs/openapi.mjs']);
-  for (const [pack, src, dest] of tooling) add(`tools/golden/${dest}`, read(`plugins/${pack}/${src}`), 'generated');
+  for (const [pack, src, dest] of tooling) add(`tools/autopilot/${dest}`, read(`plugins/${pack}/${src}`), 'generated');
 
   // Generated index and git hooks.
   add('CLAUDE.md', fill(read('plugins/core/templates/claude/CLAUDE.md'), {
@@ -131,7 +134,7 @@ export function renderFiles(goldenRoot, rawConfig) {
   add('.gitleaks.toml', read('plugins/core/tooling/gitleaks.toml'), 'once');
   add('commitlint.config.cjs', [
     "module.exports = {",
-    "  extends: ['./tools/golden/commitlint/golden-base.cjs'],",
+    "  extends: ['./tools/autopilot/commitlint/autopilot-base.cjs'],",
     '  rules: {',
     "    // The project's capability slugs (project rules § Product), e.g. ['orders', 'auth', 'deps', 'ci']:",
     "    // 'scope-enum': [2, 'always', []],",
@@ -143,12 +146,12 @@ export function renderFiles(goldenRoot, rawConfig) {
     add('eslint.config.mjs', [
       "import { readFileSync } from 'node:fs';",
       '',
-      "import { goldenAngular } from './tools/golden/eslint/preset.mjs';",
+      "import { autopilotAngular } from './tools/autopilot/eslint/preset.mjs';",
       '',
-      "const golden = JSON.parse(readFileSync(new URL('./.claude/golden.json', import.meta.url), 'utf8'));",
+      "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
       '',
       'export default [',
-      '  ...goldenAngular({ tsconfigRootDir: import.meta.dirname, ...golden.lint }),',
+      '  ...autopilotAngular({ tsconfigRootDir: import.meta.dirname, ...autopilot.lint }),',
       '  // Project blocks below (outside the strict scope, or project-only rules).',
       '];',
       '',
@@ -156,18 +159,18 @@ export function renderFiles(goldenRoot, rawConfig) {
     add('stylelint.config.mjs', [
       "import { readFileSync } from 'node:fs';",
       '',
-      "import { goldenStylelint } from './tools/golden/stylelint/preset.mjs';",
+      "import { autopilotStylelint } from './tools/autopilot/stylelint/preset.mjs';",
       '',
-      "const golden = JSON.parse(readFileSync(new URL('./.claude/golden.json', import.meta.url), 'utf8'));",
+      "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
       '',
-      'export default goldenStylelint({ ...golden.stylelint, strictScope: golden.lint.strictScope });',
+      'export default autopilotStylelint({ ...autopilot.stylelint, strictScope: autopilot.lint.strictScope });',
       '',
     ].join('\n'), 'once');
   }
 
-  // Settings: golden permissions + the packs enabled for this project.
+  // Settings: autopilot permissions + the packs enabled for this project.
   const settings = JSON.parse(read('plugins/core/templates/claude/settings.json'));
-  settings.enabledPlugins = Object.fromEntries(c.packs.map((p) => [`${p}@${MARKETPLACE}`, true]));
+  settings.enabledPlugins = Object.fromEntries(c.packs.map((p) => [pluginId(p), true]));
   const pmPrefix = c.packageManager === 'pnpm' ? 'Bash(npm' : 'Bash(pnpm';
   for (const list of ['allow', 'ask']) settings.permissions[list] = settings.permissions[list].filter((e) => !e.startsWith(pmPrefix));
   add('.claude/settings.json', settings, 'merge');

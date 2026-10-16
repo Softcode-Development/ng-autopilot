@@ -1,6 +1,6 @@
 # Code-review rubric
 
-The rubric the `code-reviewer` agent applies. It cites the golden rules (`.claude/rules/golden/*`) and the project rules (`.claude/rules/project.md`) instead of restating them, so each rule lives in one place; this file is about **how to look**.
+The rubric the `code-reviewer` agent applies. It cites the autopilot rules (`.claude/rules/autopilot/*`) and the project rules (`.claude/rules/project.md`) instead of restating them, so each rule lives in one place; this file is about **how to look**.
 
 ## Lanes
 
@@ -62,7 +62,7 @@ Check the deferral context first.
 
 ## C — Readability and structure
 
-Golden rule `readable-code`. Mostly `SUGGESTION`; `BLOCKING` only when code is genuinely incomprehensible or duplicates non-trivial logic.
+Autopilot rule `readable-code`. Mostly `SUGGESTION`; `BLOCKING` only when code is genuinely incomprehensible or duplicates non-trivial logic.
 
 DRY (three similar lines can beat a premature abstraction) · extract methods · single responsibility · intent-named, not technology-named · guard clauses · tell-don't-ask · named predicates over boolean soup · obvious, isolated side effects · composition over giant classes · comments explain why; step-counter comments banned.
 
@@ -81,17 +81,17 @@ How to flag:
 
 ## D — Hard rules
 
-Every golden rule whose Enforcement is not lint, and every project hard rule in the project rules, checked against the diff. Violations are `BLOCKING`. Lint-enforced rules: flag only escape hatches (`eslint-disable` without a reason, a rule widened to pass).
+Every autopilot rule whose Enforcement is not lint, and every project hard rule in the project rules, checked against the diff. Violations are `BLOCKING`. Lint-enforced rules: flag only escape hatches (`eslint-disable` without a reason, a rule widened to pass).
 
 Common: `any`; template method calls; `*ngIf`/`*ngFor` or decorator inputs in new code; `@for` without a stable `track`; hardcoded routes/API paths/page-name keys (especially HTML attribute literals lint can't see); `console.log`; PII in logs; `[innerHTML]` without sanitising; a raw interactive element where a design-system primitive exists; inline template over 15 lines.
 
 ## E — Architecture
 
-The project rules (§ Architecture specifics) + golden `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, the project's declared legacy carve-outs respected (new code doesn't extend a legacy pattern outside its confined folders).
+The project rules (§ Architecture specifics) + autopilot `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, the project's declared legacy carve-outs respected (new code doesn't extend a legacy pattern outside its confined folders).
 
 ## F — Design system (UI diffs only)
 
-The project rules' Design system section + golden `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
+The project rules' Design system section + autopilot `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
 
 ## G — Tests (gross level only)
 
@@ -99,7 +99,7 @@ Tier reviewers own depth. Flag: tests that always pass (no assertion, unawaited 
 
 ## H — Performance (hot paths only)
 
-Lists, signals, queries, I/O. Otherwise skip — performance comments everywhere dilute the signal. The full hunting list is the golden `performance` rule (frontend, and backend when the nestjs pack is on).
+Lists, signals, queries, I/O. Otherwise skip — performance comments everywhere dilute the signal. The full hunting list is the autopilot `performance` rule (frontend, and backend when the nestjs pack is on).
 
 Unbounded lists without `track` / virtualization; template method calls; eager-loaded areas that should be lazy; heavy synchronous work in constructors/`ngOnInit` that belongs behind `@defer` or off the critical path; repeated identical HTTP calls without caching/sharing; an unjustified new dependency (note the bundle impact).
 

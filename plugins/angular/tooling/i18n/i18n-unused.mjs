@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // i18n gate: every key in a source locale file is referenced somewhere in the
 // code (as a quoted string). Keys only built dynamically are listed under
-// i18n.ignoreUnusedPrefixes in .claude/golden.json.
+// i18n.ignoreUnusedPrefixes in .claude/autopilot.json.
 //
-//   node tools/golden/i18n/i18n-unused.mjs
+//   node tools/autopilot/i18n/i18n-unused.mjs
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

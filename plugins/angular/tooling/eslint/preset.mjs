@@ -1,10 +1,10 @@
-// Golden Angular ESLint preset. Every rule applies only inside
+// Autopilot Angular ESLint preset. Every rule applies only inside
 // `strictScope` (default: the whole src/), so a legacy repo can enforce the
 // full set on its new features/ folder while the rest of the code is migrated.
 //
 // Usage in the project's eslint.config.mjs:
-//   import { goldenAngular } from './tools/golden/eslint/preset.mjs';
-//   export default [ ...goldenAngular({ tsconfigRootDir: import.meta.dirname, ...golden.lint }), /* project blocks */ ];
+//   import { autopilotAngular } from './tools/autopilot/eslint/preset.mjs';
+//   export default [ ...autopilotAngular({ tsconfigRootDir: import.meta.dirname, ...autopilot.lint }), /* project blocks */ ];
 
 import angular from 'angular-eslint';
 import prettierConfig from 'eslint-config-prettier';
@@ -13,33 +13,33 @@ import securityPlugin from 'eslint-plugin-security';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 
-import golden from './golden-plugin.mjs';
+import autopilot from './autopilot-plugin.mjs';
 
-const NO_ENUM = { selector: 'TSEnumDeclaration', message: 'Use string-literal unions or `as const` maps instead of `enum` (golden rule: typescript).' };
+const NO_ENUM = { selector: 'TSEnumDeclaration', message: 'Use string-literal unions or `as const` maps instead of `enum` (autopilot rule: typescript).' };
 const NO_SUBJECT = {
   selector: 'NewExpression[callee.name=/^(BehaviorSubject|ReplaySubject|Subject)$/]',
-  message: 'Subjects are banned for app state — use signals; convert streams with toSignal() (golden rule: state).',
+  message: 'Subjects are banned for app state — use signals; convert streams with toSignal() (autopilot rule: state).',
 };
 const NO_DECORATOR_APIS = {
   selector: 'Decorator[expression.callee.name=/^(Input|Output|ViewChild|ViewChildren|ContentChild|ContentChildren|HostBinding|HostListener)$/]',
-  message: 'Use input() / output() / model(), signal queries and `host` metadata instead of decorators (golden rule: components-templates).',
+  message: 'Use input() / output() / model(), signal queries and `host` metadata instead of decorators (autopilot rule: components-templates).',
 };
-const NO_NGMODULE = { selector: 'Decorator[expression.callee.name="NgModule"]', message: 'No NgModule in new code — standalone components and providers in app.config.ts (golden rule: architecture).' };
+const NO_NGMODULE = { selector: 'Decorator[expression.callee.name="NgModule"]', message: 'No NgModule in new code — standalone components and providers in app.config.ts (autopilot rule: architecture).' };
 const NO_BYPASS_SECURITY = {
   selector: 'CallExpression[callee.property.name=/^bypassSecurityTrust/]',
-  message: 'bypassSecurityTrust* defeats Angular sanitising — sanitise instead (golden rule: security).',
+  message: 'bypassSecurityTrust* defeats Angular sanitising — sanitise instead (autopilot rule: security).',
 };
 const NO_ROUTE_NAVIGATE = {
   selector: 'CallExpression[callee.property.name=/^(navigate|createUrlTree)$/] > ArrayExpression > Literal[value=/^\\//]',
-  message: 'Use ROUTE_PATHS.* instead of a hardcoded route (golden rule: constants-naming).',
+  message: 'Use ROUTE_PATHS.* instead of a hardcoded route (autopilot rule: constants-naming).',
 };
 const NO_ROUTE_URL = {
   selector: 'CallExpression[callee.property.name=/^(navigateByUrl|parseUrl)$/] > Literal[value=/^\\//]',
-  message: 'Use ROUTE_PATHS.* instead of a hardcoded route (golden rule: constants-naming).',
+  message: 'Use ROUTE_PATHS.* instead of a hardcoded route (autopilot rule: constants-naming).',
 };
 const NO_API_URL = {
   selector: 'CallExpression[callee.property.name=/^(get|post|put|patch|delete)$/] > Literal[value=/^\\/api\\//]',
-  message: 'Use API_PATHS.* instead of a hardcoded API URL (golden rule: constants-naming).',
+  message: 'Use API_PATHS.* instead of a hardcoded API URL (autopilot rule: constants-naming).',
 };
 
 const BASE_SYNTAX = [NO_ENUM, NO_DECORATOR_APIS, NO_NGMODULE, NO_BYPASS_SECURITY];
@@ -48,7 +48,7 @@ const LITERAL_SYNTAX = [NO_ROUTE_NAVIGATE, NO_ROUTE_URL, NO_API_URL];
 const RXJS_SUBJECTS = {
   name: 'rxjs',
   importNames: ['BehaviorSubject', 'ReplaySubject', 'Subject'],
-  message: 'Subjects are banned for app state — use signals (golden rule: state).',
+  message: 'Subjects are banned for app state — use signals (autopilot rule: state).',
 };
 
 export const DEFAULTS = {
@@ -77,9 +77,9 @@ function restrictedImports(o, { subjects, toolkit }) {
   return paths.length ? ['error', { paths }] : 'off';
 }
 
-export function goldenAngular(options = {}) {
+export function autopilotAngular(options = {}) {
   const o = { ...DEFAULTS, ...options };
-  if (!o.tsconfigRootDir) throw new Error('goldenAngular: tsconfigRootDir is required (pass import.meta.dirname).');
+  if (!o.tsconfigRootDir) throw new Error('autopilotAngular: tsconfigRootDir is required (pass import.meta.dirname).');
 
   const ts = filesFor(o.strictScope, 'ts');
   const html = filesFor(o.strictScope, 'html');
@@ -164,11 +164,11 @@ export function goldenAngular(options = {}) {
     ...inScope(angular.configs.templateAccessibility, html),
     {
       files: html,
-      plugins: { golden },
+      plugins: { autopilot },
       rules: {
         '@angular-eslint/template/prefer-control-flow': 'error',
-        'golden/template-no-method-calls': ['error', { allowList: o.templateCallAllowList, storePatterns: o.storePatterns }],
-        'golden/template-no-hardcoded-text': ['error', {
+        'autopilot/template-no-method-calls': ['error', { allowList: o.templateCallAllowList, storePatterns: o.storePatterns }],
+        'autopilot/template-no-hardcoded-text': ['error', {
           translatePipes: o.translatePipes,
           ...(o.i18nAllowlistFile ? { allowlistFile: o.i18nAllowlistFile } : {}),
         }],

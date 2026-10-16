@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  readEnvelope, projectRoot, loadGoldenConfig, globToRegExp, canonicalisePath, finish,
+  readEnvelope, projectRoot, loadAutopilotConfig, globToRegExp, canonicalisePath, finish,
 } from './lib/hook-io.mjs';
 import { outOfScopeOffenders, postEditContent } from './lib/plans.mjs';
 
@@ -44,5 +44,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const rel = canonicalisePath(input.file_path ?? '', root);
   const abs = path.isAbsolute(rel) ? rel : path.join(root, rel);
   const content = postEditContent(envelope?.tool_name, input, readOrEmpty(abs));
-  finish(NAME, evaluateOutOfScope(rel, content, { config: loadGoldenConfig(root) }));
+  finish(NAME, evaluateOutOfScope(rel, content, { config: loadAutopilotConfig(root) }));
 }

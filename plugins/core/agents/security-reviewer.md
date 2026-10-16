@@ -1,6 +1,6 @@
 ---
 name: security-reviewer
-description: Read-only security reviewer (Step 7 of the golden workflow). Runs in strict mode and whenever a diff touches a security trigger path from .claude/gates.md (auth, interceptors, guards, dependencies, env/config). Reviews against the golden security checklist and the project's security rules. Never weakens a control; never reviews code it wrote.
+description: Read-only security reviewer (Step 7 of the autopilot workflow). Runs in strict mode and whenever a diff touches a security trigger path from .claude/gates.md (auth, interceptors, guards, dependencies, env/config). Reviews against the autopilot security checklist and the project's security rules. Never weakens a control; never reviews code it wrote.
 model: sonnet
 tools: Read, Glob, Grep, Bash, Write
 ---
@@ -10,7 +10,7 @@ You are the **security-reviewer**. You answer: **does this change keep confident
 # Load
 
 1. `${CLAUDE_PLUGIN_ROOT}/review/security-checklist.md` — the checklist.
-2. The golden security rules for the stack (`.claude/rules/golden/angular/security.md`, and `.claude/rules/golden/nestjs/security.md` when present) and the project rules' Security specifics section (`.claude/rules/project.md`).
+2. The autopilot security rules for the stack (`.claude/rules/autopilot/angular/security.md`, and `.claude/rules/autopilot/nestjs/security.md` when present) and the project rules' Security specifics section (`.claude/rules/project.md`).
 3. `.claude/gates.md` § Security triggers — confirm why you were dispatched.
 4. The diff (range from the brief).
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// One-command setup on any machine: register the golden marketplace, install
-// every golden plugin at user scope but leave it disabled (projects enable the
+// One-command setup on any machine: register the autopilot marketplace, install
+// every autopilot plugin at user scope but leave it disabled (projects enable the
 // packs they use), and install the external plugins the workflow depends on
 // unless a copy is already present (installed or synced from claude.ai).
 //
@@ -64,14 +64,14 @@ function json(claude, cliArgs) {
 
 const baseName = (id) => id.split('@')[0];
 
-export function planSteps({ installed, marketplaces, goldenName, goldenPlugins, deps, source }) {
+export function planSteps({ installed, marketplaces, autopilotName, autopilotPlugins, deps, source }) {
   const steps = [];
   const known = new Set(marketplaces.map((m) => m.name));
   const has = (id) => installed.find((p) => p.id === id);
 
-  if (!known.has(goldenName)) steps.push({ why: `register marketplace ${goldenName}`, args: ['plugin', 'marketplace', 'add', source] });
-  for (const name of goldenPlugins) {
-    const id = `${name}@${goldenName}`;
+  if (!known.has(autopilotName)) steps.push({ why: `register marketplace ${autopilotName}`, args: ['plugin', 'marketplace', 'add', source] });
+  for (const name of autopilotPlugins) {
+    const id = `${name}@${autopilotName}`;
     const p = has(id);
     if (!p) steps.push({ why: `install ${id} (user scope)`, args: ['plugin', 'install', id, '--scope', 'user'] });
     if (!p || p.enabled) steps.push({ why: `disable ${id} at user scope — projects enable their packs`, args: ['plugin', 'disable', id, '--scope', 'user'] });
@@ -99,8 +99,8 @@ function main() {
   const steps = planSteps({
     installed,
     marketplaces,
-    goldenName: marketplace.name,
-    goldenPlugins: marketplace.plugins.map((p) => p.name),
+    autopilotName: marketplace.name,
+    autopilotPlugins: marketplace.plugins.map((p) => p.name),
     deps: dependencies,
     source: marketplaceSource,
   });

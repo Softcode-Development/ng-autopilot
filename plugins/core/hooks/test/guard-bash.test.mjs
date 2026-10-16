@@ -42,7 +42,7 @@ const BLOCK = {
   'redirect into schema.prisma': "echo 'model Foo {}' >> prisma/schema.prisma",
   'redirect into specs': 'cat tmp.md > openspec/specs/transactions/spec.md',
   'tee into specs': 'echo data | tee openspec/specs/transactions/spec.md',
-  'redirect into golden rules': 'echo x > .claude/rules/golden/state.md',
+  'redirect into autopilot rules': 'echo x > .claude/rules/autopilot/state.md',
 };
 
 const ALLOW = {
@@ -81,8 +81,8 @@ test('protected write passes when its flag is set', () => {
   assert.equal(blocked('cat a > openspec/specs/x/spec.md', opts), true);
 });
 
-test('golden rules protected without any project config', () => {
-  assert.equal(blocked('echo x > .claude/rules/golden/a.md', {}), true);
+test('autopilot rules protected without any project config', () => {
+  assert.equal(blocked('echo x > .claude/rules/autopilot/a.md', {}), true);
 });
 
 test('block reason names the rule', () => {
