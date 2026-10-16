@@ -34,6 +34,13 @@ Before writing markup that looks like a primitive (spinner, progress bar, toast,
 - Accessibility basics in templates (alt text, label association, focusable interactive elements, …) — **Enforcement:** angular-eslint `templateAccessibility` rules.
 - Custom classes (where utilities or primitives don't fit) use BEM-like names: `.feature-element__part--modifier`.
 
+## Theme and dark mode (apps with more than one theme)
+- **Default:** follow `prefers-color-scheme` until the user chooses.
+- **Persistence:** the choice is `light | dark | system`, stored (e.g. `localStorage.theme`, synced to the user's settings when the app has them); an explicit choice overrides the OS.
+- **No flash of the wrong theme:** an inline script in `index.html` applies the theme class before the bundle loads.
+- **System mode follows the OS live:** listen to `matchMedia('(prefers-color-scheme: dark)')` changes while the setting is `system`.
+- Tokens carry both themes — components never branch on the theme themselves.
+
 ## Accessibility minimums
 - Every interactive element has an accessible name (`aria-label`, `aria-labelledby`, or visible text).
 - Keyboard navigation works for every primary flow.
