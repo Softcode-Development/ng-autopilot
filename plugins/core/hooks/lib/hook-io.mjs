@@ -116,9 +116,16 @@ export const BUILT_IN_PROTECTED = [
 // installed, i.e. has an autopilot.json with packs.
 export const isInstalled = (config) => Array.isArray(config?.packs);
 
+const OPENSPEC_PROTECTED = {
+  glob: 'openspec/specs/**',
+  flag: 'openspec-archive',
+  reason: 'promoted specs — only the openspec archive flow edits them',
+};
+
 export function protectedPaths(config) {
   return [
     ...(isInstalled(config) ? BUILT_IN_PROTECTED : []),
+    ...(isInstalled(config) && config.packs.includes('openspec') ? [OPENSPEC_PROTECTED] : []),
     ...(Array.isArray(config?.protectedPaths) ? config.protectedPaths : []),
   ];
 }

@@ -30,11 +30,11 @@ Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs
 
 Inspect the repo, then present **one** table with a proposed answer per question, each with the evidence. The owner confirms or corrects.
 
-**Install the whole frontend toolkit by default.** The point is to give the project every capability from day one — not to mirror what it already has. Detection fills in *details* (prefix, pipes, locale files, commands); it does not decide *what* gets installed. Leave something out only when the project cannot use it at all (no backend → no `nestjs`).
+**Install every frontend capability.** The point is to give the project the whole toolkit from day one — not to mirror what it already has. Detection fills in *details* (prefix, pipes, locale files, commands); it never decides to leave a frontend capability out.
 
 | Key in `.claude/autopilot.json` | Inspect | Default |
 |---|---|---|
-| `packs` | `package.json` dependencies | `core`, `angular`, `testing`, plus the UI library's pack (`primeng` / `spartan`; both if both are in use). `nestjs` only when the repo has a NestJS app. `openspec` only if the owner picks that planning format. |
+| `packs` | `package.json` dependencies | **Always** `core`, `angular`, `testing`, `openspec`. **UI library pack** — PrimeNG in use → `primeng`; spartan/ng in use → `spartan`; both → both; **neither → ask the owner which UI library the project will use** (PrimeNG or spartan/ng + Tailwind) and install that pack. **Backend pack** — `nestjs` only when the repo has a NestJS app; without a backend there is nothing for it to do. |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
 | `testTiers` | runner + spec files; e2e framework config | **`["unit", "integration", "e2e"]` — always all three.** A tier the repo does not run yet still gets its overrides and backlog (placeholders); the first `/write-<tier>-tests` sets the tier up (framework choice — Playwright for a new e2e suite — config, scripts) and fills the overrides. Note in the table which tiers start from zero. |
 | `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside, legacy code keeps its current lint |

@@ -16,6 +16,7 @@ export const DEFAULT_PLAN_GLOBS = ['.claude/plans/**/plan.md'];
 export function evaluateOutOfScope(rel, content, { config = {} } = {}) {
   const globs = [
     ...DEFAULT_PLAN_GLOBS,
+    ...(Array.isArray(config.packs) && config.packs.includes('openspec') ? ['openspec/changes/*/proposal.md'] : []),
     ...(Array.isArray(config.outOfScopeDocs) ? config.outOfScopeDocs : []),
   ];
   if (!rel || rel.startsWith('.claude/plans/archive/')) return { blocked: false };

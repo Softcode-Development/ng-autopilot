@@ -1,10 +1,6 @@
 ---
 paths:
   - "openspec/**"
-  - "**/*.spec.ts"
-  - "**/*.int-spec.ts"
-  - "**/*.e2e.ts"
-  - "**/*.cy.ts"
 ---
 
 # OpenSpec

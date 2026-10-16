@@ -128,6 +128,26 @@ test('pre-commit fingerprint check blocks staged edits, deletions and new files 
   assert.deepEqual(verifyStaged(root), []);
 });
 
+test('openspec pack: installed with plan-file planning, the git gate is copied but not wired into the hooks', () => {
+  config({ packs: ['angular', 'testing', 'openspec'], planning: 'plan-file' });
+  sync(root);
+  assert.ok(existsSync(p('tools/autopilot/openspec/tasks-gate.mjs')));
+  assert.ok(existsSync(p('.claude/rules/autopilot/openspec/openspec.md')));
+  assert.doesNotMatch(read('.husky/pre-commit'), /tasks-gate/);
+  assert.doesNotMatch(read('.husky/commit-msg'), /tasks-gate/);
+});
+
+test('openspec pack: with openspec planning, the git gate runs in pre-commit and commit-msg', () => {
+  config({ packs: ['angular', 'testing', 'openspec'], planning: 'openspec' });
+  sync(root);
+  assert.match(read('.husky/pre-commit'), /tasks-gate\.mjs --pre-commit/);
+  assert.match(read('.husky/commit-msg'), /tasks-gate\.mjs --commit-msg "\$1"/);
+  config();
+  sync(root);
+  git('add', '-A');
+  git('commit', '-q', '-m', 'back to the base config');
+});
+
 test('a re-sync after a autopilot change commits cleanly (staged lock matches staged files)', () => {
   config({ testTiers: ['unit', 'e2e'] });
   sync(root);

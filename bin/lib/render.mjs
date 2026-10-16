@@ -50,7 +50,7 @@ const exec = (c) => (c.packageManager === 'pnpm' ? 'pnpm exec' : 'npx --no-insta
 function huskySteps(c) {
   const pre = ['echo "[hook:pre-commit] autopilot fingerprints…"', 'node tools/autopilot/lock/verify.mjs --staged'];
   const msg = [];
-  if (c.packs.includes('openspec')) {
+  if (c.packs.includes('openspec') && c.planning === 'openspec') {
     pre.push('node tools/autopilot/openspec/tasks-gate.mjs --pre-commit');
     msg.push('node tools/autopilot/openspec/tasks-gate.mjs --commit-msg "$1"');
   }

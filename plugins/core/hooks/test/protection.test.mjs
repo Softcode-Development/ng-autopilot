@@ -99,6 +99,17 @@ test('fence: a session opened in the autopilot repo may edit it', () => {
   assert.equal(edit('plugins/core/rules/work-modes.md', { root: fence }), false);
 });
 
+test('openspec pack: promoted specs are protected and proposals need out-of-scope destinations', async () => {
+  const { evaluateOutOfScope } = await import('../out-of-scope.mjs');
+  const withPack = { packs: ['angular', 'openspec'] };
+  assert.equal(edit('openspec/specs/orders/spec.md', { config: withPack }), true);
+  assert.equal(edit('openspec/specs/orders/spec.md', { config: { packs: ['angular'] } }), false);
+  assert.equal(edit('openspec/specs/orders/spec.md', { config: withPack, isFlagSet: (f) => f === 'openspec-archive' }), false);
+  const proposal = '## Out of scope\n\n- CSV export\n';
+  assert.equal(evaluateOutOfScope('openspec/changes/add-x/proposal.md', proposal, { config: withPack }).blocked, true);
+  assert.equal(evaluateOutOfScope('openspec/changes/add-x/proposal.md', proposal, { config: { packs: ['angular'] } }).blocked, false);
+});
+
 test('fence: the real fence resolves to the repo holding the marketplace manifest', () => {
   assert.ok(autopilotFence().some((f) => /ng-autopilot$/i.test(f)), autopilotFence().join(', '));
 });
