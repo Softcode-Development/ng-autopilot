@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
+import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
 import { normaliseConfig, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
 import { AUTOPILOT_ROOT } from './sync.mjs';
 
@@ -82,6 +83,9 @@ export function doctor(projectRoot) {
     const missing = requiredDevDependencies(readJson(configFile)).filter((d) => !have[d]);
     if (missing.length) warnings.push(`devDependencies missing: ${missing.join(', ')}`);
   }
+
+  // Technology added since install.
+  warnings.push(...stackDrift(readPackageJson(projectRoot), config).map((d) => `stack drift: ${d}`));
 
   // Legacy AI setup left behind.
   for (const rel of LEGACY) {

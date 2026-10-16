@@ -6,6 +6,7 @@ import {
 import { evaluatePlanReady } from '../plan-ready.mjs';
 import { evaluateOutOfScope } from '../out-of-scope.mjs';
 import { describeContext } from '../session-context.mjs';
+import { stackDrift } from '../lib/stack-drift.mjs';
 
 const PLAN = `---
 slug: orders-list
@@ -107,4 +108,17 @@ test('session context: no plan, then an active plan with its next step', () => {
   const one = describeContext({ ...base, plans: [plan({ openQuestions: 1, mode: 'balanced' })], lastEntry: () => 'Slice 1 — data-access' });
   assert.match(one, /orders-list \(approved, balanced\) · tasks 1\/3 · 1 open question\(s\) · next task: list page · last worklog: Slice 1/);
   assert.match(one, /resume with \/deliver/);
+});
+
+test('stack drift: technology added after install is reported until autopilot.json covers it', () => {
+  const config = { packs: ['core', 'angular', 'primeng'], stylelint: { scss: true, tailwind: false } };
+  assert.deepEqual(stackDrift({ dependencies: { primeng: '21.1.10' } }, config), []);
+  const drift = stackDrift({ dependencies: { primeng: '21.1.10', '@spartan-ng/brain': '1.0.0' }, devDependencies: { tailwindcss: '4.1.0' } }, config);
+  assert.equal(drift.length, 2);
+  assert.match(drift[0], /tailwindcss is installed but stylelint\.tailwind is false — run \/autopilot:install \(reconfigure\)/);
+  assert.match(drift[1], /spartan\/ng is installed but the spartan pack is not/);
+  assert.deepEqual(stackDrift({ devDependencies: { tailwindcss: '4.1.0' } }, { ...config, stylelint: { tailwind: true } }), []);
+  assert.deepEqual(stackDrift({ dependencies: { '@nestjs/core': '11.0.0' } }, {}), [], 'not installed: nothing to compare');
+  const context = describeContext({ branch: 'main', lastCommit: '', dirty: 0, config, plans: [], drift });
+  assert.match(context, /\[context\] stack drift: tailwindcss .* tell the owner before other work/);
 });

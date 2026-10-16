@@ -5,13 +5,14 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectRoot, loadAutopilotConfig } from './lib/hook-io.mjs';
 import { findActivePlans, lastWorklogHeading } from './lib/plans.mjs';
+import { readPackageJson, stackDrift } from './lib/stack-drift.mjs';
 
 function git(root, args) {
   const r = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
   return r.status === 0 ? r.stdout.trim() : '';
 }
 
-export function describeContext({ branch, lastCommit, dirty, config, plans, lastEntry = () => '' }) {
+export function describeContext({ branch, lastCommit, dirty, config, plans, lastEntry = () => '', drift = [] }) {
   const lines = [];
   lines.push(`[context] branch: ${branch || '(unknown)'} · last commit: ${lastCommit || '(none)'} · uncommitted files: ${dirty}`);
   const packs = Array.isArray(config.packs) ? config.packs.join(', ') : '(no .claude/autopilot.json)';
@@ -29,19 +30,22 @@ export function describeContext({ branch, lastCommit, dirty, config, plans, last
     lines.push(`[context] active plan: ${parts.join(' · ')}`);
   }
   if (plans.length > 0) lines.push('[context] resume with /deliver');
+  for (const d of drift) lines.push(`[context] stack drift: ${d} — tell the owner before other work`);
   return lines.join('\n');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = projectRoot();
   const status = git(root, ['status', '--porcelain']);
+  const config = loadAutopilotConfig(root);
   process.stdout.write(describeContext({
     branch: git(root, ['rev-parse', '--abbrev-ref', 'HEAD']),
     lastCommit: git(root, ['log', '-1', '--pretty=format:%h %s']),
     dirty: status ? status.split('\n').length : 0,
-    config: loadAutopilotConfig(root),
+    config,
     plans: findActivePlans(root),
     lastEntry: (p) => lastWorklogHeading(p.path),
+    drift: stackDrift(readPackageJson(root), config),
   }) + '\n');
   process.exit(0);
 }
