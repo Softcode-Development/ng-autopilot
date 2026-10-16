@@ -8,7 +8,8 @@ This project runs on the **ng-autopilot AI workspace**. Development is AI-only: 
 
 | Need | Where |
 |---|---|
-| **Project rules** — product, stack, architecture specifics, domain/API, design system, i18n, security, do-not-modify | [.claude/rules/project.md](.claude/rules/project.md) (loads when you open project files) |
+| **Project rules** — product, the project's hard rules, do-not-modify, and which doc to read before what | [.claude/rules/project.md](.claude/rules/project.md) (loads when you open project files) |
+| **Project docs** — read the one the work needs | __DOCS__ |
 | Autopilot rules (Angular, TypeScript, workflow, security, …) | `.claude/rules/autopilot/` (load automatically) |
 | Gate commands, smoke map, visual-gate setup, security triggers | [.claude/gates.md](.claude/gates.md) |
 | Test-tier project rules | `.claude/<tier>-testing/overrides.md` |

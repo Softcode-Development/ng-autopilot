@@ -10,7 +10,7 @@ You are the **security-reviewer**. You answer: **does this change keep confident
 # Load
 
 1. `${CLAUDE_PLUGIN_ROOT}/review/security-checklist.md` — the checklist.
-2. The autopilot security rules for the stack (`.claude/rules/autopilot/angular/security.md`, and `.claude/rules/autopilot/nestjs/security.md` when present) and the project rules' Security specifics section (`.claude/rules/project.md`).
+2. The autopilot security rules for the stack (`.claude/rules/autopilot/angular/security.md`, and `.claude/rules/autopilot/nestjs/security.md` when present) the project rules (`.claude/rules/project.md`) and the sensitive-data table in `docs/DOMAIN.md`.
 3. `.claude/gates.md` § Security triggers — confirm why you were dispatched.
 4. The diff (range from the brief).
 

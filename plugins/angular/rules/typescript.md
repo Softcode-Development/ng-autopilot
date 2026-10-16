@@ -29,7 +29,7 @@ paths:
   }
 }
 ```
-A project that cannot reach a setting yet lists it, with the reason, in the project rules' Architecture specifics section (`.claude/rules/project.md`).
+A project that cannot reach a setting yet lists it, with the reason, in the project's `docs/ARCHITECTURE.md`.
 
 ## Hard rules
 - **No `any`.** Use `unknown` and narrow. — **Enforcement:** lint `@typescript-eslint/no-explicit-any: error`.
@@ -52,9 +52,9 @@ export type TransactionDirection = (typeof TransactionDirection)[keyof typeof Tr
 - `satisfies` to check a literal against a type without widening it.
 
 ## Money and dates
-- **Money is never a `number`.** Floats and money do not mix. Wire format: string (or integer minor units). App code: a money value object (`{ amount: bigint /* minor units */, currency }`) with arithmetic through one helper. A project whose API sends money as numbers documents the boundary conversion in the project rules' Domain and API section.
+- **Money is never a `number`.** Floats and money do not mix. Wire format: string (or integer minor units). App code: a money value object (`{ amount: bigint /* minor units */, currency }`) with arithmetic through one helper. A project whose API sends money as numbers documents the boundary conversion in the project's `docs/DOMAIN.md`.
 - **Dates over the wire are ISO-8601 strings.** Timestamps are UTC; display converts to the user's time zone.
-- **One date library project-wide**, named in the project rules' Stack section.
+- **One date library project-wide**, named in the project's `docs/TECH_STACK.md`.
 
 ## Exempt
 `*.spec.ts` for the `@ts-expect-error` rule only.

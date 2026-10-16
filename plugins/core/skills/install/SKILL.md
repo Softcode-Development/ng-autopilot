@@ -58,7 +58,7 @@ Present one table, a row per file or folder, with a decision:
 
 | Decision | Meaning |
 |---|---|
-| **extract → delete** | holds knowledge **new work needs** — extracted into `.claude/rules/project.md` (or gates.md / an overrides file) in Phase 3, then deleted. Files that only describe legacy code (its conventions, design system, UI-library rules, scaffolding) are **delete**, not extract |
+| **extract → delete** | holds knowledge **new work needs** — extracted into the project docs (`docs/`), `.claude/rules/project.md`, gates.md or an overrides file in Phase 3, then deleted. Files that only describe legacy code (its conventions, design system, UI-library rules, scaffolding) are **delete**, not extract |
 | **delete** | replaced by the ng-autopilot workspace (generic agents, skills, instructions, Copilot copies, old review reports) |
 | **archive** | finished plans → `.claude/plans/archive/` |
 | **keep** | genuinely project-specific and not expressible as a rule (rare — say why) |
@@ -67,15 +67,30 @@ Nothing is touched until the owner approves the table.
 
 ## Phase 3 — Extract project knowledge (owner reviews)
 
-1. Write `.claude/rules/project.md` from `${CLAUDE_PLUGIN_ROOT}/templates/project/project.md`, filled with what the extracted files say. Follow the autopilot `ai-first-docs` rule:
-   - **only what new work needs and the autopilot rules don't already say** — the test for every line: "would an agent building a new feature inside `lint.strictScope` go wrong without it?" Typical keepers: API and auth/session facts, markets/tenants and their config, i18n source-of-truth workflow, security fields, frozen packages new code must not bump, do-not-modify list, how a new feature is mounted in the legacy shell;
+1. Write the project docs and the project rules from the templates, filled with what the extracted files, the code and `package.json` say. Each fact goes to exactly one file (autopilot `ai-first-docs` rule, "Where project knowledge lives"):
+
+   | File | Template | Gets |
+   |---|---|---|
+   | `docs/TECH_STACK.md` | `${CLAUDE_PLUGIN_ROOT}/templates/docs/TECH_STACK.md` | every layer with its version and why; frozen packages; branch model, hooks, env, versioning |
+   | `docs/ARCHITECTURE.md` | `…/templates/docs/ARCHITECTURE.md` | layout, legacy vs new code and how a feature is mounted, state table, patterns to reuse, where things live, i18n setup, testing layout |
+   | `docs/DOMAIN.md` | `…/templates/docs/DOMAIN.md` | glossary, API facts and quirks, auth/session facts, entities, wire enums, sensitive data, markets / tenants / roles |
+   | `docs/DESIGN_SYSTEM.md` | the angular pack's `templates/docs/DESIGN_SYSTEM.md` | the design system **new code** uses — never the legacy one |
+   | `docs/FEATURES.md` | `…/templates/docs/FEATURES.md` | every feature drafted from routes and feature folders, with capability slug and status (code wins over old docs) |
+   | `docs/GETTING_STARTED.md` | `…/templates/docs/GETTING_STARTED.md` | prerequisites, install, environment, run / test / build |
+   | `docs/DATA_MODEL.md` (nestjs pack) | the nestjs pack's `templates/docs/DATA_MODEL.md` | the schema |
+   | `.claude/rules/project.md` | `…/templates/project/project.md` | product in two lines, the docs table, the project's **hard rules** (Rule / Why / Enforcement), do-not-modify — nothing descriptive |
+
+   Sync creates any of these still missing from the templates; fill them before Phase 3 ends — `doctor` reports placeholders left verbatim. For every line:
+   - **only what new work needs and the autopilot rules don't already say** — the test: "would an agent building a new feature inside `lint.strictScope` go wrong without it?" Typical keepers: API and auth/session facts, markets/tenants and their config, i18n source-of-truth workflow, security fields, frozen packages new code must not bump, do-not-modify list, how a new feature is mounted in the legacy shell;
    - **legacy stays legacy:** no legacy conventions, no legacy design system, no legacy UI-library rules, no legacy component idioms — legacy code is only bug-fixed, in its own style, and the file itself shows that style;
    - each rule keeps its why, enforcement and precedent;
    - nothing stale (old versions, finished migrations, superseded advice).
    - Also extract project facts from the owner's auto-memory for this repo (`~/.claude/projects/<repo>/memory/`) by the same test — it exists on one machine only.
 2. Draft `.claude/gates.md` (commands, smoke map, visual-gate setup, security triggers) and, per test tier, `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs) from the same sources and `package.json`.
-3. Show the owner `project.md` with a coverage map: every section of every extract → delete file → where it went (`project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
-4. Commit: `docs: extract project knowledge into project rules`.
+3. Show the owner the docs and `project.md` with a coverage map: every section of every extract → delete file → where it went (a doc / `project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
+4. Commit: `docs: extract project knowledge into project docs and rules`.
+
+**Reconfigure on a project whose `project.md` predates the doc set** (it holds Stack / Architecture specifics / Domain and API / Design system / i18n / Security specifics sections): move each section into its doc by the table above, leave `project.md` with product, docs table, hard rules and do-not-modify, and show the owner the move as a coverage map.
 
 ## Phase 4 — Remove the old setup
 

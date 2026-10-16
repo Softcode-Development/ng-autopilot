@@ -14,7 +14,7 @@ What sync writes into a project. Autopilot-owned files go under `tools/autopilot
 | `core/tooling/husky/*` | `.husky/pre-commit`, `commit-msg`, `pre-push` | autopilot (regenerated); project steps in `.husky/pre-commit.local` |
 | — | `eslint.config.mjs` → `...autopilotAngular({ tsconfigRootDir: import.meta.dirname, ...autopilot.lint })` + project blocks | project |
 | — | `stylelint.config.mjs` → `autopilotStylelint({ scss, tailwind, strictScope })` | project |
-| — | `commitlint.config.cjs` → extends the autopilot base + `scope-enum` from the project's capability slugs (the project rules' Product section) | project |
+| — | `commitlint.config.cjs` → extends the autopilot base + `scope-enum` from the project's capability slugs (`docs/FEATURES.md`) | project |
 | — | `.lintstagedrc.mjs` → `...autopilotLintStaged(autopilot)` + project entries | project |
 | `testing/templates/toolkit/README.md` (testing pack) | `<lint.testingToolkit>/README.md` (default `src/testing/`) — the shared test-helper folder, created with its index table | project (created once) |
 | `core/tooling/prettier/*` | `.prettierrc.json`, `.prettierignore` | project (created once) |

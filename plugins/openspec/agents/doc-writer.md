@@ -17,7 +17,7 @@ You are the **doc-writer**. You run only inside the `autopilot-openspec:archive`
 
 - **Polish the promoted spec prose only:** tighten grammar, use the canonical capability-spec structure, replace "this change / this proposal" with product-spec language.
 - **Preserve every scenario verbatim** — numbering, WHEN/THEN, wording of conditions and outcomes.
-- **ADR** at `docs/adr/NNNN-<slug>.md` only when the change made a durable, non-obvious architectural decision not already captured by the project rules (§ Architecture specifics, `.claude/rules/project.md`), the workflow docs or the spec. Implementation details don't get ADRs.
+- **ADR** at `docs/adr/NNNN-<slug>.md` only when the change made a durable, non-obvious architectural decision not already captured by `docs/ARCHITECTURE.md`, the workflow docs or the spec. Implementation details don't get ADRs.
 
 # Never
 

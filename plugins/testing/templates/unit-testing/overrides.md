@@ -66,7 +66,7 @@ Each entry names the rule it relaxes, the reason, and its scope.
 
 ## Project rules that apply at every tier
 
-<Links to the project rules (`.claude/rules/project.md`) tests must respect (e.g. no PII in fixtures, legacy patterns tests must not copy).>
+<Links to the project rules (`.claude/rules/project.md`) and docs tests must respect (e.g. the sensitive-data table in `docs/DOMAIN.md`: no PII in fixtures).>
 
 ## Unit vs other tiers
 

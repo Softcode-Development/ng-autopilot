@@ -71,7 +71,7 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - **Owner:** only to override the mode or format.
 
 ### Step 1 — Plan
-- **architect** writes `.claude/plans/<slug>/plan.md` (status `draft`) from the request, the project's CLAUDE.md (index) and the project rules (`.claude/rules/project.md`), and the code.
+- **architect** writes `.claude/plans/<slug>/plan.md` (status `draft`) from the request, the project's CLAUDE.md (index), the project rules (`.claude/rules/project.md`), the project docs it needs (`docs/FEATURES.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN.md`), and the code.
 - Every question only the owner can answer goes into **Open questions** with options and a recommendation — never guessed.
 - Scope that does not fit goes into **Out of scope** with a destination. Never silently dropped.
 - Driver creates the branch `<type>/<slug>` and commits the plan.

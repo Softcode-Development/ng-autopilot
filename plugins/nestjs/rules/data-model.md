@@ -14,4 +14,4 @@ paths:
 - **Naming:** snake_case columns, plural table names, `id uuid default gen_random_uuid()`, foreign keys `<singular>_id`, booleans `is_` / `has_`.
 - **Schema changes only through migrations** checked into git and reviewed in the PR. Never edit the database directly in a dashboard.
 - **Protected paths:** the schema file and migrations are edited only by the migration agent/workflow. — **Enforcement:** PreToolUse path guard with a sentinel flag.
-- **Versioned/append-only records** (ledgers, audit) document their "current version" query pattern in the project rules' Domain and API section, and every list/aggregate query applies it.
+- **Versioned/append-only records** (ledgers, audit) document their "current version" query pattern in the project's `docs/DATA_MODEL.md`, and every list/aggregate query applies it.

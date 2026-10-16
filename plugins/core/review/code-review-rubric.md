@@ -1,6 +1,6 @@
 # Code-review rubric
 
-The rubric the `code-reviewer` agent applies. It cites the autopilot rules (`.claude/rules/autopilot/*`) and the project rules (`.claude/rules/project.md`) instead of restating them, so each rule lives in one place; this file is about **how to look**.
+The rubric the `code-reviewer` agent applies. It cites the autopilot rules (`.claude/rules/autopilot/*`) the project rules (`.claude/rules/project.md`) and the project docs (`docs/`) instead of restating them, so each rule lives in one place; this file is about **how to look**.
 
 ## Lanes
 
@@ -87,11 +87,11 @@ Common: `any`; template method calls; `*ngIf`/`*ngFor` or decorator inputs in ne
 
 ## E — Architecture
 
-The project rules (§ Architecture specifics) + autopilot `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, legacy stays legacy (outside `lint.strictScope`: bug fixes only, in the file's existing style — a new feature, a rewrite or a modernised fragment there is a finding; new code never extends a legacy pattern).
+The project's `docs/ARCHITECTURE.md` + autopilot `architecture` and `state` rules: folder placement (feature / core / shared), import boundaries, one mechanism per state origin, interceptors and HTTP through the project's API layer, legacy stays legacy (outside `lint.strictScope`: bug fixes only, in the file's existing style — a new feature, a rewrite or a modernised fragment there is a finding; new code never extends a legacy pattern).
 
 ## F — Design system (UI diffs only)
 
-The project rules' Design system section + autopilot `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
+The project's `docs/DESIGN_SYSTEM.md` + autopilot `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
 
 ## G — Tests (gross level only)
 

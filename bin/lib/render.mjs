@@ -46,6 +46,14 @@ export function normaliseConfig(raw) {
   return c;
 }
 
+// The project doc set: path in the project → template in the autopilot repo.
+export function projectDocs(c) {
+  const docs = ['TECH_STACK', 'ARCHITECTURE', 'DOMAIN', 'FEATURES', 'GETTING_STARTED'].map((d) => [`docs/${d}.md`, `plugins/core/templates/docs/${d}.md`]);
+  if (c.packs.includes('angular')) docs.push(['docs/DESIGN_SYSTEM.md', 'plugins/angular/templates/docs/DESIGN_SYSTEM.md']);
+  if (c.packs.includes('nestjs')) docs.push(['docs/DATA_MODEL.md', 'plugins/nestjs/templates/docs/DATA_MODEL.md']);
+  return docs;
+}
+
 export const apiMissing = (c) => !c.api.none && (!c.api.baseUrl || !c.api.docsUrl);
 
 function apiLine(c) {
@@ -110,6 +118,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     __TEST_TIERS__: c.testTiers.length ? c.testTiers.join(', ') : 'none',
     __STRICT_SCOPE__: c.lint.strictScope.map((g) => `\`${g}\``).join(', '),
     __API__: apiLine(c),
+    __DOCS__: projectDocs(c).map(([p]) => `[${path.posix.basename(p)}](${p})`).join(' · '),
   }), 'generated');
   const steps = huskySteps(c);
   const values = { __EXEC__: exec(c), __TYPECHECK__: c.commands.typecheck, __PREPUSH__: c.commands.prePush };
@@ -120,6 +129,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
 
   // Project-owned files, created once.
   add('.claude/rules/project.md', read('plugins/core/templates/project/project.md'), 'once');
+  for (const [doc, template] of projectDocs(c)) add(doc, read(template), 'once');
   add('.claude/gates.md', read('plugins/core/templates/claude/gates.md'), 'once');
   add('.claude/plans/backlog.md', read('plugins/core/templates/plans/backlog.md'), 'once');
   add('.claude/reviews/.gitkeep', '', 'once');
@@ -151,7 +161,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     "module.exports = {",
     "  extends: ['./tools/autopilot/commitlint/autopilot-base.cjs'],",
     '  rules: {',
-    "    // The project's capability slugs (project rules § Product), e.g. ['orders', 'auth', 'deps', 'ci']:",
+    "    // The project's capability slugs (docs/FEATURES.md), e.g. ['orders', 'auth', 'deps', 'ci']:",
     "    // 'scope-enum': [2, 'always', []],",
     '  },',
     '};',

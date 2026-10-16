@@ -47,7 +47,21 @@ test('after sync: no errors; warnings name what the owner still has to do', () =
   assert.match(text, /unexpected rule file \.claude\/rules\/old-rules\.md/);
   assert.match(text, /git hooks not active/);
   assert.match(text, /api\.baseUrl \/ api\.docsUrl not set/);
+  assert.match(text, /docs\/TECH_STACK\.md: \d+ unfilled/);
   assert.doesNotMatch(text, /not enabled/);
+});
+
+test('placeholders: only template text left unfilled counts, not the project\'s own <angle> notation', () => {
+  write('docs/FEATURES.md', '# Feature Modules\n\nEach feature lives in `src/app/features/<domain>/` with `<domain>.routes.ts`.\n');
+  write('docs/TECH_STACK.md', '# Tech Stack\n\n| Framework | Angular <x.y> — <standalone/signals/zoneless status> | |\n');
+  const text = doctor(root).warnings.join('\n');
+  assert.doesNotMatch(text, /docs\/FEATURES\.md/);
+  assert.match(text, /docs\/TECH_STACK\.md: 2 unfilled/);
+});
+
+test('a missing project doc is reported', () => {
+  rmSync(path.join(root, 'docs/DOMAIN.md'));
+  assert.match(doctor(root).warnings.join('\n'), /docs\/DOMAIN\.md missing — run sync/);
 });
 
 test('a hand-edited generated file is an error', () => {

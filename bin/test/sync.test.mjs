@@ -16,6 +16,7 @@ const write = (rel, text) => {
   mkdirSync(path.dirname(p(rel)), { recursive: true });
   writeFileSync(p(rel), text);
 };
+const lockHas = (rel) => Boolean(JSON.parse(read('.claude/autopilot.lock.json')).files[rel]);
 const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
 const config = (over = {}) => write('.claude/autopilot.json', JSON.stringify({
   packs: ['angular', 'testing'],
@@ -58,10 +59,14 @@ test('fresh sync writes generated files, creates project files, merges settings,
   }
   for (const f of ['.claude/rules/project.md', '.claude/gates.md', '.claude/plans/backlog.md', '.claude/unit-testing/overrides.md',
     '.claude/unit-testing/backlog.md', 'eslint.config.mjs', 'stylelint.config.mjs', 'commitlint.config.cjs', '.lintstagedrc.mjs',
-    'src/testing/README.md']) {
+    'src/testing/README.md', 'docs/TECH_STACK.md', 'docs/ARCHITECTURE.md', 'docs/DOMAIN.md', 'docs/FEATURES.md',
+    'docs/GETTING_STARTED.md', 'docs/DESIGN_SYSTEM.md']) {
     assert.ok(r.created.includes(f), f);
   }
   assert.equal(existsSync(p('.claude/e2e-testing/overrides.md')), false);
+  assert.equal(existsSync(p('docs/DATA_MODEL.md')), false, 'DATA_MODEL only with the nestjs pack');
+  assert.match(read('CLAUDE.md'), /\[TECH_STACK\.md\]\(docs\/TECH_STACK\.md\) · \[ARCHITECTURE\.md\]\(docs\/ARCHITECTURE\.md\)/);
+  assert.equal(lockHas('docs/TECH_STACK.md'), false, 'docs are project-owned, not fingerprinted');
   assert.equal(existsSync(p('tools/autopilot/openspec/tasks-gate.mjs')), false);
 
   assert.match(read('CLAUDE.md'), /`src\/app\/features\/\*\*`/);

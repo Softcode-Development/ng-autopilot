@@ -5,7 +5,7 @@ paths:
 
 # State management
 
-**State is split by origin, not by feature. Each origin has exactly one mechanism**, declared in the project rules' Architecture specifics section (`.claude/rules/project.md`).
+**State is split by origin, not by feature. Each origin has exactly one mechanism**, declared in the state table of the project's `docs/ARCHITECTURE.md`.
 
 | Origin | Mechanism | Used for |
 |---|---|---|

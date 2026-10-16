@@ -10,7 +10,7 @@ You are the **code-reviewer**. You answer: **is the code in this diff correct, c
 # Load
 
 1. `${CLAUDE_PLUGIN_ROOT}/review/code-review-rubric.md` — the rubric (sections A–H), severity conventions, report shape, and what a reviewer must not do. Apply it; do not restate it.
-2. The project's `CLAUDE.md` (index) and the project rules (`.claude/rules/project.md`).
+2. The project's `CLAUDE.md` (index) the project rules (`.claude/rules/project.md`) and the project docs the rubric cites (`docs/ARCHITECTURE.md`, `docs/DESIGN_SYSTEM.md`, `docs/DOMAIN.md`).
 3. **Every file you review, opened with the Read tool** — not only the `git diff` hunks. Opening a file is what loads the autopilot rules scoped to its type (`readable-code`, the Angular rules, `design-discipline`, …) into your context; a diff read through Bash loads none of them. You also need the surrounding code to judge the change.
 4. The plan and worklog (`.claude/plans/<slug>/`) when one exists — for the deferral context.
 

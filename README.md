@@ -19,7 +19,7 @@ Open Claude Code in the project and run **`/autopilot:install`**. It works on a 
 
 1. **Setup questions** — it inspects the repo and proposes each answer; you confirm or correct. The answers go to `.claude/autopilot.json`.
 2. **Inventory** — every existing AI file (old CLAUDE.md, agents, skills, instructions, prompts, Copilot files, hooks) with a decision per file: extract → delete, delete, archive, keep. You approve the table.
-3. **Extract** — project-specific knowledge goes into `.claude/rules/project.md` (only what differs from the autopilot rules); you review it. *Commit 1.*
+3. **Extract** — project knowledge goes into the doc set (`docs/TECH_STACK.md`, `ARCHITECTURE.md`, `DOMAIN.md`, `DESIGN_SYSTEM.md`, `FEATURES.md`, `GETTING_STARTED.md`, plus `DATA_MODEL.md` with a backend) and the project's hard rules into `.claude/rules/project.md` — only what new work needs and the autopilot rules don't say; you review it with a coverage map. *Commit 1.*
 4. **Clean** — the old AI setup is deleted. *Commit 2.*
 5. **Install** — sync writes the autopilot files; the drift check runs; you approve installing the devDependencies and activating the git hooks. *Commit 3.*
 
@@ -46,7 +46,7 @@ Outside the scope, autopilot lint rules are off and legacy code keeps its curren
 | `/deliver` | Every change |
 | `/review` | Full review of a branch or PR |
 
-Generated files (`CLAUDE.md`, `.claude/rules/autopilot/`, `tools/autopilot/`, `.husky/*`, `.claude/autopilot*.json`) change only through sync: hooks refuse edits, and the pre-commit fingerprint check refuses commits of edited copies. Project-owned files — `.claude/rules/project.md`, `.claude/gates.md`, test overrides and backlogs, plans, and the project's own `eslint.config.mjs` / `stylelint.config.mjs` / `commitlint.config.cjs` — are yours.
+Generated files (`CLAUDE.md`, `.claude/rules/autopilot/`, `tools/autopilot/`, `.husky/*`, `.claude/autopilot*.json`) change only through sync: hooks refuse edits, and the pre-commit fingerprint check refuses commits of edited copies. Project-owned files — `.claude/rules/project.md`, the `docs/` doc set, `.claude/gates.md`, test overrides and backlogs, plans, and the project's own `eslint.config.mjs` / `stylelint.config.mjs` / `commitlint.config.cjs` — are yours.
 
 The scripts behind the skills can also run directly from the autopilot repo: `node bin/sync.mjs <project> [--dry-run]`, `node bin/doctor.mjs <project>`.
 

@@ -27,6 +27,7 @@ const LEGACY = [
 ];
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
+const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
 
 export function doctor(projectRoot) {
   const errors = [];
@@ -65,14 +66,17 @@ export function doctor(projectRoot) {
     }
   }
 
-  // Unfilled placeholders in project-owned files.
-  const owned = ['.claude/rules/project.md', '.claude/gates.md', ...config.testTiers.map((t) => `.claude/${t}-testing/overrides.md`)];
-  for (const rel of owned) {
-    const full = path.join(projectRoot, rel);
-    if (!existsSync(full)) continue;
-    const text = readFileSync(full, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
-    const count = (text.match(PLACEHOLDER) ?? []).length;
-    if (count) warnings.push(`${rel}: ${count} unfilled <placeholder>(s)`);
+  // Unfilled placeholders in project-owned files: a template placeholder still present verbatim.
+  // Angle brackets the project writes itself (`features/<domain>/`) are not placeholders.
+  for (const f of files.filter((x) => x.kind === 'once' && x.path.endsWith('.md'))) {
+    const full = path.join(projectRoot, f.path);
+    if (!existsSync(full)) {
+      warnings.push(`${f.path} missing — run sync to create it`);
+      continue;
+    }
+    const text = stripComments(readFileSync(full, 'utf8'));
+    const unfilled = [...new Set(stripComments(f.content).match(PLACEHOLDER) ?? [])].filter((p) => text.includes(p));
+    if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s)`);
   }
 
   // devDependencies.
