@@ -30,6 +30,8 @@ Environment the commands need: `<e.g. CHROME_BIN for Karma>`. The full-suite com
 
 ## Toolkit
 
+Shared helpers live in the testing toolkit (`lint.testingToolkit`, default `src/testing/`; its README indexes them). Specs only — production imports fail lint.
+
 | Need | Use | Path |
 |---|---|---|
 | Collaborator mocks | `<toolkit mocks | jasmine.createSpyObj inline (see carve-outs)>` | `<path>` |

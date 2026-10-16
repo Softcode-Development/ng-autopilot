@@ -54,16 +54,38 @@ export { s };
 write('src/app/features/core/constants/route-paths.ts', `export const go = (r: { navigate(c: string[]): void }): void => r.navigate(['/orders']);
 `);
 
+// The testing toolkit sits outside the strict scope, as in a legacy repo.
+write('src/testing/builders.ts', `export const buildOrder = (id: string): { id: string } => ({ id: id! });
+`);
+write('src/app/features/orders/order-label.ts', `import { buildOrder } from '../../../testing/builders';
+
+export const orderLabel = (): string => buildOrder('1').id;
+`);
+write('src/app/features/orders/order-label.spec.ts', `import { buildOrder } from '../../../testing/builders';
+
+export const order = buildOrder('1');
+`);
+write('src/app/features/orders/order-alias.ts', `import { buildOrder } from '@app/testing/builders';
+
+export const aliasLabel = (): string => buildOrder('1').id;
+`);
+
 const eslint = new ESLint({
   cwd: root,
   overrideConfigFile: true,
-  overrideConfig: autopilotAngular({ tsconfigRootDir: root, strictScope: ['src/app/features/**'], constantsGlobs: ['**/core/constants/**'] }),
+  overrideConfig: autopilotAngular({
+    tsconfigRootDir: root,
+    strictScope: ['src/app/features/**'],
+    constantsGlobs: ['**/core/constants/**'],
+    testingToolkitImports: ['@app/testing'],
+  }),
 });
 
-const rulesIn = async (rel) => {
+const messagesIn = async (rel) => {
   const [result] = await eslint.lintFiles([path.join(root, rel)]);
-  return new Set(result.messages.map((m) => m.ruleId ?? `fatal: ${m.message}`));
+  return result.messages;
 };
+const rulesIn = async (rel) => new Set((await messagesIn(rel)).map((m) => m.ruleId ?? `fatal: ${m.message}`));
 
 test('in scope: every autopilot rule fires on the component', async () => {
   const rules = await rulesIn('src/app/features/orders/orders.component.ts');
@@ -102,6 +124,23 @@ test('specs: subjects allowed, ts-expect-error allowed with a reason', async () 
 test('constants files may hold route literals', async () => {
   const rules = await rulesIn('src/app/features/core/constants/route-paths.ts');
   assert.ok(!rules.has('no-restricted-syntax'), [...rules].join(', '));
+});
+
+test('testing toolkit: production code cannot import it, by relative path or alias', async () => {
+  for (const rel of ['src/app/features/orders/order-label.ts', 'src/app/features/orders/order-alias.ts']) {
+    const toolkitErrors = (await messagesIn(rel)).filter((m) => m.ruleId === 'no-restricted-imports' && /testing toolkit/.test(m.message));
+    assert.equal(toolkitErrors.length, 1, `${rel}: ${[...(await rulesIn(rel))].join(', ')}`);
+  }
+});
+
+test('testing toolkit: specs import it freely', async () => {
+  assert.ok(!(await rulesIn('src/app/features/orders/order-label.spec.ts')).has('no-restricted-imports'));
+});
+
+test('testing toolkit: linted outside the strict scope, with the spec relaxations', async () => {
+  const messages = await messagesIn('src/testing/builders.ts');
+  assert.ok(!messages.some((m) => m.fatal || /no matching configuration/i.test(m.message)), messages.map((m) => m.message).join('; '));
+  assert.ok(!messages.some((m) => m.ruleId === '@typescript-eslint/no-non-null-assertion'), 'non-null assertion is allowed, as in specs');
 });
 
 test('tsconfigRootDir is required', () => {

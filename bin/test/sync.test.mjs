@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { sync } from '../sync.mjs';
 import { verifyStaged, verifyAll } from '../../plugins/core/tooling/lock/verify.mjs';
@@ -56,7 +57,8 @@ test('fresh sync writes generated files, creates project files, merges settings,
     assert.ok(existsSync(p(f)), f);
   }
   for (const f of ['.claude/rules/project.md', '.claude/gates.md', '.claude/plans/backlog.md', '.claude/unit-testing/overrides.md',
-    '.claude/unit-testing/backlog.md', 'eslint.config.mjs', 'stylelint.config.mjs', 'commitlint.config.cjs', '.lintstagedrc.json']) {
+    '.claude/unit-testing/backlog.md', 'eslint.config.mjs', 'stylelint.config.mjs', 'commitlint.config.cjs', '.lintstagedrc.mjs',
+    'src/testing/README.md']) {
     assert.ok(r.created.includes(f), f);
   }
   assert.equal(existsSync(p('.claude/e2e-testing/overrides.md')), false);
@@ -66,7 +68,7 @@ test('fresh sync writes generated files, creates project files, merges settings,
   assert.match(read('CLAUDE.md'), /\.claude\/rules\/project\.md/);
   assert.match(read('.husky/pre-commit'), /npx --no-install lint-staged/);
   assert.match(read('.husky/pre-commit'), /tools\/autopilot\/lock\/verify\.mjs --staged/);
-  assert.ok(JSON.parse(read('.lintstagedrc.json'))['src/assets/i18n/*.json']);
+  assert.ok(existsSync(p('tools/autopilot/lint-staged/preset.mjs')));
 
   const settings = JSON.parse(read('.claude/settings.json'));
   assert.ok(settings.permissions.allow.includes('Bash(npm run e2e:*)'), 'project entry kept');
@@ -82,6 +84,19 @@ test('fresh sync writes generated files, creates project files, merges settings,
   assert.deepEqual(r.missingDevDependencies.includes('eslint'), false);
   assert.ok(r.missingDevDependencies.includes('husky'));
   assert.deepEqual(verifyAll(root), []);
+});
+
+test('the generated lint-staged config loads and covers only the lint scope, the toolkit and the locale files', async () => {
+  const { default: lintStaged } = await import(pathToFileURL(p('.lintstagedrc.mjs')).href);
+  assert.deepEqual(Object.keys(lintStaged).sort(), [
+    'src/app/features/**/*.{md,json,yml,yaml}',
+    'src/app/features/**/*.{scss,css}',
+    'src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}',
+    'src/assets/i18n/*.json',
+    'src/testing/**/*.{md,json,yml,yaml}',
+    'src/testing/**/*.{scss,css}',
+    'src/testing/**/*.{ts,mts,cts,js,mjs,cjs,html}',
+  ]);
 });
 
 test('second sync changes nothing', () => {

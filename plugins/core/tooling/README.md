@@ -8,13 +8,15 @@ What sync writes into a project. Autopilot-owned files go under `tools/autopilot
 | `angular/tooling/stylelint/preset.mjs` | `tools/autopilot/stylelint/preset.mjs` | autopilot |
 | `angular/tooling/i18n/*` | `tools/autopilot/i18n/` | autopilot |
 | `core/tooling/commitlint/autopilot-base.cjs` | `tools/autopilot/commitlint/autopilot-base.cjs` | autopilot |
+| `core/tooling/lint-staged/preset.mjs` | `tools/autopilot/lint-staged/preset.mjs` (linters + Prettier on staged files inside `lint.strictScope` and the testing toolkit only; locale validation on the `i18n.sets` files) | autopilot |
 | `openspec/tooling/tasks-gate.mjs` (openspec pack) | `tools/autopilot/openspec/tasks-gate.mjs` | autopilot |
 | `nestjs/tooling/openapi.mjs` (nestjs pack) | `tools/autopilot/nestjs/openapi.mjs` | autopilot |
 | `core/tooling/husky/*` | `.husky/pre-commit`, `commit-msg`, `pre-push` | autopilot (regenerated); project steps in `.husky/pre-commit.local` |
 | — | `eslint.config.mjs` → `...autopilotAngular({ tsconfigRootDir: import.meta.dirname, ...autopilot.lint })` + project blocks | project |
 | — | `stylelint.config.mjs` → `autopilotStylelint({ scss, tailwind, strictScope })` | project |
 | — | `commitlint.config.cjs` → extends the autopilot base + `scope-enum` from the project's capability slugs (the project rules' Product section) | project |
-| `core/tooling/lint-staged/lintstagedrc.json` | `.lintstagedrc.json` | project (created once) |
+| — | `.lintstagedrc.mjs` → `...autopilotLintStaged(autopilot)` + project entries | project |
+| `testing/templates/toolkit/README.md` (testing pack) | `<lint.testingToolkit>/README.md` (default `src/testing/`) — the shared test-helper folder, created with its index table | project (created once) |
 | `core/tooling/prettier/*` | `.prettierrc.json`, `.prettierignore` | project (created once) |
 | `core/tooling/editorconfig` | `.editorconfig` | project (created once) |
 | `core/tooling/gitleaks.toml` | `.gitleaks.toml` | project (created once) |
@@ -26,7 +28,6 @@ What sync writes into a project. Autopilot-owned files go under `tools/autopilot
 | `__EXEC__` | `npx --no-install` (npm) or `pnpm exec` (pnpm) |
 | `__TYPECHECK__` | the incremental typecheck, e.g. `npx tsc -p tsconfig.app.json --noEmit --incremental` |
 | `__PREPUSH__` | the final-gate command from `.claude/gates.md` |
-| `__I18N_GLOB__` | the locale files glob from `autopilot.json` → `i18n.sets`; the line is dropped when the project has no i18n |
 
 Pack steps are inserted between the `# >>> autopilot pack steps` markers: the openspec tasks gate (pre-commit + commit-msg), the nestjs OpenAPI regeneration (pre-commit).
 

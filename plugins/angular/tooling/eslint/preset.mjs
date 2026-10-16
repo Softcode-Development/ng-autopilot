@@ -56,6 +56,7 @@ export const DEFAULTS = {
   selectorPrefix: 'app',
   constantsGlobs: ['**/core/constants/**'],
   realtimeGlobs: ['**/core/realtime/**'],
+  testingToolkit: 'src/testing',
   testingToolkitImports: [],
   translatePipes: ['translate'],
   i18nAllowlistFile: undefined,
@@ -66,24 +67,35 @@ export const DEFAULTS = {
 const filesFor = (scope, ext) => scope.map((g) => (g.endsWith('/**') ? `${g}/*.${ext}` : `${g}/**/*.${ext}`));
 const inScope = (configs, files) => configs.map((c) => ({ ...c, files }));
 
+const TOOLKIT_MESSAGE = 'The testing toolkit is test-only — never import it from production code (specs only).';
+
+// Matches every way production code can reach the toolkit: relative paths into
+// its folder (`../../testing/builders`), the folder itself, and any aliases.
+export function toolkitPatterns(o) {
+  const folder = o.testingToolkit ? o.testingToolkit.replace(/\\/g, '/').replace(/\/$/, '').split('/').pop() : null;
+  const groups = [
+    ...(folder ? [`**/${folder}`, `**/${folder}/**`] : []),
+    ...o.testingToolkitImports.flatMap((alias) => [alias, `${alias}/**`]),
+  ];
+  return groups.length ? [{ group: groups, message: TOOLKIT_MESSAGE }] : [];
+}
+
 function restrictedImports(o, { subjects, toolkit }) {
-  const paths = [];
-  if (subjects) paths.push(RXJS_SUBJECTS);
-  if (toolkit) {
-    for (const name of o.testingToolkitImports) {
-      paths.push({ name, message: 'The testing toolkit is test-only — never import it from production code.' });
-    }
-  }
-  return paths.length ? ['error', { paths }] : 'off';
+  const paths = subjects ? [RXJS_SUBJECTS] : [];
+  const patterns = toolkit ? toolkitPatterns(o) : [];
+  if (!paths.length && !patterns.length) return 'off';
+  return ['error', { paths, patterns }];
 }
 
 export function autopilotAngular(options = {}) {
   const o = { ...DEFAULTS, ...options };
   if (!o.tsconfigRootDir) throw new Error('autopilotAngular: tsconfigRootDir is required (pass import.meta.dirname).');
 
-  const ts = filesFor(o.strictScope, 'ts');
+  // The toolkit is test code wherever it sits: linted, with the spec relaxations.
+  const toolkit = o.testingToolkit ? filesFor([`${o.testingToolkit.replace(/\/$/, '')}/**`], 'ts') : [];
+  const ts = [...filesFor(o.strictScope, 'ts'), ...toolkit];
   const html = filesFor(o.strictScope, 'html');
-  const specs = filesFor(o.strictScope, 'spec.ts');
+  const specs = [...filesFor(o.strictScope, 'spec.ts'), ...toolkit];
   const constants = o.constantsGlobs.map((g) => `${g}/*.ts`);
   const realtime = o.realtimeGlobs.map((g) => `${g}/*.ts`);
 

@@ -39,7 +39,7 @@ export function normaliseConfig(raw) {
   c.testTiers ??= [];
   for (const t of c.testTiers) if (!TIERS.includes(t)) throw new Error(`Unknown test tier "${t}"`);
   c.packageManager ??= 'npm';
-  c.lint = { strictScope: ['src/**'], ...(c.lint ?? {}) };
+  c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
   c.stylelint = { scss: false, tailwind: false, ...(c.stylelint ?? {}) };
   return c;
@@ -63,13 +63,6 @@ const fillSteps = (template, steps) => template.replace(
   ['# >>> autopilot pack steps', ...steps, '# <<< autopilot pack steps'].join('\n'),
 );
 
-function i18nGlob(c) {
-  const files = (c.i18n?.sets ?? []).flatMap((s) => [s.source, ...s.locales]);
-  if (files.length === 0) return null;
-  const dirs = [...new Set(files.map((f) => path.posix.dirname(f)))];
-  return dirs.length === 1 ? `${dirs[0]}/*.json` : `{${dirs.join(',')}}/*.json`;
-}
-
 const fill = (s, values) => Object.entries(values).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 
 export function renderFiles(autopilotRoot, rawConfig) {
@@ -90,6 +83,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     ['core', 'tooling/commitlint/autopilot-base.cjs', 'commitlint/autopilot-base.cjs'],
     ['core', 'tooling/lock/verify.mjs', 'lock/verify.mjs'],
     ['core', 'tooling/lock/fingerprint.mjs', 'lock/fingerprint.mjs'],
+    ['core', 'tooling/lint-staged/preset.mjs', 'lint-staged/preset.mjs'],
   ];
   if (c.packs.includes('angular')) {
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
@@ -123,11 +117,22 @@ export function renderFiles(autopilotRoot, rawConfig) {
     add(`.claude/${tier}-testing/overrides.md`, read(`plugins/testing/templates/${tier}-testing/overrides.md`), 'once');
     add(`.claude/${tier}-testing/backlog.md`, read(`plugins/testing/templates/${tier}-testing/backlog.md`), 'once');
   }
-  const glob = i18nGlob(c);
-  const lintStaged = JSON.parse(read('plugins/core/tooling/lint-staged/lintstagedrc.json'));
-  if (glob) lintStaged[glob] = lintStaged.__I18N_GLOB__;
-  delete lintStaged.__I18N_GLOB__;
-  add('.lintstagedrc.json', `${JSON.stringify(lintStaged, null, 2)}\n`, 'once');
+  if (c.packs.includes('testing') && c.lint.testingToolkit) {
+    add(`${c.lint.testingToolkit.replace(/\/$/, '')}/README.md`, read('plugins/testing/templates/toolkit/README.md'), 'once');
+  }
+  add('.lintstagedrc.mjs', [
+    "import { readFileSync } from 'node:fs';",
+    '',
+    "import { autopilotLintStaged } from './tools/autopilot/lint-staged/preset.mjs';",
+    '',
+    "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
+    '',
+    'export default {',
+    '  ...autopilotLintStaged(autopilot),',
+    '  // Project entries below.',
+    '};',
+    '',
+  ].join('\n'), 'once');
   add('.prettierrc.json', read('plugins/core/tooling/prettier/prettierrc.json'), 'once');
   add('.prettierignore', read('plugins/core/tooling/prettier/prettierignore'), 'once');
   add('.editorconfig', read('plugins/core/tooling/editorconfig'), 'once');

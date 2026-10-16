@@ -33,6 +33,8 @@ Default is in-memory fakes. Containers or live services only when authorised her
 
 ## Toolkit
 
+Shared helpers live in the testing toolkit (`lint.testingToolkit`, default `src/testing/`; its README indexes them). Specs only — production imports fail lint.
+
 | Need | Use | Path |
 |---|---|---|
 | In-memory adapters / fakes | `<…>` | `<path>` |

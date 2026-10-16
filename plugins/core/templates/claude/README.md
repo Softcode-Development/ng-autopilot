@@ -29,7 +29,8 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
     "strictScope": ["src/app/features/**"],
     "selectorPrefix": "app",
     "translatePipes": ["translate"],
-    "testingToolkitImports": ["src/testing"]
+    "testingToolkit": "src/testing",
+    "testingToolkitImports": ["@app/testing"]
   },
   "i18n": {
     "sets": [{ "source": "src/assets/i18n/lt.json", "locales": ["src/assets/i18n/en.json"] }],

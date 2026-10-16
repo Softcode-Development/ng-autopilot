@@ -40,11 +40,12 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside, legacy code keeps its current lint |
 | `lint.selectorPrefix` | `angular.json` → `prefix` | |
 | `lint.translatePipes` | i18n library | `translate` (ngx-translate), `transloco`, … |
-| `lint.testingToolkitImports` | test helper folders | import paths production code must never use |
+| `lint.testingToolkit` | existing shared test-helper folder | **`src/testing`** unless one already exists. Sync creates it with its README; specs import it, production code can't (ESLint, by relative path and alias); it is linted with the spec rules even outside `strictScope` |
+| `lint.testingToolkitImports` | `tsconfig` `paths` pointing at the toolkit | path aliases for the toolkit (e.g. `@app/testing`); `[]` when there is none |
 | `i18n.sets` | locale JSON files | each set: the source-of-truth locale file + the locales that mirror it |
 | `packageManager` | lockfile | `npm` / `pnpm` |
 | `commands.typecheck` | tsconfig files | incremental, e.g. `npx tsc -p tsconfig.app.json --noEmit --incremental` |
-| `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command |
+| `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: a command that needs an env var (e.g. `CHROME_BIN`) must work on the owner's machine as it is — check, and note it in the table |
 | `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | |
 | `sourceGlobs` | layout | what counts as application code (default `src/**`) |
 
