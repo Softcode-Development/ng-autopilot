@@ -30,11 +30,13 @@ Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs
 
 Inspect the repo, then present **one** table with a proposed answer per question, each with the evidence. The owner confirms or corrects.
 
-| Key in `.claude/autopilot.json` | Inspect | Notes |
+**Install the whole frontend toolkit by default.** The point is to give the project every capability from day one — not to mirror what it already has. Detection fills in *details* (prefix, pipes, locale files, commands); it does not decide *what* gets installed. Leave something out only when the project cannot use it at all (no backend → no `nestjs`).
+
+| Key in `.claude/autopilot.json` | Inspect | Default |
 |---|---|---|
-| `packs` | `package.json` dependencies | `core` always; `angular`; `testing`; `primeng` / `spartan` by UI library; `nestjs` when the repo has a NestJS app; `openspec` only if the owner wants that planning format |
+| `packs` | `package.json` dependencies | `core`, `angular`, `testing`, plus the UI library's pack (`primeng` / `spartan`; both if both are in use). `nestjs` only when the repo has a NestJS app. `openspec` only if the owner picks that planning format. |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
-| `testTiers` | runner + spec files; e2e framework config | only tiers the project actually runs |
+| `testTiers` | runner + spec files; e2e framework config | **`["unit", "integration", "e2e"]` — always all three.** A tier the repo does not run yet still gets its overrides and backlog (placeholders); the first `/write-<tier>-tests` sets the tier up (framework choice — Playwright for a new e2e suite — config, scripts) and fills the overrides. Note in the table which tiers start from zero. |
 | `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or only the modern folders (e.g. `["src/app/features/**"]`)** — inside it every autopilot rule is an error; outside, legacy code keeps its current lint |
 | `lint.selectorPrefix` | `angular.json` → `prefix` | |
 | `lint.translatePipes` | i18n library | `translate` (ngx-translate), `transloco`, … |
