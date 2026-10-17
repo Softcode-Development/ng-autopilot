@@ -15,7 +15,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
-import { PACKS, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
+import { installCommand, installSpecs } from './lib/dev-deps.mjs';
+import { normaliseConfig, PACKS, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
 
 export const AUTOPILOT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -121,7 +122,11 @@ function print(report, dryRun) {
   section('Project files kept (already exist — check they use the autopilot presets)', report.kept.filter((p) => /config|lintstaged|prettier|editorconfig|gitleaks/.test(p)));
   section('Conflicts', report.conflicts);
   section('devDependencies to install', report.missingDevDependencies);
-  console.log(`\nUnchanged: ${report.unchanged.length}. Fingerprints ${report.lockChanged ? `${verb}updated` : 'unchanged'}.`);
+  if (report.install) {
+    console.log(`  → ${report.install.command}`);
+    for (const n of report.install.notes) console.log(`    ${n}`);
+  }
+  console.log(`\nUnchanged: ${report.unchanged.length}. Fingerprints ${report.lockChanged ? (dryRun ? 'would be updated' : 'updated') : 'unchanged'}.`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -133,7 +138,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(2);
   }
   try {
-    print(sync(path.resolve(target), { dryRun }), dryRun);
+    const root = path.resolve(target);
+    const report = sync(root, { dryRun });
+    if (report.missingDevDependencies.length) {
+      const config = normaliseConfig(readJson(path.join(root, '.claude', 'autopilot.json'), {}));
+      const { specs, notes } = installSpecs(report.missingDevDependencies, readJson(path.join(root, 'package.json'), {}));
+      report.install = { command: installCommand(specs, config.packageManager), notes };
+    }
+    print(report, dryRun);
   } catch (e) {
     console.error(`[sync] ${e.message}`);
     process.exit(1);

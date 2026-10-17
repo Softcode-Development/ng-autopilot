@@ -22,7 +22,7 @@ write('tsconfig.json', JSON.stringify({
 }));
 
 // The same violations in and out of scope.
-const COMPONENT = (name) => `import { Component, Input } from '@angular/core';
+const COMPONENT = (name) => `import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 export enum Mode { A, B }
@@ -30,6 +30,7 @@ export enum Mode { A, B }
 @Component({
   selector: 'app-${name}',
   templateUrl: './${name}.component.html',
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class ${name[0].toUpperCase() + name.slice(1)}Component {
   @Input() title = '';

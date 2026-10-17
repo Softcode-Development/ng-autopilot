@@ -8,7 +8,7 @@
 
 import angular from 'angular-eslint';
 import prettierConfig from 'eslint-config-prettier';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import-x';
 import securityPlugin from 'eslint-plugin-security';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';

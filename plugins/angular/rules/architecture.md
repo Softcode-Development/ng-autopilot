@@ -68,7 +68,7 @@ One file per component, directive, pipe or service; a class used by two consumer
 ## Modern Angular baseline
 - **Standalone everything.** No `NgModule` in new code. Providers in `app.config.ts` (`provideRouter`, `provideHttpClient(withInterceptors([...]))`, …).
 - **`inject()`** for DI in new code.
-- **`ChangeDetectionStrategy.OnPush`** on every component. — **Enforcement:** lint `prefer-on-push-component-change-detection`.
+- **OnPush change detection** on every component: explicit `ChangeDetectionStrategy.OnPush` before Angular 22; from 22 it is the default, so a component never opts out with `Eager` (or the deprecated `Default`). — **Enforcement:** lint `prefer-on-push-component-change-detection` (angular-eslint matches the project's Angular major and checks the right form).
 - **Zoneless** when the project's Angular version supports it and the project's `docs/ARCHITECTURE.md` declares it; then never add `zone.js` to polyfills.
 - **Signals are the primary reactive primitive**: `signal`, `computed`, `linkedSignal`, `effect`, `resource`. RxJS only where signals cannot express the flow (debounced streams, websockets), converted with `toSignal()` at the boundary.
 
@@ -82,7 +82,7 @@ When the app runs zoneless (`provideZonelessChangeDetection()`):
 - Change detection runs on **signal writes**, Angular-bound template events, the `async` pipe and explicit `markForCheck()` — **not** on `setTimeout`, `setInterval`, `requestAnimationFrame` or promise callbacks. State a callback changes for the UI must be a signal write.
 - Third-party libraries that rely on zone.js patches (some charts, drag-drop) get an adapter that writes signals; document the adapter in a why-comment.
 - Avoid `NgZone.run()`; it is the zone-ful escape hatch, used only to adapt a library that cannot be integrated otherwise, and called out in review.
-- `OnPush` everywhere is what makes zoneless safe — the default strategy is a review blocker.
+- `OnPush` everywhere is what makes zoneless safe — `Eager` / `Default` change detection is a review blocker.
 
 ## Refactoring and migrations
 - **Behaviour stays identical:** the same values, conditions, request payloads and timing. Anything that cannot stay identical is reported (with the reason and a proposal), never changed silently.

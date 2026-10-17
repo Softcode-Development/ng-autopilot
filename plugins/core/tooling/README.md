@@ -33,4 +33,13 @@ Pack steps are inserted between the `# >>> autopilot pack steps` markers: the op
 
 ## devDependencies the project needs
 
-`eslint`, `angular-eslint`, `typescript-eslint`, `eslint-plugin-import`, `eslint-plugin-security`, `eslint-plugin-unicorn`, `eslint-config-prettier`, `prettier`, `stylelint`, `stylelint-config-standard` (or `-scss`), `husky`, `lint-staged`, `@commitlint/cli`, `@commitlint/config-conventional`. The drift check lists the missing ones; installing them is part of the project's alignment change.
+`eslint`, `angular-eslint`, `typescript-eslint`, `eslint-plugin-import-x`, `eslint-plugin-security`, `eslint-plugin-unicorn`, `eslint-config-prettier`, `prettier`, `stylelint`, `stylelint-config-standard` (or `-scss`), `husky`, `lint-staged`, `@commitlint/cli`, `@commitlint/config-conventional`. The drift check lists the missing ones; sync prints the install command; installing them is part of the project's alignment change.
+
+**Modern and compatible, never pinned.** Nothing is held at a fixed version; each package gets the newest version that fits the project:
+
+- `angular-eslint` — the project's `@angular/core` major (`angular-eslint@21` for Angular 21); its rules follow that Angular version.
+- `eslint` — the newest major that angular-eslint version accepts as a peer (an installed eslint is kept).
+- Packages that peer on eslint (`typescript-eslint`, the eslint plugins, `eslint-config-prettier`) — their latest when it accepts that eslint major, else their newest major that does.
+- Everything else — latest.
+
+The import rules use `eslint-plugin-import-x` (registered under the `import/` rule prefix): the original `eslint-plugin-import` does not accept eslint 10. The presets are tested against angular-eslint 21 and 22 with eslint 10.

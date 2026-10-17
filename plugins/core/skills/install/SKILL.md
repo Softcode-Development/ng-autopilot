@@ -108,7 +108,7 @@ Nothing is touched until the owner approves the table.
 1. Write `.claude/autopilot.json` with the Phase 1 answers. It is a protected file: create the flag first and remove it after — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync`, write, then `rm .claude/.flags/autopilot-sync`.
 2. Dry run: launcher `sync <project-dir> --dry-run`; show the summary. Then apply: launcher `sync <project-dir>`.
 3. Run launcher `doctor <project-dir>`.
-4. Ask the owner before installing the missing devDependencies and before running `npx husky` to activate the git hooks.
+4. Ask the owner before installing the missing devDependencies — run the install command sync printed (each package at the newest version compatible with the project's Angular and eslint, never pinned) — and before running `npx husky` to activate the git hooks.
 5. Commit: `chore: install autopilot workspace`.
 
 ## Phase 6 — Hand-back

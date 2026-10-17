@@ -1,0 +1,7 @@
+{
+  "version": "78.0.0",
+  "peerDependencies": {
+    "eslint": ">=10.4",
+    "typescript": "*"
+  }
+}

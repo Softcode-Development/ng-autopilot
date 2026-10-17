@@ -207,7 +207,7 @@ export function requiredDevDependencies(rawConfig) {
   const c = normaliseConfig(rawConfig);
   const deps = ['husky', 'lint-staged', '@commitlint/cli', '@commitlint/config-conventional', 'prettier'];
   if (c.packs.includes('angular')) {
-    deps.push('eslint', 'angular-eslint', 'typescript-eslint', 'eslint-plugin-import', 'eslint-plugin-security',
+    deps.push('eslint', 'angular-eslint', 'typescript-eslint', 'eslint-plugin-import-x', 'eslint-plugin-security',
       'eslint-plugin-unicorn', 'eslint-config-prettier', 'stylelint', c.stylelint.scss ? 'stylelint-config-standard-scss' : 'stylelint-config-standard');
   }
   return deps;
