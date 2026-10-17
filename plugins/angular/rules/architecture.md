@@ -17,7 +17,8 @@ The project's concrete tree and any deviation from this rule live in the project
 Code outside `lint.strictScope` is legacy. It is never developed further: bug fixes only, made in the file's existing style; no new features, no in-place modernisation. New work, and every replacement of a legacy screen, is built inside the strict scope. Legacy conventions, the legacy design system and legacy UI libraries are never written into the project rules and never reach new code.
 - **Why:** a half-modernised legacy file is worse than either state, and every new feature built on legacy patterns extends what has to be replaced.
 - **Enforcement:** the autopilot ESLint and stylelint presets apply every rule to `strictScope` only; the plan gate puts new work inside it; reviewers flag new features or rewrites outside it.
-- **Exempt:** the one-line wiring that mounts a new feature (a lazy route, a menu entry) in the legacy shell.
+- **Exempt:** the one-line wiring that mounts a new feature (a lazy route, a menu entry) in the legacy shell; an additive change to a legacy contract new code depends on (a config field with its value in every config, an optional DTO property) — nothing else in that file changes.
+- **Shared code:** a repo with legacy shared code adds a modern shared folder (e.g. `src/app/shared/modern/`, mirroring the legacy `shared/` kinds) to `strictScope`. Code more than one new feature uses lives there. A legacy shared piece is modernised by writing it anew there under the same name, never in place; the legacy original stays for its legacy consumers and is deleted with the last of them.
 
 ## Shape
 ```

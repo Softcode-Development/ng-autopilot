@@ -219,3 +219,18 @@ test('settings merge: an autopilot entry that moved tiers leaves its old tier; p
   assert.deepEqual(merged.permissions.ask, ['Bash(docker:*)', 'Bash(gh pr merge:*)']);
   assert.deepEqual(merged.permissions.deny, ['Bash(git push origin main:*)']);
 });
+
+test('a modern shared folder in the strict scope gets its README once, with links that resolve', () => {
+  config({ lint: { strictScope: ['src/app/features/**', 'src/app/shared/modern/**'], selectorPrefix: 'app' } });
+  const r = sync(root);
+  assert.ok(r.created.includes('src/app/shared/modern/README.md'));
+  const readme = read('src/app/shared/modern/README.md');
+  assert.match(readme, /\[ARCHITECTURE\.md § 2\]\(\.\.\/\.\.\/\.\.\/\.\.\/docs\/ARCHITECTURE\.md\)/);
+  assert.match(readme, /`components\/\{name\}\/`/);
+  for (const [, target] of readme.matchAll(/\]\((\.\.\/[^)]+)\)/g)) assert.ok(existsSync(path.resolve(p('src/app/shared/modern'), target)), target);
+  write('src/app/shared/modern/README.md', '# shared/modern — project edit\n');
+  sync(root);
+  assert.equal(read('src/app/shared/modern/README.md'), '# shared/modern — project edit\n', 'project-owned once created');
+  config();
+  sync(root);
+});

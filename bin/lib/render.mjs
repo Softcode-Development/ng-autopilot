@@ -152,6 +152,13 @@ export function renderFiles(autopilotRoot, rawConfig) {
     add(`.claude/${tier}-testing/overrides.md`, read(`plugins/testing/templates/${tier}-testing/overrides.md`), 'once');
     add(`.claude/${tier}-testing/backlog.md`, read(`plugins/testing/templates/${tier}-testing/backlog.md`), 'once');
   }
+  if (c.packs.includes('angular')) {
+    for (const glob of c.lint.strictScope.filter((g) => /(^|\/)shared\/modern\/\*\*$/.test(g))) {
+      const dir = glob.replace(/\/\*\*$/, '');
+      const up = '../'.repeat(dir.split('/').length);
+      add(`${dir}/README.md`, fill(read('plugins/angular/templates/shared-modern/README.md'), { __ROOT__: up }), 'once');
+    }
+  }
   if (c.packs.includes('testing') && c.lint.testingToolkit) {
     add(`${c.lint.testingToolkit.replace(/\/$/, '')}/README.md`, read('plugins/testing/templates/toolkit/README.md'), 'once');
   }

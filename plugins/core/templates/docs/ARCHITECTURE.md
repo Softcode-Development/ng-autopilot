@@ -27,6 +27,8 @@ This document is non-negotiable. Agents read it before generating code; reviewer
 
 - **New code:** `<lint.strictScope paths>` — every autopilot rule applies.
 - **Legacy:** everything else — bug fixes only, in the file's existing style; replaced, never modernised in place.
+- **Shared new code:** `src/app/shared/modern/{kind}/`, mirroring the legacy `shared/` (its README maps each kind to the legacy folder). A legacy shared piece is modernised by writing it anew there, never in place.
+- **Legacy contracts new code depends on:** only additive changes — a config field with its value in every config, an optional DTO property; nothing else in that file changes.
 - **Mounting a new feature in the legacy shell:** <where its lazy route and menu entry go, with a correct-shape example — the only legacy edits new work makes>.
 - **Replacing a legacy page:** <the cutover steps: build next to legacy, parity check, route swap, removal>.
 
