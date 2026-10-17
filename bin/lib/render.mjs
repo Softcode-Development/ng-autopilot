@@ -116,6 +116,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
   if (c.packs.includes('angular')) {
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
     tooling.push(['angular', 'tooling/stylelint/preset.mjs', 'stylelint/preset.mjs']);
+    tooling.push(['angular', 'tooling/i18n/hardcoded-ratchet.mjs', 'i18n/hardcoded-ratchet.mjs']);
     if (c.i18n?.sets?.length) for (const f of ['lib.mjs', 'i18n-validate.mjs', 'i18n-unused.mjs']) tooling.push(['angular', `tooling/i18n/${f}`, `i18n/${f}`]);
   }
   if (c.packs.includes('openspec')) tooling.push(['openspec', 'tooling/tasks-gate.mjs', 'openspec/tasks-gate.mjs']);

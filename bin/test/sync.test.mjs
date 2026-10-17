@@ -96,9 +96,11 @@ test('fresh sync writes generated files, creates project files, merges settings,
   assert.deepEqual(verifyAll(root), []);
 });
 
-test('the generated lint-staged config loads and covers only the lint scope, the toolkit and the locale files', async () => {
+test('the generated lint-staged config loads and covers the lint scope, the toolkit, legacy templates (ratchet) and the locale files', async () => {
   const { default: lintStaged } = await import(pathToFileURL(p('.lintstagedrc.mjs')).href);
+  assert.ok(existsSync(p('tools/autopilot/i18n/hardcoded-ratchet.mjs')), 'the ratchet the legacy-template entry runs');
   assert.deepEqual(Object.keys(lintStaged).sort(), [
+    '**/*.html',
     'src/app/features/**/*.{md,json,yml,yaml}',
     'src/app/features/**/*.{scss,css}',
     'src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}',

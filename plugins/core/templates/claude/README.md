@@ -45,7 +45,7 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
 
 `sourceGlobs` is what counts as application code for the `plan-ready` hook and the openspec tasks gate (default `src/**`, `apps/**`, `libs/**`, `projects/**`).
 
-`lint.strictScope` is where every autopilot lint rule applies as an error, with no carve-outs (default `["src/**"]`). A legacy repo migrating step by step sets its modern folders here (e.g. `["src/app/features/**"]`) — chosen at install time, widened as code moves in. The other `lint` keys feed the ESLint preset: component/directive selector prefix, translation pipe names, test-only toolkit import paths, the i18n allowlist file, extra template call exceptions.
+`lint.strictScope` is where every autopilot lint rule applies as an error, with no carve-outs (default `["src/**"]`). A legacy repo migrating step by step sets its modern folders here (e.g. `["src/app/features/**"]`) — chosen at install time, widened as code moves in. With a narrowed scope, staged templates outside it go through the hardcoded-text ratchet (their untranslated text may shrink, never grow); `lint.legacyHardcodedTextRatchet: false` turns it off. The other `lint` keys feed the ESLint preset: component/directive selector prefix, translation pipe names, test-only toolkit import paths, the i18n allowlist file, extra template call exceptions.
 
 `i18n.sets` drives the i18n gates: each set is a source locale file and the locales that must mirror it.
 
