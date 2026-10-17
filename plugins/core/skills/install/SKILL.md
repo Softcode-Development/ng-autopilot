@@ -21,6 +21,13 @@ Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs
 
   Reconfigure never touches project-owned files (project.md, gates.md, overrides, plans) except creating the ones a new tier or pack needs.
 
+  **Adopt the design-system starter** — when `design.starter` goes from `false` to `true` on a project that already configures PrimeNG:
+  1. Find the existing setup: `git grep -n "providePrimeNG("`, theme/preset files, global PrimeNG overrides.
+  2. Carry its decisions into the starter files sync created — preset and token overrides into `app-preset.ts`; `darkModeSelector`, `cssLayer`, `pt`, `zIndex`, ripple, translation options into `primeng.providers.ts` — and show the owner a mapping table (old file and setting → new place). `design.legacyCss` / `design.darkMode` follow what the old setup did unless the owner changes them.
+  3. Repoint imports (`app.config.ts` and everything importing the old files) to `PRIMENG_PROVIDERS`; delete the old files; `git grep` their paths and basenames and relink docs.
+  4. Wire what Phase 5 step 4 lists that is still missing. `ng build` and the affected tests pass; the visual gate on two PrimeNG screens shows them unchanged — behaviour stays identical (architecture rule, Refactoring).
+  5. Commit: `refactor(theme): adopt the autopilot design-system starter`.
+
 ## Phase 0 — Branch
 
 1. The working tree must be clean (`git status --porcelain` empty). If not: stop and ask the owner to commit or stash.
@@ -46,7 +53,10 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `packageManager` | lockfile | `npm` / `pnpm` |
 | `commands.typecheck` | tsconfig files | incremental, e.g. `npx tsc -p tsconfig.app.json --noEmit --incremental` |
 | `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: it must work on the owner's machine as it is, with no setup step. Don't add env vars or machine paths because a doc says "set X": tools usually find what they need themselves (karma-chrome-launcher finds Chrome in `%LOCALAPPDATA%`, `Program Files` and `Program Files (x86)` when `CHROME_BIN` is unset). Verify by asking the tool what it resolves, and never conclude "not installed" from one folder |
-| `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | |
+| `design.starter` | primeng pack | **`true`** — sync creates the default design system's code once (preset, providers, theme service, `src/styles/tailwind.css`, `.postcssrc.json`) and `docs/DESIGN_SYSTEM.md` comes pre-filled. On a project that already configures PrimeNG, reconfigure → Adopt the design-system starter |
+| `design.legacyCss` | `angular.json` → `styles`, global stylesheets | **`true`** when the app loads global legacy CSS (Bootstrap, Material, Nebular, a large global SCSS): Tailwind without its base reset, classes prefixed `tw:`, PrimeNG unlayered. Otherwise `false`. Show the evidence |
+| `design.darkMode` | existing theme switching, the owner's product decision | `true` (light + dark, follows the OS until the user picks); `false` for a single light theme |
+| `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | `stylelint.tailwind`: `true` with `design.starter` |
 | `sourceGlobs` | layout | what counts as application code (default `src/**`) |
 | `api.baseUrl`, `api.docsUrl` | environment files (`apiUrl`, `baseUrl`, proxy config), README / docs / old AI files / your memory for Swagger / OpenAPI / `api-docs` links | the dev API base and its Swagger/OpenAPI docs URL. **Not found → ask the owner; never guess.** A project with no backend API: `api.none: true`. Sync writes them into the generated `CLAUDE.md`, so every session has them |
 
@@ -109,8 +119,15 @@ Nothing is touched until the owner approves the table.
 1. Write `.claude/autopilot.json` with the Phase 1 answers. It is a protected file: create the flag first and remove it after — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync`, write, then `rm .claude/.flags/autopilot-sync`.
 2. Dry run: launcher `sync <project-dir> --dry-run`; show the summary. Then apply: launcher `sync <project-dir>`.
 3. Run launcher `doctor <project-dir>`.
-4. Ask the owner before installing the missing devDependencies — run the install command sync printed (each package at the newest version compatible with the project's Angular and eslint, never pinned) — and before running `npx husky` to activate the git hooks.
-5. Commit: `chore: install autopilot workspace`.
+4. **Design-system starter** (`design.starter`), wiring in project-owned files:
+   - `PRIMENG_PROVIDERS` (`src/app/core/theme/primeng.providers.ts`) into `app.config.ts` → `providers`;
+   - `src/styles/tailwind.css` first in `angular.json` → `styles` (every build and test target), `primeicons/primeicons.css` after it;
+   - `angular.json` → `schematics["@schematics/angular:component"].style = "none"`;
+   - `<body class="font-sans bg-surface-0 text-color">` in `index.html` (`tw:`-prefixed in the legacy setup; with `design.darkMode` add `dark:bg-surface-950`);
+   - with `design.darkMode`: the inline script from the primeng pack's `templates/starter/no-flash.html` into `index.html` `<head>` (allow it by hash if the project sets a CSP);
+   - after the installs below: `ng build` passes; then `/write-unit-tests src/app/core/theme` covers the theme service in the project's runner.
+5. Ask the owner before installing the missing dependencies and devDependencies — run the install command sync printed (each package at the newest version compatible with the project's Angular and eslint, never pinned) — and before running `npx husky` to activate the git hooks.
+6. Commit: `chore: install autopilot workspace`.
 
 ## Phase 6 — Hand-back
 

@@ -15,7 +15,8 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" doctor .` and report the
 | tier without overrides/backlog | `/autopilot:sync` creates them; fill the overrides |
 | unfilled placeholders | fill them (owner decisions go to the owner as questions with options) |
 | broken link | find where the target went (`git log --diff-filter=DR -- <path>`) and relink; a target deleted on purpose → restore it to a tracked home, or remove the link with the owner's go |
-| devDependencies missing | install them (ask before running the install) |
+| dependencies / devDependencies missing | run the install commands `/autopilot:sync` prints (ask before running them) |
+| doc missing a section from its template | add the section; if it does not apply, keep the heading with a `not applicable: reason` comment |
 | legacy AI files | `/autopilot:install` Phase 2–4, or delete them after extracting anything project-specific |
 | git hooks not active | `npx husky` (ask first) |
 

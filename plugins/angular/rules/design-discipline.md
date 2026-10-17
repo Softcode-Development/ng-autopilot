@@ -26,6 +26,20 @@ Before writing markup that looks like a primitive (spinner, progress bar, toast,
 **A `node_modules` listing or a listing of the local wrapper folder is not an audit** — both undersell what upstream offers.
 - **Precedent:** a spinner was hand-rolled after a `node_modules` audit, then ripped out when the docs catalog showed the library had one all along.
 
+## Styling
+How a template gets its look; the project's `docs/DESIGN_SYSTEM.md` § 4.6 names the concrete classes.
+
+| Concern | With | Never |
+|---|---|---|
+| Layout, spacing, sizing, typography, responsive behaviour | utility classes in the template (Tailwind) | component stylesheets |
+| Colours, surfaces, borders | the UI library's token classes (PrimeNG: `tailwindcss-primeui` — `bg-primary`, `text-muted-color`, `border-surface`) | hex / `rgb()`, raw palette classes (`bg-blue-500`) |
+| How a library component looks | the theme preset; for one instance, the library's scoped-token or pass-through inputs | overriding the library's internal classes, `::ng-deep` |
+| A project colour | a token in the theme preset, exposed as a utility class | SCSS variables |
+
+- **No component stylesheet by default** — `ng g c` is set to `style: none`. A stylesheet that must exist opens with `/* why: … */`.
+  - **Why:** a stylesheet per component re-decides spacing and colour the tokens already decide, and drifts from them.
+  - **Enforcement:** stylelint `autopilot/justified-stylesheet` on component stylesheets in `strictScope`.
+
 ## Tokens
 - Colors, spacing, type, radius and motion come from design tokens (CSS custom properties), so themes swap at runtime.
 - **No raw hex/rgb literals** in component TS/HTML/SCSS. — **Enforcement:** stylelint `color-no-hex`, `color-named`, `function-disallowed-list` (rgb/hsl) on component styles.
