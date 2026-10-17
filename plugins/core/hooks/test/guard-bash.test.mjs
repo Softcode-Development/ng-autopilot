@@ -10,7 +10,8 @@ const config = {
     { glob: 'openspec/specs/**', flag: 'opsx-archive-in-progress', reason: 'promoted truth' },
   ],
 };
-const blocked = (cmd, opts = { config }) => evaluateBash(cmd, opts).blocked;
+const onBranch = (name) => () => name;
+const blocked = (cmd, opts = { config }) => evaluateBash(cmd, { currentBranch: onBranch('feat/x'), ...opts }).blocked;
 
 const BLOCK = {
   'rm -rf /': 'rm -rf /',
@@ -75,6 +76,53 @@ for (const [name, cmd] of Object.entries(BLOCK)) {
 for (const [name, cmd] of Object.entries(ALLOW)) {
   test(`allows: ${name}`, () => assert.equal(blocked(cmd), false, cmd));
 }
+
+const TRUNK_PUSH = {
+  'explicit trunk': 'git push origin main',
+  'explicit master': 'git push origin master',
+  'explicit production': 'git push origin production',
+  'set upstream to main': 'git push -u origin main',
+  'HEAD:main': 'git push origin HEAD:main',
+  'branch:main': 'git push origin feat/x:main',
+  'refs/heads/main': 'git push origin HEAD:refs/heads/main',
+  'delete main': 'git push origin :main',
+  'git -C dir': 'git -C ../app push origin main',
+  'after another command': 'npm test && git push origin main',
+  'env assignment first': 'GIT_TRACE=1 git push origin main',
+  'with a push option': 'git push -o ci.skip origin main',
+  'quoted refspec': 'git push origin "main"',
+  '--all': 'git push --all origin',
+  '--mirror': 'git push --mirror',
+};
+for (const [name, cmd] of Object.entries(TRUNK_PUSH)) {
+  test(`blocks a push to a trunk: ${name}`, () => assert.equal(blocked(cmd), true, cmd));
+}
+
+test('a bare push, a push to the remote only, or HEAD, is blocked on a trunk and allowed on a feature branch', () => {
+  for (const cmd of ['git push', 'git push origin', 'git push -u origin HEAD', 'git push origin HEAD']) {
+    assert.equal(blocked(cmd, { config, currentBranch: onBranch('main') }), true, `${cmd} on main`);
+    assert.equal(blocked(cmd, { config, currentBranch: onBranch('production') }), true, `${cmd} on production`);
+    assert.equal(blocked(cmd, { config, currentBranch: onBranch('feat/x') }), false, `${cmd} on feat/x`);
+  }
+});
+
+test('projects add trunks with protectedBranches', () => {
+  const withRelease = { config: { ...config, protectedBranches: ['release'] } };
+  assert.equal(blocked('git push origin release', withRelease), true);
+  assert.equal(blocked('git push', { ...withRelease, currentBranch: onBranch('release') }), true);
+  assert.equal(blocked('git push origin release'), false);
+});
+
+test('not a push to a trunk: branches named like one, and git mentioned as text', () => {
+  assert.equal(blocked('git push origin main-menu-fix'), false);
+  assert.equal(blocked('git push origin feat/main'), false);
+  assert.equal(blocked('git commit -m "docs: never git push origin main"'), false);
+  assert.equal(blocked("node gen.mjs <<'EOF'\n  'x': 'git push --all origin',\nEOF"), false);
+});
+
+test('the reason names the trunk and the way forward', () => {
+  assert.match(evaluateBash('git push origin HEAD:main', { currentBranch: onBranch('feat/x') }).reason, /protected trunk refused: it targets main.*open a PR/);
+});
 
 test('protected write passes when its flag is set', () => {
   const opts = { config, isFlagSet: (f) => f === 'db-migrator-active' };

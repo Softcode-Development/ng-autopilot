@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { sync } from '../sync.mjs';
+import { mergeSettings, sync } from '../sync.mjs';
 import { verifyStaged, verifyAll } from '../../plugins/core/tooling/lock/verify.mjs';
 
 let root;
@@ -202,4 +202,13 @@ test('removing a pack removes its generated files and disables the plugin', () =
   assert.equal(existsSync(p('.claude/rules/autopilot/angular/state.md')), false);
   assert.equal(JSON.parse(read('.claude/settings.json')).enabledPlugins['autopilot-angular@ng-autopilot'], false);
   assert.ok(existsSync(p('eslint.config.mjs')), 'project-owned entry file is the project\'s to remove');
+});
+
+test('settings merge: an autopilot entry that moved tiers leaves its old tier; project entries stay', () => {
+  const autopilot = { permissions: { allow: ['Bash(git push:*)'], ask: ['Bash(gh pr merge:*)'], deny: ['Bash(git push origin main:*)'] } };
+  const existing = { permissions: { allow: ['Bash(make:*)'], ask: ['Bash(git push:*)', 'Bash(docker:*)'], deny: [] } };
+  const merged = mergeSettings(existing, autopilot, []);
+  assert.deepEqual(merged.permissions.allow, ['Bash(make:*)', 'Bash(git push:*)']);
+  assert.deepEqual(merged.permissions.ask, ['Bash(docker:*)', 'Bash(gh pr merge:*)']);
+  assert.deepEqual(merged.permissions.deny, ['Bash(git push origin main:*)']);
 });

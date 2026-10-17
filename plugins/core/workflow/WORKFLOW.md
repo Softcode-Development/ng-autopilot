@@ -2,7 +2,7 @@
 
 The single source of **what happens after what** when a change is delivered. The `/deliver` skill executes it; agents cite it; the work-modes rule sets the policy it runs under. If this file and another doc disagree on sequence, this file wins.
 
-Development here is AI-only. The owner decides — scope, open questions, product calls, push — and agents do everything else. Every step below says whether the owner is needed.
+Development here is AI-only. The owner decides — scope, open questions, product calls, merge — and agents do everything else. Every step below says whether the owner is needed.
 
 ---
 
@@ -123,7 +123,7 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - Version bump as the last commit when the project versions its app (git-safety rule).
 
 ### Step 10 — Close
-- **Owner approves push/PR.** Driver pushes and opens the PR (title = conventional subject; body = goal, scope, test summary, link to the plan).
+- **Driver pushes and opens the PR** without asking (title = conventional subject; body = goal, scope, test summary, link to the plan); later PR edits and comments need no stop either. **The owner approves the merge** — agents never merge and never push to a trunk (git-safety rule).
 - Plan `status: done`, folder moved to `.claude/plans/archive/<date>-<slug>/`, committed. A durable, non-obvious decision gets an ADR (`docs/adr/`).
 - With `openspec`: the archive step promotes the spec instead.
 
@@ -151,7 +151,7 @@ Only these:
 4. A review finding that is a product decision (§ 7).
 5. The browser is not connected for a visual gate.
 6. A red gate the driver cannot fix within the change's scope.
-7. Push / PR / merge.
+7. Merge. Pushing a feature branch and opening, editing or commenting on its PR are not stops.
 
 **How to ask:** one question per message, 2–4 options, a recommendation with its reason first. Never forward a raw finding or error without a proposed answer.
 

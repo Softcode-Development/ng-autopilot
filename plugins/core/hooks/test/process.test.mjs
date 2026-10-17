@@ -70,6 +70,21 @@ test('guard-bash exit codes', () => {
   assert.equal(runHook('guard-bash.mjs', bash('git status')).code, 0);
 });
 
+test('guard-bash reads the current branch: a bare push on main is blocked, on a feature branch it passes', () => {
+  const repo = mkdtempSync(path.join(tmpdir(), 'autopilot-trunk-'));
+  try {
+    const git = (...args) => spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+    git('init', '-q', '-b', 'main');
+    const onMain = runHook('guard-bash.mjs', bash('git push'), repo);
+    assert.equal(onMain.code, 2);
+    assert.match(onMain.stderr, /current branch is main/);
+    git('switch', '-q', '-c', 'feat/x');
+    assert.equal(runHook('guard-bash.mjs', bash('git push -u origin HEAD'), repo).code, 0);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 function writePlan(slug, frontmatterStatus, openQuestion) {
   const dir = path.join(project, '.claude', 'plans', slug);
   mkdirSync(dir, { recursive: true });

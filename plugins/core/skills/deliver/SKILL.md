@@ -27,7 +27,7 @@ You are the **driver**. Read `${CLAUDE_PLUGIN_ROOT}/workflow/WORKFLOW.md` now �
 | 5 Test phase | For each tier in `autopilot.json` → `testTiers`, in the order unit → e2e → integration, sequentially: `autopilot-testing:<tier>-test-orchestrator`. Brief: the changed files, the plan's criteria for that tier, and the overrides path `.claude/<tier>-testing/overrides.md`. A listed tier without its overrides file → stop and offer to create it from the testing pack template. |
 | 7 Review | `autopilot:plan-reviewer` + `autopilot:code-reviewer` (+ `autopilot:security-reviewer`) in parallel |
 | 8 Fixes | the implementer, one brief with every `fix` decision |
-| 10 Close | plan-file: archive the plan folder yourself. openspec: invoke the `autopilot-openspec:archive` skill |
+| 10 Close | push the branch and open the PR yourself, without asking; the owner approves the merge. plan-file: archive the plan folder yourself. openspec: invoke the `autopilot-openspec:archive` skill |
 
 Every brief follows WORKFLOW.md § 8. Smoke and visual gates (Step 6) and triage (Step 8) are yours — do not delegate them.
 

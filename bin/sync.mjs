@@ -27,7 +27,14 @@ export function mergeSettings(existing, autopilot, packs) {
   const merged = structuredClone(existing ?? {});
   merged.$schema ??= autopilot.$schema;
   merged.permissions ??= {};
-  for (const list of ['allow', 'ask', 'deny']) merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]);
+  const tiers = ['allow', 'ask', 'deny'];
+  for (const list of tiers) merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]);
+  // An autopilot entry lives only in the tier autopilot puts it in: when it moves
+  // (git push: ask → allow), the old tier's copy goes, or ask/deny would still win.
+  for (const list of tiers) {
+    const elsewhere = new Set(tiers.filter((t) => t !== list).flatMap((t) => autopilot.permissions[t] ?? []));
+    merged.permissions[list] = merged.permissions[list].filter((e) => (autopilot.permissions[list] ?? []).includes(e) || !elsewhere.has(e));
+  }
   merged.enabledPlugins ??= {};
   for (const p of PACKS) merged.enabledPlugins[pluginId(p)] = packs.includes(p);
   return merged;

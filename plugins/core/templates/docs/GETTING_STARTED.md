@@ -37,7 +37,7 @@ From an empty machine to a running app, then how to work in this repo with agent
 ## 5. Working with agents
 
 ```
-/deliver {request}   → plan → plan gate (you) → implement → tests → gates → review → PR (you approve the push)
+/deliver {request}   → plan → plan gate (you) → implement → tests → gates → review → push + PR (you approve the merge)
 /deliver            → resume the active plan
 /review {range|PR}  → review any branch or PR
 ```

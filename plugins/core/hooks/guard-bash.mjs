@@ -1,8 +1,9 @@
 // PreToolUse(Bash): block destructive or rule-breaking shell commands.
 // Settings deny-lists match command prefixes only; this hook closes the
 // side channels (secret reads via cat/grep, redirect writes into protected
-// paths, force pushes spelled as `+branch`).
+// paths, force pushes spelled as `+branch`, pushes to a trunk branch).
 
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   readEnvelope, projectRoot, loadAutopilotConfig, protectedPaths, flagIsSet, globToRegExp, finish,
@@ -61,6 +62,60 @@ const RULES = [
   },
 ];
 
+export const DEFAULT_TRUNKS = ['main', 'master', 'production'];
+
+// git push options that take a value as the next word.
+const PUSH_VALUE_OPTIONS = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec']);
+
+// Each `git [-C dir] [-c k=v] push …` in command position, as its argument words.
+// `git` quoted or mid-segment is an argument (a commit message, test data), not a command.
+function pushInvocations(command) {
+  const out = [];
+  for (const segment of command.split(/&&|\|\||[;|\n]/)) {
+    const raw = segment.trim().replace(/^\(\s*/, '').split(/\s+/);
+    let i = 0;
+    while (/^[A-Za-z_]\w*=/.test(raw[i] ?? '')) i++;
+    if (raw[i] !== 'git') continue;
+    const words = raw.map((w) => w.replace(/^['"]|['"]$/g, ''));
+    i++;
+    while (words[i] === '-C' || words[i] === '-c') i += 2;
+    if (words[i] === 'push') out.push(words.slice(i + 1));
+  }
+  return out;
+}
+
+// Why a push would land on a trunk, or null. Bare pushes and `HEAD` resolve
+// through the current branch.
+export function trunkPush(command, trunks, currentBranch) {
+  const isTrunk = (ref) => trunks.includes(ref.replace(/^refs\/heads\//, ''));
+  for (const args of pushInvocations(command)) {
+    const positional = [];
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i];
+      if (a === '--all' || a === '--mirror' || a === '--branches') return `git push ${a} also pushes the trunk branches`;
+      if (PUSH_VALUE_OPTIONS.has(a)) i++;
+      else if (!a.startsWith('-')) positional.push(a);
+    }
+    const refspecs = positional.slice(1);
+    if (!refspecs.length || refspecs.some((r) => r.replace(/^\+/, '') === 'HEAD')) {
+      const branch = currentBranch();
+      if (branch && isTrunk(branch)) return `the current branch is ${branch}`;
+    }
+    for (const spec of refspecs) {
+      const bare = spec.replace(/^\+/, '');
+      const dst = bare.includes(':') ? bare.slice(bare.indexOf(':') + 1) : bare;
+      if (dst && isTrunk(dst)) return `it targets ${dst.replace(/^refs\/heads\//, '')}`;
+    }
+  }
+  return null;
+}
+
+function gitCurrentBranch(root) {
+  // --show-current also answers on a branch with no commits yet; empty when detached.
+  const r = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
+  return r.status === 0 ? r.stdout.trim() || null : null;
+}
+
 function readsSecretFile(command) {
   if (!new RegExp(`(?:^|[\\s;&|(])${READ_VERBS}\\s`).test(command)) return false;
   for (const m of command.matchAll(ENV_FILE)) {
@@ -70,10 +125,14 @@ function readsSecretFile(command) {
   return SECRET_FILE.test(command);
 }
 
-export function evaluateBash(command, { root = '.', config = {}, isFlagSet = () => false, fence = null } = {}) {
+export function evaluateBash(command, { root = '.', config = {}, isFlagSet = () => false, fence = null, currentBranch = () => gitCurrentBranch(root) } = {}) {
   if (!command) return { blocked: false };
   for (const rule of RULES) {
     if (rule.test(command)) return { blocked: true, reason: rule.reason };
+  }
+  const trunk = trunkPush(command, [...DEFAULT_TRUNKS, ...(config.protectedBranches ?? [])], currentBranch);
+  if (trunk) {
+    return { blocked: true, reason: `push to a protected trunk refused: ${trunk}. Push a feature branch and open a PR; the owner approves the merge.` };
   }
   for (const target of writeTargets(command)) {
     if (fenceBlocks(target, root, fence)) {
