@@ -65,3 +65,14 @@ test('the install command follows the package manager', () => {
   assert.equal(installCommand(['a', 'b@2'], 'pnpm'), 'pnpm add -D a b@2');
   assert.equal(installCommand(['a'], 'npm'), 'npm install -D a');
 });
+
+test('the theme package is held at 2.x for its licence', () => {
+  const { specs, notes } = installSpecs(['@primeuix/themes', '@fontsource-variable/inter'], {}, view);
+  assert.deepEqual(specs, ['@primeuix/themes@2', '@fontsource-variable/inter']);
+  assert.match(notes.join('\n'), /@primeuix\/themes@2: .*licen/);
+});
+
+test('runtime dependencies install without -D', () => {
+  assert.equal(installCommand(['a'], 'npm', { dev: false }), 'npm install a');
+  assert.equal(installCommand(['a'], 'pnpm', { dev: false }), 'pnpm add a');
+});

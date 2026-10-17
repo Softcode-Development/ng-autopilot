@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
 import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
-import { apiMissing, normaliseConfig, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
+import { apiMissing, normaliseConfig, pluginId, renderFiles, requiredDependencies, requiredDevDependencies } from './lib/render.mjs';
 import { brokenLinks } from './links.mjs';
 import { AUTOPILOT_ROOT } from './sync.mjs';
 
@@ -106,6 +106,8 @@ export function doctor(projectRoot) {
   if (existsSync(pkgFile)) {
     const pkg = readJson(pkgFile);
     const have = { ...pkg.dependencies, ...pkg.devDependencies };
+    const missingRuntime = requiredDependencies(readJson(configFile)).filter((d) => !have[d]);
+    if (missingRuntime.length) warnings.push(`dependencies missing: ${missingRuntime.join(', ')}`);
     const missing = requiredDevDependencies(readJson(configFile)).filter((d) => !have[d]);
     if (missing.length) warnings.push(`devDependencies missing: ${missing.join(', ')}`);
   }

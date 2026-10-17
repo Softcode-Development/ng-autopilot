@@ -5,7 +5,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { fillBlocks, normaliseConfig, renderFiles } from '../lib/render.mjs';
+import { fillBlocks, normaliseConfig, renderFiles, requiredDependencies, requiredDevDependencies } from '../lib/render.mjs';
+import { doctor } from '../doctor.mjs';
 import { AUTOPILOT_ROOT, sync } from '../sync.mjs';
 
 const STARTER = ['src/app/core/theme/app-preset.ts', 'src/app/core/theme/primeng.providers.ts', 'src/app/core/theme/theme.service.ts',
@@ -130,4 +131,21 @@ test('sync ships the stylelint rule with the preset; stylelint.config turns tail
   assert.equal(files['tools/autopilot/stylelint/rules/justified-stylesheet.mjs']?.kind, 'generated');
   assert.equal(files['tools/autopilot/stylelint/preset.mjs']?.kind, 'generated');
   assert.match(files['stylelint.config.mjs'].content, /tailwind: Boolean\(autopilot\.design\?\.starter\)/);
+});
+
+test('the starter needs its packages: theme, font and icons at runtime, Tailwind for the build', () => {
+  const config = { packs: ['angular', 'primeng'], design: { starter: true } };
+  assert.deepEqual(requiredDependencies(config), ['@primeuix/themes', '@fontsource-variable/inter', 'primeicons']);
+  for (const d of ['tailwindcss', '@tailwindcss/postcss', 'tailwindcss-primeui']) assert.ok(requiredDevDependencies(config).includes(d), d);
+  assert.deepEqual(requiredDependencies({ packs: ['angular', 'primeng'] }), []);
+  assert.ok(!requiredDevDependencies({ packs: ['angular', 'primeng'] }).includes('tailwindcss'));
+  const report = sync(root);
+  assert.ok(report.missingDependencies.includes('@primeuix/themes'));
+  assert.ok(report.missingDevDependencies.includes('tailwindcss-primeui'));
+});
+
+test('doctor names missing runtime dependencies apart from devDependencies', () => {
+  const text = doctor(root).warnings.join('\n');
+  assert.match(text, /^dependencies missing: @primeuix\/themes, @fontsource-variable\/inter, primeicons$/m);
+  assert.match(text, /^devDependencies missing: .*tailwindcss-primeui/m);
 });

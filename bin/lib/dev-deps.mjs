@@ -6,6 +6,9 @@
 
 import { spawnSync } from 'node:child_process';
 
+// Held on purpose: @primeuix/themes 3.x carries its own licence; 2.x is MIT and is what PrimeNG 21 styles against.
+const HELD = { '@primeuix/themes': { major: 2, why: 'held below 3.x for its licence (2.x is MIT)' } };
+
 // Packages whose peer range on eslint decides which version fits.
 export const ESLINT_PEERS = ['typescript-eslint', 'eslint-plugin-import-x', 'eslint-plugin-security', 'eslint-plugin-unicorn', 'eslint-config-prettier'];
 
@@ -73,7 +76,10 @@ export function installSpecs(missing, pkg, view = npmView) {
   }
 
   for (const name of missing) {
-    if (name === 'angular-eslint' && angularMajor) {
+    if (HELD[name]) {
+      specs.push(`${name}@${HELD[name].major}`);
+      notes.push(`${name}@${HELD[name].major}: ${HELD[name].why}`);
+    } else if (name === 'angular-eslint' && angularMajor) {
       specs.push(`angular-eslint@${angularMajor}`);
       notes.push(`angular-eslint@${angularMajor}: matches @angular/core ${have['@angular/core']}`);
     } else if (name === 'eslint' && eslintMajor !== null) {
@@ -89,4 +95,5 @@ export function installSpecs(missing, pkg, view = npmView) {
   return { specs, notes };
 }
 
-export const installCommand = (specs, packageManager) => `${packageManager === 'pnpm' ? 'pnpm add -D' : 'npm install -D'} ${specs.join(' ')}`;
+export const installCommand = (specs, packageManager, { dev = true } = {}) =>
+  `${packageManager === 'pnpm' ? 'pnpm add' : 'npm install'}${dev ? ' -D' : ''} ${specs.join(' ')}`;

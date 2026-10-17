@@ -270,5 +270,14 @@ export function requiredDevDependencies(rawConfig) {
     deps.push('eslint', 'angular-eslint', 'typescript-eslint', 'eslint-plugin-import-x', 'eslint-plugin-security',
       'eslint-plugin-unicorn', 'eslint-config-prettier', 'stylelint', c.stylelint.scss ? 'stylelint-config-standard-scss' : 'stylelint-config-standard');
   }
+  if (designStarter(c)) deps.push('tailwindcss', '@tailwindcss/postcss', 'tailwindcss-primeui');
   return deps;
+}
+
+const designStarter = (c) => c.packs.includes('primeng') && c.design.starter;
+
+// Runtime packages the presets need (dependencies, not devDependencies).
+export function requiredDependencies(rawConfig) {
+  const c = normaliseConfig(rawConfig);
+  return designStarter(c) ? ['@primeuix/themes', '@fontsource-variable/inter', 'primeicons'] : [];
 }

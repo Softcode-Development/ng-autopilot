@@ -41,5 +41,8 @@ Pack steps are inserted between the `# >>> autopilot pack steps` markers: the op
 - `eslint` — the newest major that angular-eslint version accepts as a peer (an installed eslint is kept).
 - Packages that peer on eslint (`typescript-eslint`, the eslint plugins, `eslint-config-prettier`) — their latest when it accepts that eslint major, else their newest major that does.
 - Everything else — latest.
+- **One deliberate hold:** `@primeuix/themes@2` (primeng pack with the design-system starter) — 3.x carries its own licence; 2.x is MIT and is what PrimeNG 21 styles against.
+
+With the primeng pack's design-system starter (`design.starter`), the project also needs `tailwindcss`, `@tailwindcss/postcss` and `tailwindcss-primeui` (devDependencies) and `@primeuix/themes`, `@fontsource-variable/inter` and `primeicons` (dependencies); sync prints one install command for each kind.
 
 The import rules use `eslint-plugin-import-x` (registered under the `import/` rule prefix): the original `eslint-plugin-import` does not accept eslint 10. The presets are tested against angular-eslint 21 and 22 with eslint 10.
