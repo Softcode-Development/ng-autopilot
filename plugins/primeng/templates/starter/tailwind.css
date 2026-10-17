@@ -1,0 +1,36 @@
+/* Global styles for new code: Tailwind utilities + PrimeNG token utilities + the app font.
+   Layout, spacing, typography and colour are classes in templates (docs/DESIGN_SYSTEM.md § 4).
+   List this file first in angular.json → styles. */
+{{^legacyCss}}
+@import "tailwindcss";
+{{/legacyCss}}
+{{#legacyCss}}
+/* Legacy setup: no Tailwind base reset (it would restyle legacy pages), every class prefixed
+   `tw:` (no clash with legacy class names), only the strict-scope folders scanned. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(tw) source(none);
+{{/legacyCss}}
+@import "tailwindcss-primeui";
+@import "@fontsource-variable/inter";
+{{#legacyCss}}
+
+/* Only new code (lint.strictScope) is scanned for classes. */
+__SOURCES__
+{{/legacyCss}}
+{{#darkMode}}
+
+/* Same class as PrimeNG's darkModeSelector (src/app/core/theme/primeng.providers.ts). */
+@custom-variant dark (&:where(.app-dark, .app-dark *));
+{{/darkMode}}
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Project tokens (defined in app-preset.ts → extend.app) as Tailwind colours, e.g.
+   text-app-income:
+@theme inline {
+  --color-app-income: var(--p-app-income-color);
+}
+*/

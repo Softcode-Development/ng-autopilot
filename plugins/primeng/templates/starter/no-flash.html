@@ -1,0 +1,10 @@
+<!-- Paste into index.html <head>, before the stylesheets. Applies the stored theme
+     before the bundle loads (no flash of the wrong theme). Mirrors ThemeService.
+     With a Content-Security-Policy, allow this script by hash in script-src. -->
+<script>
+  (function () {
+    var mode = localStorage.getItem('theme') || 'system';
+    var dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('app-dark');
+  })();
+</script>

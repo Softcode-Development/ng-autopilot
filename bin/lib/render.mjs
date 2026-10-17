@@ -41,9 +41,34 @@ export function normaliseConfig(raw) {
   c.packageManager ??= 'npm';
   c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
-  c.stylelint = { scss: false, tailwind: false, ...(c.stylelint ?? {}) };
+  c.design = { starter: false, legacyCss: false, darkMode: true, ...(c.design ?? {}) };
+  c.stylelint = { scss: false, tailwind: c.design.starter, ...(c.stylelint ?? {}) };
   c.api ??= {};
   return c;
+}
+
+// Conditional blocks in templates: `{{#flag}}…{{/flag}}` stays when the flag is true,
+// `{{^flag}}…{{/flag}}` when it is false; the other is removed with its content.
+export function fillBlocks(text, flags) {
+  // A marker on its own line takes its line break with it.
+  return text.replace(/\{\{([#^])(\w+)\}\}(?:\r?\n)?([\s\S]*?)\{\{\/\2\}\}(?:\r?\n)?/g, (_, kind, flag, body) => {
+    const keep = kind === '#' ? Boolean(flags[flag]) : !flags[flag];
+    return keep ? body : '';
+  });
+}
+
+// Static directory part of a glob: 'src/app/features/**' → 'src/app/features'.
+const globDir = (glob) => glob.split('/').filter((_, i, parts) => !parts.slice(0, i + 1).some((p) => /[*?{[]/.test(p))).join('/');
+
+// Values for the design-system starter and the PrimeNG DESIGN_SYSTEM template.
+export function designValues(c) {
+  const legacy = c.design.legacyCss;
+  return {
+    __TW__: legacy ? 'tw:' : '',
+    __DARK_SELECTOR__: c.design.darkMode ? "'.app-dark'" : 'false',
+    __CSS_LAYER__: legacy ? 'false' : "{ name: 'primeng', order: 'theme, base, primeng' }",
+    __SOURCES__: legacy ? [...new Set(c.lint.strictScope.map(globDir))].map((d) => `@source "${path.posix.relative('src/styles', d)}";`).join('\n') : '',
+  };
 }
 
 // What each project doc answers — the README's "Start here" table.
@@ -145,6 +170,15 @@ export function renderFiles(autopilotRoot, rawConfig) {
     .map(([p]) => `| ${DOC_NEEDS[path.posix.basename(p, '.md')]} | [${p}](${p}) |`).join('\n');
   add('README.md', fill(read('plugins/core/templates/project/README.md'), { __START_HERE__: startHere }), 'once');
   for (const [doc, template] of projectDocs(c)) add(doc, read(template), 'once');
+  if (c.packs.includes('primeng') && c.design.starter) {
+    const flags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode };
+    const starter = (src, dest) => add(dest, fill(fillBlocks(read(`plugins/primeng/templates/starter/${src}`), flags), designValues(c)), 'once');
+    starter('app-preset.ts', 'src/app/core/theme/app-preset.ts');
+    starter('primeng.providers.ts', 'src/app/core/theme/primeng.providers.ts');
+    if (c.design.darkMode) starter('theme.service.ts', 'src/app/core/theme/theme.service.ts');
+    starter('tailwind.css', 'src/styles/tailwind.css');
+    starter('postcssrc.json', '.postcssrc.json');
+  }
   add('.claude/gates.md', read('plugins/core/templates/claude/gates.md'), 'once');
   add('.claude/plans/backlog.md', read('plugins/core/templates/plans/backlog.md'), 'once');
   add('.claude/reviews/.gitkeep', '', 'once');
