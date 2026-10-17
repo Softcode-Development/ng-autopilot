@@ -74,6 +74,7 @@ test('legacy setup without dark mode: prefixed, no preflight, scans the strict s
   assert.match(css, /@source "\.\.\/app\/features";/);
   assert.match(css, /@source "\.\.\/app\/shared\/modern";/);
   assert.match(css, /@source "\.\.\/app\/x";/);
+  assert.match(css, /@source "\.\.\/index\.html";/, 'the <body> classes live in index.html');
   assert.doesNotMatch(css, /@import "tailwindcss";|preflight|@custom-variant|\{\{|__/);
   const providers = files['src/app/core/theme/primeng.providers.ts'].content;
   assert.match(providers, /darkModeSelector: false/);
@@ -131,6 +132,7 @@ test('sync ships the stylelint rule with the preset; stylelint.config turns tail
   assert.equal(files['tools/autopilot/stylelint/rules/justified-stylesheet.mjs']?.kind, 'generated');
   assert.equal(files['tools/autopilot/stylelint/preset.mjs']?.kind, 'generated');
   assert.match(files['stylelint.config.mjs'].content, /tailwind: Boolean\(autopilot\.design\?\.starter\)/);
+  assert.match(files['stylelint.config.mjs'].content, /strictScope: autopilot\.lint\?\.strictScope \?\? \["src\/\*\*"\]/, 'no lint block in autopilot.json must not crash');
 });
 
 test('the starter needs its packages: theme, font and icons at runtime, Tailwind for the build', () => {

@@ -67,7 +67,8 @@ export function designValues(c) {
     __TW__: legacy ? 'tw:' : '',
     __DARK_SELECTOR__: c.design.darkMode ? "'.app-dark'" : 'false',
     __CSS_LAYER__: legacy ? 'false' : "{ name: 'primeng', order: 'theme, base, primeng' }",
-    __SOURCES__: legacy ? [...new Set(c.lint.strictScope.map(globDir))].map((d) => `@source "${path.posix.relative('src/styles', d)}";`).join('\n') : '',
+    // Legacy setup scans only new code — plus index.html, which carries the <body> classes.
+    __SOURCES__: legacy ? [...new Set([...c.lint.strictScope.map(globDir), 'src/index.html'])].map((d) => `@source "${path.posix.relative('src/styles', d)}";`).join('\n') : '',
   };
 }
 
@@ -248,7 +249,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
       '',
       "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
       '',
-      'export default autopilotStylelint({ tailwind: Boolean(autopilot.design?.starter), ...autopilot.stylelint, strictScope: autopilot.lint.strictScope });',
+      'export default autopilotStylelint({ tailwind: Boolean(autopilot.design?.starter), ...autopilot.stylelint, strictScope: autopilot.lint?.strictScope ?? ["src/**"] });',
       '',
     ].join('\n'), 'once');
   }
