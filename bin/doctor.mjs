@@ -5,8 +5,8 @@
 //
 // Errors (exit 1): invalid autopilot.json, generated files edited/deleted/added,
 // generated files out of date with the autopilot repo. Warnings: plugins not
-// enabled, tiers without overrides, unfilled placeholders, missing
-// devDependencies, legacy AI files, inactive git hooks.
+// enabled, tiers without overrides, unfilled placeholders, broken doc links,
+// missing devDependencies, legacy AI files, inactive git hooks.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -17,6 +17,7 @@ import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
 import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
 import { apiMissing, normaliseConfig, pluginId, renderFiles, requiredDevDependencies } from './lib/render.mjs';
+import { brokenLinks } from './links.mjs';
 import { AUTOPILOT_ROOT } from './sync.mjs';
 
 const PLACEHOLDER = /<(?![!/]|https?:)[A-Za-z…][^<>\n]{2,}>/g;
@@ -78,6 +79,9 @@ export function doctor(projectRoot) {
     const unfilled = [...new Set(stripComments(f.content).match(PLACEHOLDER) ?? [])].filter((p) => text.includes(p));
     if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s)`);
   }
+
+  // Links between the project's own docs.
+  for (const b of brokenLinks(projectRoot)) warnings.push(`broken link in ${b.file}: ${b.target}`);
 
   // devDependencies.
   const pkgFile = path.join(projectRoot, 'package.json');

@@ -5,6 +5,7 @@
 
 # Review reports are per-run output. Findings that matter go into the
 # change's worklog or get fixed; the reports themselves are not history.
+# A report another doc must link to (gate evidence) moves to docs/<area>/reviews/.
 /reviews/*.md
 !/reviews/.gitkeep
 

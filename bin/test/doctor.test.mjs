@@ -59,6 +59,15 @@ test('placeholders: only template text left unfilled counts, not the project\'s 
   assert.match(text, /docs\/TECH_STACK\.md: 2 unfilled/);
 });
 
+test('a freshly synced project has no broken links; a broken one in a project doc is a warning', () => {
+  assert.doesNotMatch(doctor(root).warnings.join('\n'), /broken link/);
+  write('docs/upgrade/notes.md', '[ok](../FEATURES.md) [gone](../../.claude/reviews/upgrade.md)');
+  const text = doctor(root).warnings.join('\n');
+  assert.match(text, /broken link in docs\/upgrade\/notes\.md: \.\.\/\.\.\/\.claude\/reviews\/upgrade\.md/);
+  assert.doesNotMatch(text, /FEATURES\.md$/m);
+  rmSync(path.join(root, 'docs/upgrade'), { recursive: true });
+});
+
 test('a missing project doc is reported', () => {
   rmSync(path.join(root, 'docs/DOMAIN.md'));
   assert.match(doctor(root).warnings.join('\n'), /docs\/DOMAIN\.md missing — run sync/);

@@ -59,9 +59,12 @@ Present one table, a row per file or folder, with a decision:
 | Decision | Meaning |
 |---|---|
 | **extract → delete** | holds knowledge **new work needs** — extracted into the project docs (`docs/`), `.claude/rules/project.md`, gates.md or an overrides file in Phase 3, then deleted. Files that only describe legacy code (its conventions, design system, UI-library rules, scaffolding) are **delete**, not extract |
-| **delete** | replaced by the ng-autopilot workspace (generic agents, skills, instructions, Copilot copies, old review reports) |
+| **delete** | replaced by the ng-autopilot workspace (generic agents, skills, instructions, Copilot copies), and review reports nothing links to |
+| **move → relink** | another tracked file links to it — never deleted. It moves to a tracked home (review reports that are gate evidence → `docs/<area>/reviews/`; `.claude/reviews/*.md` is git-ignored after install) and every link to it is rewritten in the same commit |
 | **archive** | finished plans → `.claude/plans/archive/` |
 | **keep** | genuinely project-specific and not expressible as a rule (rare — say why) |
+
+Before proposing **delete** for any row, look for referrers: `git grep -n "<path>"` and `git grep -n "<basename>"` (outside the file itself). A hit makes the row **move → relink**, or a question for the owner — never delete. Show the referrers in the table.
 
 Nothing is touched until the owner approves the table.
 
@@ -94,9 +97,11 @@ Nothing is touched until the owner approves the table.
 
 ## Phase 4 — Remove the old setup
 
-1. Delete everything the table marked delete / extract → delete; move archive items. The old `CLAUDE.md` and any existing `.husky/pre-commit|commit-msg|pre-push` are protected paths (sync will regenerate them): set the flag for their removal — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync` — and remove it right after.
+0. For each path to delete or move, run `git grep -n "<path>"` and `git grep -n "<basename>"` again (Phase 3 may have added links). A hit on a delete row means **move → relink** or ask the owner.
+1. Delete everything the table marked delete / extract → delete; move archive and move → relink items and rewrite every link to them. The old `CLAUDE.md` and any existing `.husky/pre-commit|commit-msg|pre-push` are protected paths (sync will regenerate them): set the flag for their removal — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync` — and remove it right after.
 2. Remove old hooks and permissions from `.claude/settings.json` that point at deleted scripts.
-3. Commit: `chore: remove legacy AI setup`.
+3. Link check: launcher `links <project-dir>` (README, `docs/**`, project rules, gates, overrides). Fix every broken link before committing — relink to the new home, or remove the link with the owner's consent when its target is gone on purpose.
+4. Commit: `chore: remove legacy AI setup`.
 
 ## Phase 5 — Install
 

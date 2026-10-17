@@ -42,7 +42,7 @@ Outside the scope, autopilot lint rules are off and legacy code keeps its curren
 | Command | Use |
 |---|---|
 | `/autopilot:sync` | Bring the project up to date after the autopilot repo changes (dry run first) |
-| `/autopilot:doctor` | Drift check: edited generated files, autopilot repo ahead, placeholders, missing devDependencies, legacy files |
+| `/autopilot:doctor` | Drift check: edited generated files, autopilot repo ahead, placeholders, broken doc links, missing devDependencies, legacy files |
 | `/deliver` | Every change |
 | `/review` | Full review of a branch or PR |
 
