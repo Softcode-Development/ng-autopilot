@@ -6,7 +6,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test \"plugins/*/hooks/test/*.test.mjs\" \"plugins/*/tooling/test/*.test.mjs\" \"bin/test/*.test.mjs\"",
+    "test": "node --test \"plugins/*/hooks/test/*.test.mjs\" \"plugins/*/tooling/test/*.test.mjs\" \"plugins/*/mcp/test/*.test.mjs\" \"bin/test/*.test.mjs\"",
     "setup": "node bin/setup.mjs",
     "sync": "node bin/sync.mjs",
     "doctor": "node bin/doctor.mjs"

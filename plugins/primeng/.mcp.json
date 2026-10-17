@@ -4,7 +4,7 @@
       "command": "node",
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/mcp/npx-launch.mjs",
-        "-p", "@primeng/mcp@21.1.10",
+        "-p", "@primeng/mcp@{primeng-major}",
         "-p", "@primeuix/mcp@1.0.1",
         "-p", "@modelcontextprotocol/sdk@1.25.2",
         "-p", "zod@3.25.76",
