@@ -23,7 +23,7 @@ This document is non-negotiable. Agents read it before generating code; reviewer
 
 ## 2. Legacy and new code
 
-<!-- guide: delete this section when lint.strictScope is the whole app. Legacy conventions are not described here: legacy code is only bug-fixed, in its own style. -->
+<!-- guide: when lint.strictScope is the whole app, keep the heading, drop the bullets and add a "not applicable: no legacy code" comment under it. Legacy conventions are not described here: legacy code is only bug-fixed, in its own style. -->
 
 - **New code:** `<lint.strictScope paths>` — every autopilot rule applies.
 - **Legacy:** everything else — bug fixes only, in the file's existing style; replaced, never modernised in place.

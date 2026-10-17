@@ -35,6 +35,22 @@ const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
 // Template placeholders the project still has verbatim. A placeholder counts only
 // next to its template neighbours (a few characters either side on its line), so
 // the project's own `<version>-<build>` or `features/<slug>` is not a hit.
+// `## 4.2 Typography`, `## 9.N — Name` → `typography`, `name`.
+const sectionTitle = (heading) => heading.replace(/^#{2,3}\s+/, '').replace(/^\d+(\.(\d+|N))*\.?\s*(—\s*)?/, '').trim().toLowerCase();
+const headings = (text) => stripComments(text).split(/\r?\n/).filter((l) => /^#{2,3}\s/.test(l));
+
+// Section headings (## / ###) of a template the project doc no longer has. Numbering and
+// case don't matter; headings that are themselves fill-ins (<…>, {…}) are skipped; extra
+// project sections never count.
+export function missingSections(template, text) {
+  const have = new Set(headings(text).map(sectionTitle));
+  return headings(template)
+    .filter((h) => !/[<{]/.test(h))
+    .map((h) => [sectionTitle(h), h.replace(/^#{2,3}\s+/, '').replace(/^\d+(\.\d+)*\.?\s*/, '').trim()])
+    .filter(([title]) => title && !have.has(title))
+    .map(([, shown]) => shown);
+}
+
 export function unfilledPlaceholders(template, text) {
   const hits = new Set();
   for (const line of stripComments(template).split('\n')) {
@@ -94,6 +110,10 @@ export function doctor(projectRoot) {
       continue;
     }
     const unfilled = unfilledPlaceholders(f.content.replaceAll('\r\n', '\n'), stripComments(readFileSync(full, 'utf8')));
+    if (f.path === 'README.md' || f.path.startsWith('docs/')) {
+      const missing = missingSections(f.content, readFileSync(full, 'utf8'));
+      if (missing.length) warnings.push(`${f.path}: missing section(s) from its template: ${missing.join(', ')} — add them, or keep the heading with <!-- not applicable: reason -->`);
+    }
     const short = (p) => (p.length > 40 ? `${p.slice(0, 38)}…>` : p);
     if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s): ${unfilled.map(short).join(' ')}`);
   }

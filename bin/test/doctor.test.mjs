@@ -1,11 +1,11 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { doctor } from '../doctor.mjs';
+import { doctor, missingSections } from '../doctor.mjs';
 import { sync } from '../sync.mjs';
 
 let root;
@@ -55,7 +55,7 @@ test('placeholders: only template text left unfilled counts, not the project\'s 
   write('docs/FEATURES.md', '# Feature Modules\n\nEach feature lives in `src/app/features/<domain>/` with `<domain>.routes.ts`.\n');
   write('docs/TECH_STACK.md', '# Tech Stack\n\n| Framework | Angular <x.y> — <standalone/signals/zoneless status> | |\n');
   const text = doctor(root).warnings.join('\n');
-  assert.doesNotMatch(text, /docs\/FEATURES\.md/);
+  assert.doesNotMatch(text, /docs\/FEATURES\.md: \d+ unfilled/);
   assert.match(text, /docs\/TECH_STACK\.md: 2 unfilled/);
 });
 
@@ -91,4 +91,18 @@ test('a hand-edited generated file is an error', () => {
 test('a config change not yet synced is an error', () => {
   write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing', 'primeng'], testTiers: ['unit'] }));
   assert.ok(doctor(root).errors.some((e) => /run sync/.test(e)));
+});
+
+test('missingSections: template headings the project lacks, ignoring numbering, case and placeholder headings', () => {
+  const template = '## 1. Layout\n### 4.2 Typography\n### 4.1 <Pattern name>\n## 9.N — {name}\n<!-- ## Hidden -->\n';
+  assert.deepEqual(missingSections(template, '## 1. Layout\n'), ['Typography']);
+  assert.deepEqual(missingSections(template, '## Layout\n## 4.2 typography\n'), []);
+  assert.deepEqual(missingSections(template, '## 1. Layout\n### Typography\n## 12. Ours\n'), []);
+});
+
+test('a project doc missing a template section is a warning', () => {
+  sync(root);
+  const file = path.join(root, 'docs/DESIGN_SYSTEM.md');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/## 7\. Forms[\s\S]*?(?=## 8\.)/, ''));
+  assert.match(doctor(root).warnings.join('\n'), /docs\/DESIGN_SYSTEM\.md: missing section\(s\) from its template: Forms/);
 });
