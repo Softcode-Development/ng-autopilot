@@ -10,7 +10,7 @@ paths:
 
 Library-specific half of the design discipline; the project's `docs/DESIGN_SYSTEM.md` holds the catalog and theme preset.
 
-- **Upstream catalog:** https://primeng.org (and the PrimeNG MCP server when configured) is the audit authority for "does a primitive exist".
+- **Upstream catalog:** the docs for the installed PrimeNG major, `https://v{major}.primeng.org` (e.g. `https://v21.primeng.org`), and the PrimeNG MCP server when configured, are the audit authority for "does a primitive exist". `primeng.org` shows the latest major — its components and APIs may not exist in the installed one.
 - **Theme package licence:** `@primeuix/themes` 3.x is commercial. Pin `@primeuix/themes` below 3.0 (and PrimeNG to the matching free line). `@primeng/themes` is deprecated. — **Enforcement:** static check on `package.json`.
 - **Providers once:** the preset, dark-mode selector and CSS-layer choice live in one provider constant registered in `app.config.ts`.
 - **CSS layers next to legacy CSS:** when the app still ships unlayered legacy CSS (Bootstrap, Material, Nebular), do **not** put PrimeNG in a CSS layer — any unlayered rule beats a layered one, so PrimeNG loses even to a bare `button` reset. Unlayered, its `.p-*` class selectors outrank legacy element selectors.

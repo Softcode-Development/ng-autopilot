@@ -14,6 +14,8 @@ The UI layer is **<library + version>** with **<styling approach>** ([TECH_STACK
 
 Full import paths: <link to the shared UI library README>.
 
+**Audit authority** for "does a primitive exist": <the library docs for the installed major — PrimeNG: `https://v{major}.primeng.org`, never `primeng.org`, which shows the latest major>.
+
 **Available now**
 
 | Category | Primitive | Import |
