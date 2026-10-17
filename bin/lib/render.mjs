@@ -143,7 +143,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
   ];
   if (c.packs.includes('angular')) {
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
-    tooling.push(['angular', 'tooling/stylelint/preset.mjs', 'stylelint/preset.mjs']);
+    for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/stylelint'))) tooling.push(['angular', `tooling/stylelint/${f}`, `stylelint/${f}`]);
     tooling.push(['angular', 'tooling/i18n/hardcoded-ratchet.mjs', 'i18n/hardcoded-ratchet.mjs']);
     if (c.i18n?.sets?.length) for (const f of ['lib.mjs', 'i18n-validate.mjs', 'i18n-unused.mjs']) tooling.push(['angular', `tooling/i18n/${f}`, `i18n/${f}`]);
   }
@@ -248,7 +248,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
       '',
       "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
       '',
-      'export default autopilotStylelint({ ...autopilot.stylelint, strictScope: autopilot.lint.strictScope });',
+      'export default autopilotStylelint({ tailwind: Boolean(autopilot.design?.starter), ...autopilot.stylelint, strictScope: autopilot.lint.strictScope });',
       '',
     ].join('\n'), 'once');
   }

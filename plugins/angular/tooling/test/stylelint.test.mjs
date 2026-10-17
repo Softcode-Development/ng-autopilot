@@ -29,7 +29,7 @@ test('out of scope: design-discipline rules do not fire on legacy styles', async
 });
 
 test('token-based styles pass', async () => {
-  const rules = await lint('.card {\n  color: var(--fg);\n  padding: var(--space-2);\n}\n', 'src/app/features/a/a.component.css', {});
+  const rules = await lint('/* why: fixed-size canvas */\n.card {\n  color: var(--fg);\n  padding: var(--space-2);\n}\n', 'src/app/features/a/a.component.css', {});
   assert.deepEqual(rules, []);
 });
 
@@ -37,4 +37,29 @@ test('tailwind at-rules are accepted when enabled', async () => {
   const code = '@import "tailwindcss";\n@theme {\n  --color-x: var(--fg);\n}\n';
   assert.ok((await lint(code, 'src/styles.css', {})).includes('at-rule-no-unknown'));
   assert.ok(!(await lint(code, 'src/styles.css', { tailwind: true })).includes('at-rule-no-unknown'));
+});
+
+const SCOPE = { scss: true, strictScope: ['src/app/features/**'] };
+
+test('justified-stylesheet: a component stylesheet in scope needs a why comment', async () => {
+  const rules = await lint('.x {\n  display: flex;\n}\n', 'src/app/features/a/a.component.scss', SCOPE);
+  assert.deepEqual(rules, ['autopilot/justified-stylesheet']);
+});
+
+test('justified-stylesheet: a why comment, an empty file, legacy code and non-component styles pass', async () => {
+  const why = '/* why: third-party canvas sizing */\n.x {\n  display: flex;\n}\n';
+  assert.deepEqual(await lint(why, 'src/app/features/a/a.component.scss', SCOPE), []);
+  assert.ok(!(await lint('', 'src/app/features/a/a.component.scss', SCOPE)).includes('autopilot/justified-stylesheet'));
+  assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/legacy/a.component.scss', SCOPE), []);
+  assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/features/a/theme.scss', SCOPE), []);
+});
+
+test('justified-stylesheet: plain css components when the project has no scss', async () => {
+  const rules = await lint('.x {\n  display: flex;\n}\n', 'src/app/features/a/a.component.css', { strictScope: ['src/app/features/**'] });
+  assert.deepEqual(rules, ['autopilot/justified-stylesheet']);
+});
+
+test('the starter tailwind.css passes with tailwind on', async () => {
+  const code = '@import "tailwindcss";\n@import "tailwindcss-primeui";\n\n@custom-variant dark (&:where(.app-dark, .app-dark *));\n\n@theme {\n  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;\n}\n';
+  assert.deepEqual(await lint(code, 'src/styles/tailwind.css', { tailwind: true }), []);
 });

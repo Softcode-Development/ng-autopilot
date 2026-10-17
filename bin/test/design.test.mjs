@@ -124,3 +124,10 @@ test('angular pack alone: the neutral template, with the same § 4 split as fill
   assert.match(doc, /<Font families[^>]*>/);
   assert.doesNotMatch(doc, /Inter Variable/);
 });
+
+test('sync ships the stylelint rule with the preset; stylelint.config turns tailwind on with the starter', () => {
+  const files = render({ packs: ['angular', 'primeng'], design: { starter: true } });
+  assert.equal(files['tools/autopilot/stylelint/rules/justified-stylesheet.mjs']?.kind, 'generated');
+  assert.equal(files['tools/autopilot/stylelint/preset.mjs']?.kind, 'generated');
+  assert.match(files['stylelint.config.mjs'].content, /tailwind: Boolean\(autopilot\.design\?\.starter\)/);
+});
