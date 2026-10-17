@@ -12,8 +12,8 @@ This project runs on the **ng-autopilot AI workspace**. Development is AI-only: 
 | **Project docs** — read the one the work needs | __DOCS__ |
 | Autopilot rules (Angular, TypeScript, workflow, security, …) | `.claude/rules/autopilot/` (load automatically) |
 | Gate commands, smoke map, visual-gate setup, security triggers | [.claude/gates.md](.claude/gates.md) |
-| Test-tier project rules | `.claude/<tier>-testing/overrides.md` |
-| Active work (plan + worklog) | `.claude/plans/<slug>/` |
+| Test-tier project rules | `.claude/{tier}-testing/overrides.md` |
+| Active work (plan + worklog) | `.claude/plans/{slug}/` |
 | Workspace settings (packs, planning, lint scope, i18n) | [.claude/autopilot.json](.claude/autopilot.json) |
 | Backlog (deferred work, parked ideas) | [.claude/plans/backlog.md](.claude/plans/backlog.md) |
 

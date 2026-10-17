@@ -20,7 +20,7 @@ created: <YYYY-MM-DD>
 
 ## Out of scope
 
-- <Item> → <destination: plan slug, "backlog: <item>", or "not doing: <reason>">
+- <Item> → <destination: plan slug, "backlog: {item}", or "not doing: {reason}">
 
 ## Open questions
 

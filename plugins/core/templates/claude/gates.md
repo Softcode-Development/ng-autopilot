@@ -6,7 +6,7 @@ Project configuration for the workflow's gates. The `/deliver` driver reads this
 
 | Gate | Command | Notes |
 |---|---|---|
-| Affected / existing tests (suite) | `<e.g. npm run test:ci>` | env vars it needs (e.g. `CHROME_BIN`). Per-spec commands for the test authors live in `.claude/<tier>-testing/overrides.md`. |
+| Affected / existing tests (suite) | `<e.g. npm run test:ci>` | env vars it needs (e.g. `CHROME_BIN`). Per-spec commands for the test authors live in `.claude/{tier}-testing/overrides.md`. |
 | Lint | `<command or "none">` | |
 | Typecheck | `<command>` | |
 | Final gate | `<one command running lint + typecheck + tests (+ build)>` | |
@@ -18,7 +18,7 @@ Project configuration for the workflow's gates. The `/deliver` driver reads this
 |---|---|---|
 | `src/**` | `<dev server command>` (reuse the running server on `<port>`; never start a second one) | compiles; touched route renders without console errors |
 
-Paths matching no row: record `smoke: n/a (<paths>)`.
+Paths matching no row: record `smoke: n/a ({paths})`.
 
 ## Visual gate
 

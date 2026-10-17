@@ -37,13 +37,13 @@ From an empty machine to a running app, then how to work in this repo with agent
 ## 5. Working with agents
 
 ```
-/deliver <request>   → plan → plan gate (you) → implement → tests → gates → review → PR (you approve the push)
+/deliver {request}   → plan → plan gate (you) → implement → tests → gates → review → PR (you approve the push)
 /deliver            → resume the active plan
-/review <range|PR>  → review any branch or PR
+/review {range|PR}  → review any branch or PR
 ```
 
 - **Mode:** `balanced` by default; say "strict" for <when>.
-- **Test tiers:** `/write-unit-tests <target>`, … (project rules in `.claude/<tier>-testing/overrides.md`).
+- **Test tiers:** `/write-unit-tests {target}`, … (project rules in `.claude/{tier}-testing/overrides.md`).
 - **Deferring something mid-flight:** tell the agent the item and its destination; it writes both ends.
 
 ## 6. Every time you sit down

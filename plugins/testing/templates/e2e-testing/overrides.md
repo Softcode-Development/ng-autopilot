@@ -26,7 +26,7 @@ E2E: <playwright | cypress>
 
 ```
 <e2e root>/
-  <journeys|features>/<feature>/   mock-first specs (default)
+  <journeys|features>/{feature}/   mock-first specs (default)
   <critical>/                      real-API specs (allowlist below)
   <page-objects | support | fixtures | network>/
 ```

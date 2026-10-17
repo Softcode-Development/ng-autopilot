@@ -50,7 +50,7 @@ Full import paths: <link to the shared UI library README>.
 
 <!-- guide: delete if the app has a single theme. -->
 
-- **Strategy:** <class on `<html>` | media query | library preset selector>.
+- **Strategy:** <class on the html element | media query | library preset selector>.
 - **Default:** follow `prefers-color-scheme` until the user chooses.
 - **Persistence:** `localStorage.theme` ∈ `{light, dark, system}`; the user's choice overrides the OS.
 - **No flash of wrong theme:** an inline script in `index.html` sets the theme class before the bundle loads.
@@ -79,7 +79,7 @@ Full import paths: <link to the shared UI library README>.
 |---|---|
 | Design tokens | |
 | Shared UI primitives / wrappers | |
-| Feature composites | `features/<feature>/ui/` |
+| Feature composites | `features/{feature}/ui/` |
 | Theme service | |
 | Format helpers (money/date/number) | |
 
@@ -89,4 +89,4 @@ Dev servers, accounts, widths and start points live in `.claude/gates.md` § Vis
 
 ## 11. Future rules
 
-Append new UI rules as `## 11.N — <name>` with source, rationale and a "Why" sentence, so future agents can judge edge cases.
+Append new UI rules as `## 11.N — {name}` with source, rationale and a "Why" sentence, so future agents can judge edge cases.

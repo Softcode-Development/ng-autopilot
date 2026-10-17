@@ -27,8 +27,26 @@ const LEGACY = [
   '.cursor', '.cursorrules', 'AGENTS.md', '.windsurfrules',
 ];
 
+const CONTEXT = 8;
+
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
+
+// Template placeholders the project still has verbatim. A placeholder counts only
+// next to its template neighbours (a few characters either side on its line), so
+// the project's own `<version>-<build>` or `features/<slug>` is not a hit.
+export function unfilledPlaceholders(template, text) {
+  const hits = new Set();
+  for (const line of stripComments(template).split('\n')) {
+    for (const m of line.matchAll(PLACEHOLDER)) {
+      const before = line.slice(Math.max(0, m.index - CONTEXT), m.index).trimStart();
+      const after = line.slice(m.index + m[0].length, m.index + m[0].length + CONTEXT).trimEnd();
+      const kept = before || after ? (before && text.includes(before + m[0])) || (after && text.includes(m[0] + after)) : text.includes(m[0]);
+      if (kept) hits.add(m[0]);
+    }
+  }
+  return [...hits];
+}
 
 export function doctor(projectRoot) {
   const errors = [];
@@ -68,16 +86,15 @@ export function doctor(projectRoot) {
   }
 
   // Unfilled placeholders in project-owned files: a template placeholder still present verbatim.
-  // Angle brackets the project writes itself (`features/<domain>/`) are not placeholders.
+  // Templates write text that stays as written in {braces}, so only <angle> fill-ins count.
   for (const f of files.filter((x) => x.kind === 'once' && x.path.endsWith('.md'))) {
     const full = path.join(projectRoot, f.path);
     if (!existsSync(full)) {
       warnings.push(`${f.path} missing — run sync to create it`);
       continue;
     }
-    const text = stripComments(readFileSync(full, 'utf8'));
-    const unfilled = [...new Set(stripComments(f.content).match(PLACEHOLDER) ?? [])].filter((p) => text.includes(p));
-    if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s)`);
+    const unfilled = unfilledPlaceholders(f.content.replaceAll('\r\n', '\n'), stripComments(readFileSync(full, 'utf8')));
+    if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s): ${unfilled.join(' ')}`);
   }
 
   // Links between the project's own docs.

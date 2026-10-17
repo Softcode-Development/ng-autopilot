@@ -73,7 +73,7 @@ This document is non-negotiable. Agents read it before generating code; reviewer
 
 ## 7. Testing layout
 
-<Runner, where each tier's specs live and how they are named, the project test toolkit location. Rules for authoring live in `.claude/<tier>-testing/overrides.md`.>
+<Runner, where each tier's specs live and how they are named, the project test toolkit location. Rules for authoring live in `.claude/{tier}-testing/overrides.md`.>
 
 ## 8. Documentation & ADRs
 
@@ -82,4 +82,4 @@ This document is non-negotiable. Agents read it before generating code; reviewer
 
 ## 9. Future additions
 
-Append new sections as `## 9.N — <name>` with their source (ADR, plan, PR). A hard rule (Rule / Why / Enforcement) goes in `.claude/rules/project.md` instead and links here.
+Append new sections as `## 9.N — {name}` with their source (ADR, plan, PR). A hard rule (Rule / Why / Enforcement) goes in `.claude/rules/project.md` instead and links here.

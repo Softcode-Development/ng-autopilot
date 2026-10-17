@@ -59,6 +59,14 @@ test('placeholders: only template text left unfilled counts, not the project\'s 
   assert.match(text, /docs\/TECH_STACK\.md: 2 unfilled/);
 });
 
+test('placeholders: {braces} text kept as written is fine; the project\'s own <angle> words away from the template line are fine', () => {
+  write('docs/ARCHITECTURE.md', '# Architecture\n\nTier rules: `.claude/{tier}-testing/overrides.md`.\n\nAppend new sections as `## 9.N — {name}` with their source.\n');
+  write('docs/TECH_STACK.md', '# Tech Stack\n\n| Runtime | Node 24, pinned in `.nvmrc` | |\n\nCI writes the `<version>-<build>` string.\n\n| Framework | Angular <x.y> — standalone | |\n');
+  const text = doctor(root).warnings.join('\n');
+  assert.doesNotMatch(text, /docs\/ARCHITECTURE\.md: \d+ unfilled/);
+  assert.match(text, /docs\/TECH_STACK\.md: 1 unfilled <placeholder>\(s\): <x\.y>/);
+});
+
 test('a freshly synced project has no broken links; a broken one in a project doc is a warning', () => {
   assert.doesNotMatch(doctor(root).warnings.join('\n'), /broken link/);
   write('docs/upgrade/notes.md', '[ok](../FEATURES.md) [gone](../../.claude/reviews/upgrade.md)');

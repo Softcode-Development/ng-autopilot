@@ -17,7 +17,7 @@ Every feature the product has or will have, expanded into concrete behaviour. Ea
 - <Validation, permissions, empty/error states that matter.>
 
 **Out of scope**
-- <Item> → <destination: a later feature, a phase, or "no destination needed: <reason>">
+- <Item> → <destination: a later feature, a phase, or "no destination needed: {reason}">
 
 ---
 
