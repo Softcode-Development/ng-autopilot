@@ -4,5 +4,6 @@
   "description": "NestJS backend add-on: layering, error taxonomy, OpenAPI, shared contracts, data model.",
   "author": {
     "name": "Andrejus Lazauskas"
-  }
+  },
+  "license": "MIT"
 }

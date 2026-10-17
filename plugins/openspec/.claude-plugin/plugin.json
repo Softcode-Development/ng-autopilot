@@ -4,5 +4,6 @@
   "description": "OpenSpec planning format for the autopilot workflow: plan and archive skills, doc-writer agent, OpenSpec rules.",
   "author": {
     "name": "Andrejus Lazauskas"
-  }
+  },
+  "license": "MIT"
 }

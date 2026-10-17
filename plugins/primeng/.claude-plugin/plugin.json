@@ -4,5 +4,6 @@
   "description": "PrimeNG design-system add-on.",
   "author": {
     "name": "Andrejus Lazauskas"
-  }
+  },
+  "license": "MIT"
 }

@@ -4,5 +4,6 @@
   "description": "Stack-neutral workflow, agent conduct, git safety, work modes, doc templates.",
   "author": {
     "name": "Andrejus Lazauskas"
-  }
+  },
+  "license": "MIT"
 }
