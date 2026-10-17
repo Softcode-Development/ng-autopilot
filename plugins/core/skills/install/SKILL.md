@@ -25,8 +25,9 @@ Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs
   1. Find the existing setup: `git grep -n "providePrimeNG("`, theme/preset files, global PrimeNG overrides.
   2. Carry its decisions into the starter files sync created — preset and token overrides into `app-preset.ts`; `darkModeSelector`, `cssLayer`, `pt`, `zIndex`, ripple, translation options into `primeng.providers.ts` — and show the owner a mapping table (old file and setting → new place). `design.legacyCss` / `design.darkMode` follow what the old setup did unless the owner changes them.
   3. Repoint imports (`app.config.ts` and everything importing the old files) to `PRIMENG_PROVIDERS`; delete the old files; `git grep` their paths and basenames and relink docs.
-  4. Wire what Phase 5 step 4 lists that is still missing. `ng build` and the affected tests pass; the visual gate on two PrimeNG screens shows them unchanged — behaviour stays identical (architecture rule, Refactoring).
-  5. Commit: `refactor(theme): adopt the autopilot design-system starter`.
+  4. Refresh `docs/DESIGN_SYSTEM.md`: launcher `template <project-dir> docs/DESIGN_SYSTEM.md` prints the pre-filled design system for this project (with the `tw:` prefix in the legacy setup). Merge it into the existing doc — the template's § 1 and § 4–§ 9 values replace the old ones; the project's catalog additions, composites, navigation and its own decisions stay — and show the owner the merge as a coverage map. Set `stylelint.tailwind: true` in `.claude/autopilot.json` (the project's existing `stylelint.config.mjs` does not pick up the starter default).
+  5. Wire what Phase 5 step 4 lists that is still missing. `ng build` and the affected tests pass; the visual gate on two PrimeNG screens shows them unchanged — behaviour stays identical (architecture rule, Refactoring).
+  6. Commit: `refactor(theme): adopt the autopilot design-system starter`.
 
 ## Phase 0 — Branch
 

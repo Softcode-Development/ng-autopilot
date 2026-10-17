@@ -50,11 +50,15 @@ export function normaliseConfig(raw) {
 // Conditional blocks in templates: `{{#flag}}…{{/flag}}` stays when the flag is true,
 // `{{^flag}}…{{/flag}}` when it is false; the other is removed with its content.
 export function fillBlocks(text, flags) {
-  // A marker on its own line takes its line break with it.
-  return text.replace(/\{\{([#^])(\w+)\}\}(?:\r?\n)?([\s\S]*?)\{\{\/\2\}\}(?:\r?\n)?/g, (_, kind, flag, body) => {
+  // A marker on its own line takes its line break with it. Repeated until stable, so a block
+  // nested inside another flag's block resolves too.
+  const once = (t) => t.replace(/\{\{([#^])(\w+)\}\}(?:\r?\n)?([\s\S]*?)\{\{\/\2\}\}(?:\r?\n)?/g, (_, kind, flag, body) => {
     const keep = kind === '#' ? Boolean(flags[flag]) : !flags[flag];
     return keep ? body : '';
   });
+  let out = text;
+  for (let prev = null; prev !== out;) [prev, out] = [out, once(out)];
+  return out;
 }
 
 // Static directory part of a glob: 'src/app/features/**' → 'src/app/features'.

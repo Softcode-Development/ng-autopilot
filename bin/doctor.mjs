@@ -51,10 +51,16 @@ export function missingSections(template, text) {
     .map(([, shown]) => shown);
 }
 
+// Example markup in a pre-filled template (`<section class="…">`, `<p-toast />`, `<label for>`)
+// is content to keep, not a fill-in.
+const ELEMENTS = 'html|body|head|section|div|span|p|form|label|i|a|button|input|select|textarea|ul|ol|li|nav|main|header|footer|aside|table|tr|td|th|img|script|style|template|ng-container|ng-template';
+const MARKUP = new RegExp(`^<(?:[a-z][a-z0-9]*-[a-z0-9-]+|${ELEMENTS})(?=[\\s>/])|="|/>$`);
+
 export function unfilledPlaceholders(template, text) {
   const hits = new Set();
   for (const line of stripComments(template).split('\n')) {
     for (const m of line.matchAll(PLACEHOLDER)) {
+      if (MARKUP.test(m[0])) continue;
       const before = line.slice(Math.max(0, m.index - CONTEXT), m.index).trimStart();
       const after = line.slice(m.index + m[0].length, m.index + m[0].length + CONTEXT).trimEnd();
       const kept = before || after ? (before && text.includes(before + m[0])) || (after && text.includes(m[0] + after)) : text.includes(m[0]);

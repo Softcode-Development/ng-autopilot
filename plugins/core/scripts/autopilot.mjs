@@ -3,6 +3,7 @@
 //   node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" sync <project-dir> [--dry-run]
 //   node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" doctor <project-dir>
 //   node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" links <project-dir>
+//   node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" template <project-dir> <path>
 // Finds the autopilot repo next to this plugin (local marketplace) or through the
 // marketplace's clone that Claude Code keeps (git marketplace).
 
@@ -12,7 +13,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const COMMANDS = { sync: 'bin/sync.mjs', doctor: 'bin/doctor.mjs', links: 'bin/links.mjs' };
+const COMMANDS = { sync: 'bin/sync.mjs', doctor: 'bin/doctor.mjs', links: 'bin/links.mjs', template: 'bin/template.mjs' };
 
 export function findAutopilotRoot() {
   if (process.env.AUTOPILOT_ROOT && existsSync(path.join(process.env.AUTOPILOT_ROOT, 'bin', 'sync.mjs'))) return process.env.AUTOPILOT_ROOT;
@@ -33,7 +34,7 @@ export function findAutopilotRoot() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [command, ...args] = process.argv.slice(2);
   if (!COMMANDS[command]) {
-    console.error('usage: autopilot.mjs <sync|doctor|links> <project-dir> [--dry-run]');
+    console.error('usage: autopilot.mjs <sync|doctor|links|template> <project-dir> [--dry-run | <path>]');
     process.exit(2);
   }
   const root = findAutopilotRoot();

@@ -31,8 +31,12 @@ export function primengMajor(cwd) {
   return firstNumber(pkg?.dependencies?.primeng ?? pkg?.devDependencies?.primeng);
 }
 
+// @primeng/mcp is published from 21 on; an older project gets the closest docs server.
+const FIRST_MCP_MAJOR = 21;
+
 export function resolveArgs(args, cwd) {
-  const major = primengMajor(cwd) ?? 'latest';
+  const installed = primengMajor(cwd);
+  const major = installed === null ? 'latest' : String(Math.max(Number(installed), FIRST_MCP_MAJOR));
   return args.map((a) => a.replaceAll('{primeng-major}', major));
 }
 

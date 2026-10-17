@@ -6,10 +6,12 @@
 {{/legacyCss}}
 {{#legacyCss}}
 /* Legacy setup: no Tailwind base reset (it would restyle legacy pages), every class prefixed
-   `tw:` (no clash with legacy class names), only the strict-scope folders scanned. */
-@layer theme, base, components, utilities;
+   `tw:` (no clash with legacy class names), only the strict-scope folders scanned.
+   Utilities stay unlayered: the legacy CSS is unlayered too, and any unlayered rule beats a
+   layered one — layered, `tw:font-sans` would lose to a legacy `body { font-family }`. */
+@layer theme;
 @import "tailwindcss/theme.css" layer(theme) prefix(tw);
-@import "tailwindcss/utilities.css" layer(utilities) prefix(tw) source(none);
+@import "tailwindcss/utilities.css" prefix(tw) source(none);
 {{/legacyCss}}
 @import "tailwindcss-primeui";
 @import "@fontsource-variable/inter";

@@ -48,6 +48,10 @@ The UI layer is **PrimeNG** (styled mode, theme preset in `src/app/core/theme/ap
 ## 4. Design tokens
 
 Two systems, one source of truth: the **PrimeNG preset** (`--p-*` CSS variables) styles the components; **Tailwind** styles everything around them, and `tailwindcss-primeui` maps the preset's colours into Tailwind classes. Tokens are CSS variables, so light and dark swap at runtime.
+{{#legacyCss}}
+
+**Legacy setup (this app loads legacy global CSS):** every class takes the `tw:` prefix (`tw:flex`, `tw:md:grid-cols-2`{{#darkMode}}, `tw:dark:bg-surface-900`{{/darkMode}}), and only files inside `lint.strictScope` and `src/index.html` are scanned — a `tw:` class written anywhere else (the legacy app shell, a legacy page) generates no CSS. Tailwind's base reset is off, so legacy pages look exactly as before; new code sets its own type and spacing with classes.
+{{/legacyCss}}
 
 ### 4.1 Colour
 

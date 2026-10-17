@@ -75,6 +75,7 @@ test('legacy setup without dark mode: prefixed, no preflight, scans the strict s
   assert.match(css, /@source "\.\.\/app\/shared\/modern";/);
   assert.match(css, /@source "\.\.\/app\/x";/);
   assert.match(css, /@source "\.\.\/index\.html";/, 'the <body> classes live in index.html');
+  assert.match(css, /@import "tailwindcss\/utilities\.css" prefix\(tw\) source\(none\);/, 'utilities unlayered, or legacy element CSS beats them');
   assert.doesNotMatch(css, /@import "tailwindcss";|preflight|@custom-variant|\{\{|__/);
   const providers = files['src/app/core/theme/primeng.providers.ts'].content;
   assert.match(providers, /darkModeSelector: false/);
@@ -150,4 +151,46 @@ test('doctor names missing runtime dependencies apart from devDependencies', () 
   const text = doctor(root).warnings.join('\n');
   assert.match(text, /^dependencies missing: @primeuix\/themes, @fontsource-variable\/inter, primeicons$/m);
   assert.match(text, /^devDependencies missing: .*tailwindcss-primeui/m);
+});
+
+test('doctor: a fresh primeng design system reports only its real fill-ins, not its example markup', () => {
+  const fresh = mkdtempSync(path.join(tmpdir(), 'autopilot-fresh-'));
+  try {
+    spawnSync('git', ['init', '-q'], { cwd: fresh });
+    writeFileSync(path.join(fresh, 'package.json'), JSON.stringify({ name: 'app' }));
+    mkdirSync(path.join(fresh, '.claude'));
+    writeFileSync(path.join(fresh, '.claude', 'autopilot.json'), JSON.stringify({ packs: ['angular', 'primeng'], design: { starter: true } }));
+    sync(fresh);
+    const line = doctor(fresh).warnings.find((w) => w.startsWith('docs/DESIGN_SYSTEM.md:') && w.includes('unfilled'));
+    assert.match(line, /: 5 unfilled/);
+    for (const markup of ['<html>', '<section', '<div', '<p-toast', '<label for>', '<p-message', '<form ', '<i class']) assert.ok(!line.includes(markup), markup);
+  } finally {
+    rmSync(fresh, { recursive: true, force: true });
+  }
+});
+
+test('legacy design system says where tw: classes work; the modern one does not mention scanning', () => {
+  const legacy = render({ packs: ['angular', 'primeng'], design: { starter: true, legacyCss: true } })['docs/DESIGN_SYSTEM.md'].content;
+  const modern = render({ packs: ['angular', 'primeng'], design: { starter: true } })['docs/DESIGN_SYSTEM.md'].content;
+  assert.match(legacy, /every class takes the `tw:` prefix/);
+  assert.match(legacy, /only files inside `lint\.strictScope` and `src\/index\.html` are scanned/);
+  assert.doesNotMatch(modern, /are scanned/);
+});
+
+test('fillBlocks resolves a block nested inside another flag\'s block', () => {
+  const t = '{{#a}}x{{#b}}y{{/b}}{{^b}}n{{/b}}z{{/a}}';
+  assert.equal(fillBlocks(t, { a: true, b: true }), 'xyz');
+  assert.equal(fillBlocks(t, { a: true, b: false }), 'xnz');
+  assert.equal(fillBlocks(t, { a: false, b: true }), '');
+});
+
+test('template command prints the rendered project file for this project, even when the project already has one', () => {
+  const script = path.join(AUTOPILOT_ROOT, 'bin', 'template.mjs');
+  const r = spawnSync(process.execPath, [script, root, 'docs/DESIGN_SYSTEM.md'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /### 4\.2 Typography/);
+  assert.match(r.stdout, /class="flex/);
+  const missing = spawnSync(process.execPath, [script, root, 'docs/NOPE.md'], { encoding: 'utf8' });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /not a project file sync creates/);
 });
