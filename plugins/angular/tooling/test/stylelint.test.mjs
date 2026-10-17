@@ -46,12 +46,12 @@ test('justified-stylesheet: a component stylesheet in scope needs a why comment'
   assert.deepEqual(rules, ['autopilot/justified-stylesheet']);
 });
 
-test('justified-stylesheet: a why comment, an empty file, legacy code and non-component styles pass', async () => {
+test('justified-stylesheet: a why comment, an empty file and legacy code pass; other feature SCSS does not', async () => {
   const why = '/* why: third-party canvas sizing */\n.x {\n  display: flex;\n}\n';
   assert.deepEqual(await lint(why, 'src/app/features/a/a.component.scss', SCOPE), []);
   assert.ok(!(await lint('', 'src/app/features/a/a.component.scss', SCOPE)).includes('autopilot/justified-stylesheet'));
   assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/legacy/a.component.scss', SCOPE), []);
-  assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/features/a/theme.scss', SCOPE), []);
+  assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/features/a/theme.scss', SCOPE), ['autopilot/justified-stylesheet'], 'feature-level SCSS needs a reason too');
 });
 
 test('justified-stylesheet: plain css components when the project has no scss', async () => {
@@ -62,4 +62,11 @@ test('justified-stylesheet: plain css components when the project has no scss', 
 test('the starter tailwind.css passes with tailwind on', async () => {
   const code = '@import "tailwindcss";\n@import "tailwindcss-primeui";\n\n@custom-variant dark (&:where(.app-dark, .app-dark *));\n\n@theme {\n  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;\n}\n';
   assert.deepEqual(await lint(code, 'src/styles/tailwind.css', { tailwind: true }), []);
+});
+
+test('justified-stylesheet: Angular 20+ file names without .component are covered; global entry stylesheets are not', async () => {
+  assert.deepEqual(await lint('.x {\n  display: flex;\n}\n', 'src/app/features/user/user.scss', SCOPE), ['autopilot/justified-stylesheet']);
+  const whole = { scss: true, strictScope: ['src/**'] };
+  assert.ok(!(await lint('.x {\n  display: flex;\n}\n', 'src/styles.scss', whole)).includes('autopilot/justified-stylesheet'));
+  assert.ok(!(await lint('.x {\n  display: flex;\n}\n', 'src/styles/tailwind.css', whole)).includes('autopilot/justified-stylesheet'));
 });

@@ -2,7 +2,8 @@
 // design-discipline rules (tokens, no !important, no component dark-mode
 // media queries); everything stylelint-config-standard checks applies there too.
 //
-// Component stylesheets in scope must justify themselves (autopilot/justified-stylesheet).
+// Stylesheets in scope, other than the app's global entry styles, must justify
+// themselves (autopilot/justified-stylesheet).
 //
 // Usage in the project's stylelint.config.mjs:
 //   import { autopilotStylelint } from './tools/autopilot/stylelint/preset.mjs';
@@ -19,7 +20,6 @@ export function autopilotStylelint(options = {}) {
   const o = { scss: false, tailwind: false, strictScope: ['src/**'], ignoreFiles: [], ...options };
   const ext = o.scss ? '{scss,css}' : 'css';
   const files = o.strictScope.map((g) => (g.endsWith('/**') ? `${g}/*.${ext}` : `${g}/**/*.${ext}`));
-  const componentFiles = o.strictScope.map((g) => (g.endsWith('/**') ? `${g}/*.component.${ext}` : `${g}/**/*.component.${ext}`));
 
   return {
     extends: [o.scss ? 'stylelint-config-standard-scss' : 'stylelint-config-standard'],
@@ -51,7 +51,7 @@ export function autopilotStylelint(options = {}) {
         },
       },
       // Layout and look come from utility classes and tokens; a stylesheet says why it exists.
-      { files: componentFiles, rules: { 'autopilot/justified-stylesheet': true } },
+      { files, rules: { 'autopilot/justified-stylesheet': true } },
     ],
   };
 }

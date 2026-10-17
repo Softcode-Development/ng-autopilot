@@ -94,7 +94,7 @@ Two systems, one source of truth: the **PrimeNG preset** (`--p-*` CSS variables)
 | How a PrimeNG component looks | the preset; one instance: its `dt` input (scoped tokens) or `pt` (pass-through classes) | overriding `.p-*` classes, `::ng-deep` |
 | A project colour | a token in the preset's `extend.app` (§ 4.1) | SCSS variables |
 
-New components have no stylesheet (`ng g c` is set to `style: none`). A component stylesheet is the exception and opens with `/* why: … */` — stylelint `autopilot/justified-stylesheet`.
+New components have no stylesheet (`ng g c` is set to `style: none`). Any stylesheet in new code (a component's, or other SCSS) is the exception and opens with `/* why: … */` — stylelint `autopilot/justified-stylesheet`; only the global entry styles (`src/styles.*`, `src/styles/**`) are exempt.
 
 ## 5. Theme and dark mode
 

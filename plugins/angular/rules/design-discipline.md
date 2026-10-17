@@ -38,7 +38,7 @@ How a template gets its look; the project's `docs/DESIGN_SYSTEM.md` § 4.6 names
 
 - **No component stylesheet by default** — `ng g c` is set to `style: none`. A stylesheet that must exist opens with `/* why: … */`.
   - **Why:** a stylesheet per component re-decides spacing and colour the tokens already decide, and drifts from them.
-  - **Enforcement:** stylelint `autopilot/justified-stylesheet` on component stylesheets in `strictScope`.
+  - **Enforcement:** stylelint `autopilot/justified-stylesheet` on every stylesheet in `strictScope` (component styles with or without the `.component` suffix, other SCSS) except the app's global entry styles (`src/styles.*`, `src/styles/**`).
 
 ## Tokens
 - Colors, spacing, type, radius and motion come from design tokens (CSS custom properties), so themes swap at runtime.
