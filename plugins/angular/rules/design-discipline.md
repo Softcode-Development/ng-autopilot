@@ -58,7 +58,7 @@ Before writing markup that looks like a primitive (spinner, progress bar, toast,
 Before committing UI work, open each changed screen in the connected browser and check it at **desktop and phone width (~360–375 px)**, in **light and dark** theme if the app has both, in every state the change touched (empty, loading, error, filled). Check against the project's `docs/DESIGN_SYSTEM.md`. A failure is fixed in the same scope before committing.
 - **Why:** specs and unit tests can't see overflowing dialogs, missing spinners or dark-mode breakage.
 - Use the dev server that is already running; never start a second one, never kill one you did not start.
-- The project's visual-testing overrides name the URLs, accounts and states to check.
+- The project's `.claude/gates.md` § Visual gate names the dev servers, accounts, widths and start points to check.
 
 ## Design skills
 | Skill | When | Input |
