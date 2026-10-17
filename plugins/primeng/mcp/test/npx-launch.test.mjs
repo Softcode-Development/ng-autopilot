@@ -47,3 +47,9 @@ test('PrimeNG older than the first @primeng/mcp release (21) gets the 21 docs se
     rmSync(old, { recursive: true, force: true });
   }
 });
+
+test('started from a sub-folder, the lookup walks up to the project that has PrimeNG', () => {
+  const sub = path.join(installed, 'apps', 'web', 'src');
+  mkdirSync(sub, { recursive: true });
+  assert.equal(primengMajor(sub), '21');
+});

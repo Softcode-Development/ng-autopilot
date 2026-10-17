@@ -20,15 +20,20 @@ const readJson = (file) => {
 };
 const firstNumber = (s) => /(\d+)/.exec(s ?? '')?.[1] ?? null;
 
-// Major of the installed primeng, else of the range package.json declares, else null.
+// Major of the installed primeng, else of the range package.json declares, else null —
+// looked up from `cwd` upwards, so a session started in a sub-folder finds its project.
 export function primengMajor(cwd) {
-  const installed = path.join(cwd, 'node_modules', 'primeng', 'package.json');
-  if (existsSync(installed)) {
-    const major = firstNumber(readJson(installed)?.version);
-    if (major) return major;
+  for (let dir = path.resolve(cwd); ; dir = path.dirname(dir)) {
+    const installed = path.join(dir, 'node_modules', 'primeng', 'package.json');
+    if (existsSync(installed)) {
+      const major = firstNumber(readJson(installed)?.version);
+      if (major) return major;
+    }
+    const pkg = readJson(path.join(dir, 'package.json'));
+    const declared = firstNumber(pkg?.dependencies?.primeng ?? pkg?.devDependencies?.primeng);
+    if (declared) return declared;
+    if (path.dirname(dir) === dir) return null;
   }
-  const pkg = readJson(path.join(cwd, 'package.json'));
-  return firstNumber(pkg?.dependencies?.primeng ?? pkg?.devDependencies?.primeng);
 }
 
 // @primeng/mcp is published from 21 on; an older project gets the closest docs server.
