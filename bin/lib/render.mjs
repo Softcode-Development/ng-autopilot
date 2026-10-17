@@ -85,7 +85,10 @@ const DOC_NEEDS = {
 // The project doc set: path in the project → template in the autopilot repo.
 export function projectDocs(c) {
   const docs = ['TECH_STACK', 'ARCHITECTURE', 'DOMAIN', 'FEATURES', 'GETTING_STARTED'].map((d) => [`docs/${d}.md`, `plugins/core/templates/docs/${d}.md`]);
-  if (c.packs.includes('angular')) docs.push(['docs/DESIGN_SYSTEM.md', 'plugins/angular/templates/docs/DESIGN_SYSTEM.md']);
+  if (c.packs.includes('angular')) {
+    const pack = c.packs.includes('primeng') ? 'primeng' : 'angular';
+    docs.push(['docs/DESIGN_SYSTEM.md', `plugins/${pack}/templates/docs/DESIGN_SYSTEM.md`]);
+  }
   if (c.packs.includes('nestjs')) docs.push(['docs/DATA_MODEL.md', 'plugins/nestjs/templates/docs/DATA_MODEL.md']);
   return docs;
 }
@@ -169,7 +172,8 @@ export function renderFiles(autopilotRoot, rawConfig) {
   const startHere = [...projectDocs(c)].sort(([a], [b]) => (a.endsWith('GETTING_STARTED.md') ? -1 : b.endsWith('GETTING_STARTED.md') ? 1 : 0))
     .map(([p]) => `| ${DOC_NEEDS[path.posix.basename(p, '.md')]} | [${p}](${p}) |`).join('\n');
   add('README.md', fill(read('plugins/core/templates/project/README.md'), { __START_HERE__: startHere }), 'once');
-  for (const [doc, template] of projectDocs(c)) add(doc, read(template), 'once');
+  const designFlags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode };
+  for (const [doc, template] of projectDocs(c)) add(doc, fill(fillBlocks(read(template), designFlags), designValues(c)), 'once');
   if (c.packs.includes('primeng') && c.design.starter) {
     const flags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode };
     const starter = (src, dest) => add(dest, fill(fillBlocks(read(`plugins/primeng/templates/starter/${src}`), flags), designValues(c)), 'once');

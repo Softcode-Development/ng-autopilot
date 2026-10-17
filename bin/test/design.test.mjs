@@ -98,3 +98,29 @@ test('sync keeps a tailwind.css the project already has', () => {
   assert.ok(report.kept.includes('src/styles/tailwind.css'));
   assert.ok(report.created.includes('src/app/core/theme/app-preset.ts'));
 });
+
+const SPLIT = ['### 4.1 Colour', '### 4.2 Typography', '### 4.3 Spacing', '### 4.4 Radius', '### 4.5 Motion', '### 4.6 Usage rule'];
+
+test('primeng pack: DESIGN_SYSTEM.md comes pre-filled from the primeng template', () => {
+  const doc = render({ packs: ['angular', 'primeng'], design: { starter: true } })['docs/DESIGN_SYSTEM.md'].content;
+  for (const h of SPLIT) assert.ok(doc.includes(h), h);
+  for (const s of ['Inter Variable', '{blue.500}', 'app.income.color', 'https://v{major}.primeng.org', 'class="flex', 'src/app/core/theme/app-preset.ts']) {
+    assert.ok(doc.includes(s), s);
+  }
+  assert.doesNotMatch(doc, /v21\.primeng\.org|__TW__|\{\{[#^/]/);
+});
+
+test('primeng pack, legacy setup: class examples carry the tw: prefix; single theme says so', () => {
+  const doc = render({ packs: ['angular', 'primeng'], design: { starter: true, legacyCss: true, darkMode: false } })['docs/DESIGN_SYSTEM.md'].content;
+  assert.match(doc, /class="tw:flex/);
+  assert.doesNotMatch(doc, /class="flex/);
+  assert.match(doc, /darkModeSelector: false/);
+  assert.doesNotMatch(doc, /tw:dark:|ThemeService/, 'a single-theme app shows no dark variants');
+});
+
+test('angular pack alone: the neutral template, with the same § 4 split as fill-ins', () => {
+  const doc = render({ packs: ['angular'] })['docs/DESIGN_SYSTEM.md'].content;
+  for (const h of SPLIT) assert.ok(doc.includes(h), h);
+  assert.match(doc, /<Font families[^>]*>/);
+  assert.doesNotMatch(doc, /Inter Variable/);
+});

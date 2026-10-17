@@ -46,11 +46,35 @@ Full import paths: <link to the shared UI library README>.
 
 ## 4. Design tokens
 
-<Token source file(s); color tokens with their foreground pairs; the project's domain token namespace; typography, spacing, radius and motion scales.> **Usage:** <how components consume tokens — utilities, SCSS functions, preset tokens>. No raw color literals in components.
+Tokens are CSS variables, so themes swap at runtime. Every value below is concrete — "library defaults" is not an answer; name the defaults.
+
+### 4.1 Colour
+
+<Token source file; primary / secondary / muted / accent / destructive tokens with their foreground pairs; surfaces and borders; the project's domain token namespace (e.g. `--app-income`), each with a light and a dark value.>
+
+### 4.2 Typography
+
+<Font families with fallback stack and how they are loaded; root font size; the type scale (sizes and when each is used); weights.>
+
+### 4.3 Spacing
+
+<The spacing scale (base unit) and the default rhythm: between fields, between sections, inside containers, on phone.>
+
+### 4.4 Radius
+
+<The radius scale and which radius components and containers use.>
+
+### 4.5 Motion
+
+<Durations (micro / popover / panel) and easings; how reduced motion is honoured.>
+
+### 4.6 Usage rule
+
+<How templates consume tokens — utility classes, library token classes, preset tokens — and what is never done (raw colour literals, component SCSS for layout, overriding library internals).>
 
 ## 5. Theme and dark mode
 
-<!-- guide: delete if the app has a single theme. -->
+<!-- guide: single-theme app: keep the heading, replace the bullets with "Single light theme" and why. -->
 
 - **Strategy:** <class on the html element | media query | library preset selector>.
 - **Default:** follow `prefers-color-scheme` until the user chooses.
