@@ -46,6 +46,17 @@ export function normaliseConfig(raw) {
   return c;
 }
 
+// What each project doc answers — the README's "Start here" table.
+const DOC_NEEDS = {
+  GETTING_STARTED: 'Set up, run, test, build',
+  TECH_STACK: 'Stack and versions; branch model, env, versioning',
+  ARCHITECTURE: 'Code layout, new vs legacy code, state, patterns to reuse',
+  DOMAIN: 'Domain terms, API, auth, markets / tenants',
+  FEATURES: 'Features and their status',
+  DESIGN_SYSTEM: 'UI for new code: primitives, tokens, layout',
+  DATA_MODEL: 'Database schema and data rules',
+};
+
 // The project doc set: path in the project → template in the autopilot repo.
 export function projectDocs(c) {
   const docs = ['TECH_STACK', 'ARCHITECTURE', 'DOMAIN', 'FEATURES', 'GETTING_STARTED'].map((d) => [`docs/${d}.md`, `plugins/core/templates/docs/${d}.md`]);
@@ -129,6 +140,9 @@ export function renderFiles(autopilotRoot, rawConfig) {
 
   // Project-owned files, created once.
   add('.claude/rules/project.md', read('plugins/core/templates/project/project.md'), 'once');
+  const startHere = [...projectDocs(c)].sort(([a], [b]) => (a.endsWith('GETTING_STARTED.md') ? -1 : b.endsWith('GETTING_STARTED.md') ? 1 : 0))
+    .map(([p]) => `| ${DOC_NEEDS[path.posix.basename(p, '.md')]} | [${p}](${p}) |`).join('\n');
+  add('README.md', fill(read('plugins/core/templates/project/README.md'), { __START_HERE__: startHere }), 'once');
   for (const [doc, template] of projectDocs(c)) add(doc, read(template), 'once');
   add('.claude/gates.md', read('plugins/core/templates/claude/gates.md'), 'once');
   add('.claude/plans/backlog.md', read('plugins/core/templates/plans/backlog.md'), 'once');

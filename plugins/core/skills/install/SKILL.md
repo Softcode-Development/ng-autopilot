@@ -81,6 +81,7 @@ Nothing is touched until the owner approves the table.
    | `docs/FEATURES.md` | `…/templates/docs/FEATURES.md` | every feature drafted from routes and feature folders, with capability slug and status (code wins over old docs) |
    | `docs/GETTING_STARTED.md` | `…/templates/docs/GETTING_STARTED.md` | prerequisites, install, environment, run / test / build |
    | `docs/DATA_MODEL.md` (nestjs pack) | the nestjs pack's `templates/docs/DATA_MODEL.md` | the schema |
+   | `README.md` | `…/templates/project/README.md` | **rewritten** as the human entry point: purpose (two sentences), how the system works (one paragraph), the "Start here" table linking the doc set, how work happens. No commands or versions copied from `docs/GETTING_STARTED.md` / `docs/TECH_STACK.md` — they are linked. Content the old README has that no doc holds (badges, deploy notes) stays as its own section and is named in the coverage map |
    | `.claude/rules/project.md` | `…/templates/project/project.md` | product in two lines, the docs table, the project's **hard rules** (Rule / Why / Enforcement), do-not-modify — nothing descriptive |
 
    Sync creates any of these still missing from the templates; fill them before Phase 3 ends — `doctor` reports placeholders left verbatim. For every line:
@@ -90,7 +91,7 @@ Nothing is touched until the owner approves the table.
    - nothing stale (old versions, finished migrations, superseded advice).
    - Also extract project facts from the owner's auto-memory for this repo (`~/.claude/projects/<repo>/memory/`) by the same test — it exists on one machine only.
 2. Draft `.claude/gates.md` (commands, smoke map, visual-gate setup, security triggers) and, per test tier, `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs) from the same sources and `package.json`.
-3. Show the owner the docs and `project.md` with a coverage map: every section of every extract → delete file → where it went (a doc / `project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
+3. Show the owner the docs, the README and `project.md` with a coverage map: every section of every extract → delete file and of the old README → where it went (a doc / `project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
 4. Commit: `docs: extract project knowledge into project docs and rules`.
 
 **Reconfigure on a project whose `project.md` predates the doc set** (it holds Stack / Architecture specifics / Domain and API / Design system / i18n / Security specifics sections): move each section into its doc by the table above, leave `project.md` with product, docs table, hard rules and do-not-modify, and show the owner the move as a coverage map.

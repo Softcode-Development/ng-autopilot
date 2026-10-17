@@ -67,6 +67,11 @@ test('fresh sync writes generated files, creates project files, merges settings,
   assert.equal(existsSync(p('docs/DATA_MODEL.md')), false, 'DATA_MODEL only with the nestjs pack');
   assert.match(read('CLAUDE.md'), /\[TECH_STACK\.md\]\(docs\/TECH_STACK\.md\) · \[ARCHITECTURE\.md\]\(docs\/ARCHITECTURE\.md\)/);
   assert.equal(lockHas('docs/TECH_STACK.md'), false, 'docs are project-owned, not fingerprinted');
+  assert.ok(r.created.includes('README.md'), 'a repo without a README gets one');
+  const readme = read('README.md');
+  assert.match(readme, /\| Need \| Where \|\n\|---\|---\|\n\| Set up, run, test, build \| \[docs\/GETTING_STARTED\.md\]/, 'Start here opens with setup');
+  assert.match(readme, /\[docs\/DESIGN_SYSTEM\.md\]\(docs\/DESIGN_SYSTEM\.md\)/);
+  assert.doesNotMatch(readme, /DATA_MODEL|__START_HERE__/);
   assert.equal(existsSync(p('tools/autopilot/openspec/tasks-gate.mjs')), false);
 
   assert.match(read('CLAUDE.md'), /`src\/app\/features\/\*\*`/);

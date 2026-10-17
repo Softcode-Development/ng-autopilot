@@ -94,7 +94,8 @@ export function doctor(projectRoot) {
       continue;
     }
     const unfilled = unfilledPlaceholders(f.content.replaceAll('\r\n', '\n'), stripComments(readFileSync(full, 'utf8')));
-    if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s): ${unfilled.join(' ')}`);
+    const short = (p) => (p.length > 40 ? `${p.slice(0, 38)}…>` : p);
+    if (unfilled.length) warnings.push(`${f.path}: ${unfilled.length} unfilled <placeholder>(s): ${unfilled.map(short).join(' ')}`);
   }
 
   // Links between the project's own docs.
