@@ -16,12 +16,14 @@ const MODES: readonly ThemeMode[] = ['light', 'dark', 'system'];
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly window = this.document.defaultView;
-  private readonly osDark = signal(this.window?.matchMedia('(prefers-color-scheme: dark)').matches ?? false);
+  // No matchMedia on the server or in jsdom test runs: the OS preference then reads as light.
+  private readonly query = this.window?.matchMedia?.('(prefers-color-scheme: dark)');
+  private readonly osDark = signal(this.query?.matches ?? false);
 
   readonly mode = signal<ThemeMode>(this.storedMode());
 
   constructor() {
-    const query = this.window?.matchMedia('(prefers-color-scheme: dark)');
+    const query = this.query;
     const onChange = (event: MediaQueryListEvent): void => this.osDark.set(event.matches);
     query?.addEventListener('change', onChange);
     inject(DestroyRef).onDestroy(() => query?.removeEventListener('change', onChange));
@@ -35,11 +37,20 @@ export class ThemeService {
 
   setMode(mode: ThemeMode): void {
     this.mode.set(mode);
-    this.window?.localStorage.setItem(STORAGE_KEY, mode);
+    try {
+      this.window?.localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      // Storage blocked (privacy settings): the choice lasts for this session only.
+    }
   }
 
   private storedMode(): ThemeMode {
-    const stored = this.window?.localStorage.getItem(STORAGE_KEY);
+    let stored: string | null | undefined;
+    try {
+      stored = this.window?.localStorage.getItem(STORAGE_KEY);
+    } catch {
+      stored = null;
+    }
     return MODES.find((m) => m === stored) ?? 'system';
   }
 }

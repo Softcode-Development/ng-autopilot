@@ -194,3 +194,9 @@ test('template command prints the rendered project file for this project, even w
   assert.equal(missing.status, 1);
   assert.match(missing.stderr, /not a project file sync creates/);
 });
+
+test('theme service survives jsdom and blocked storage (verified under Angular 21 Vitest in the build check)', () => {
+  const svc = render({ packs: ['angular', 'primeng'], design: { starter: true } })['src/app/core/theme/theme.service.ts'].content;
+  assert.match(svc, /matchMedia\?\.\(/);
+  assert.equal((svc.match(/try \{/g) ?? []).length, 2, 'localStorage read and write are guarded');
+});
