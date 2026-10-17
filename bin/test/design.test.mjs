@@ -200,3 +200,19 @@ test('theme service survives jsdom and blocked storage (verified under Angular 2
   assert.match(svc, /matchMedia\?\.\(/);
   assert.equal((svc.match(/try \{/g) ?? []).length, 2, 'localStorage read and write are guarded');
 });
+
+test('doctor: Tailwind below v4 or a PostCSS config that shadows .postcssrc.json silently stops the classes', () => {
+  const clean = doctor(root).warnings.join('\n');
+  assert.doesNotMatch(clean, /Tailwind v4|shadows \.postcssrc\.json/);
+  mkdirSync(path.join(root, 'node_modules', 'tailwindcss'), { recursive: true });
+  writeFileSync(path.join(root, 'node_modules', 'tailwindcss', 'package.json'), JSON.stringify({ version: '3.4.17' }));
+  writeFileSync(path.join(root, 'postcss.config.json'), JSON.stringify({ plugins: { tailwindcss: {} } }));
+  try {
+    const text = doctor(root).warnings.join('\n');
+    assert.match(text, /tailwindcss 3\.4\.17 installed — the design-system starter needs Tailwind v4/);
+    assert.match(text, /postcss\.config\.json shadows \.postcssrc\.json/);
+  } finally {
+    rmSync(path.join(root, 'node_modules'), { recursive: true, force: true });
+    rmSync(path.join(root, 'postcss.config.json'));
+  }
+});

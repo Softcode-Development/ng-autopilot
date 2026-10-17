@@ -138,6 +138,16 @@ export function doctor(projectRoot) {
     if (missing.length) warnings.push(`devDependencies missing: ${missing.join(', ')}`);
   }
 
+  // Design-system starter: Tailwind v4 through .postcssrc.json, or the classes silently stop.
+  if (config.packs.includes('primeng') && config.design.starter) {
+    const installed = path.join(projectRoot, 'node_modules', 'tailwindcss', 'package.json');
+    const version = existsSync(installed) ? readJson(installed).version : null;
+    if (version && Number(version.split('.')[0]) < 4) warnings.push(`tailwindcss ${version} installed — the design-system starter needs Tailwind v4 (npm install -D tailwindcss@4 @tailwindcss/postcss)`);
+    if (existsSync(path.join(projectRoot, 'postcss.config.json'))) {
+      warnings.push('postcss.config.json shadows .postcssrc.json (Angular reads it first) — move "@tailwindcss/postcss" into it and delete .postcssrc.json, or delete it');
+    }
+  }
+
   if (apiMissing(config)) warnings.push('api.baseUrl / api.docsUrl not set — agents cannot verify endpoints; set them with /autopilot:install (reconfigure), or api.none for a project without a backend API');
 
   // Technology added since install.
