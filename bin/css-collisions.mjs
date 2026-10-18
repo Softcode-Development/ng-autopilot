@@ -112,8 +112,28 @@ function compiledScss(root) {
   });
 }
 
+// `@import 'tailwindcss'` resolves from the project when its Tailwind is v4 (the engine this check
+// speaks), else from this repo.
+function tailwindBase(root) {
+  try {
+    const { version } = JSON.parse(readFileSync(path.join(root, 'node_modules', 'tailwindcss', 'package.json'), 'utf8'));
+    if (Number(version.split('.')[0]) >= 4) return root;
+  } catch {
+    // not installed in the project
+  }
+  return AUTOPILOT_ROOT;
+}
+
 export async function analyse(root, { loadCompile = loadTailwindCompile } = {}) {
-  const sheets = globalStylesheets(root);
+  let sheets;
+  try {
+    sheets = globalStylesheets(root);
+  } catch (e) {
+    return {
+      sources: [], collisions: null, elementRules: 0, legacyCss: false,
+      note: `angular.json could not be read (${e.message.split('\n')[0]}) — list the global stylesheets by hand and decide design.legacyCss with the owner.`,
+    };
+  }
   const texts = [...sheets.map((s) => s.css), ...compiledScss(root)];
   const classes = new Set(texts.flatMap((css) => [...classSelectors(css)]));
   const elements = sheets.reduce((n, s) => n + elementRules(s.css), 0);
@@ -121,12 +141,14 @@ export async function analyse(root, { loadCompile = loadTailwindCompile } = {}) 
   let collisions = null;
   let note = null;
   if (compile) {
-    // `@import 'tailwindcss'` resolves from the project when it has Tailwind, else from this repo.
-    const base = existsSync(path.join(root, 'node_modules', 'tailwindcss')) ? root : AUTOPILOT_ROOT;
-    const theme = SEMANTIC_COLOURS.map((c) => `--color-${c}: #000;`).join(' ');
-    const compiler = await compile(`@import 'tailwindcss';\n@theme { ${theme} }`, { base, onDependency() {} });
-    const generated = new Set([...compiler.build([...classes]).matchAll(/^\s*\.((?:\\.|[\w-])+)\s*[{:,]/gm)].map((m) => m[1].replace(/\\/g, '')));
-    collisions = [...classes].filter((c) => generated.has(c)).sort();
+    try {
+      const theme = SEMANTIC_COLOURS.map((c) => `--color-${c}: #000;`).join(' ');
+      const compiler = await compile(`@import 'tailwindcss';\n@theme { ${theme} }`, { base: tailwindBase(root), onDependency() {} });
+      const generated = new Set([...compiler.build([...classes]).matchAll(/^\s*\.((?:\\.|[\w-])+)\s*[{:,]/gm)].map((m) => m[1].replace(/\\/g, '')));
+      collisions = [...classes].filter((c) => generated.has(c)).sort();
+    } catch (e) {
+      note = `Tailwind could not check the collisions (${e.message.split('\n')[0]}) — the element rules below are the evidence.`;
+    }
   } else {
     note = 'Tailwind is not installed here, so class collisions were not checked — re-run after installing the devDependencies.';
   }
@@ -148,6 +170,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const report = await analyse(path.resolve(target));
   if (process.argv.includes('--json')) {
     console.log(JSON.stringify(report, null, 2));
+  } else if (!report.sources.length && report.note) {
+    console.log(report.note);
   } else {
     console.log('Global stylesheets:');
     for (const s of report.sources) console.log(`  ${s.library.padEnd(20)} ${s.file}  (${s.classes} classes, ${s.elementRules} element rules)`);

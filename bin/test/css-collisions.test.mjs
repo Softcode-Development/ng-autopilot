@@ -97,3 +97,35 @@ test('without a Tailwind engine the check still answers from element rules and s
   assert.equal(report.legacyCss, true);
   assert.match(report.note, /Tailwind is not installed/);
 });
+
+test('degrades instead of crashing: no angular.json, unreadable angular.json, Tailwind v3 in the project', async () => {
+  const bare = mkdtempSync(path.join(tmpdir(), 'collisions-bare-'));
+  const broken = mkdtempSync(path.join(tmpdir(), 'collisions-broken-'));
+  const v3 = mkdtempSync(path.join(tmpdir(), 'collisions-v3-'));
+  try {
+    const none = await analyse(bare);
+    assert.deepEqual(none.sources, []);
+    assert.match(none.note, /angular\.json/);
+    put(broken, 'angular.json', '{ // comment\n "projects": {');
+    assert.match((await analyse(broken)).note, /angular\.json/);
+    put(v3, 'angular.json', angularJson(['src/styles.css']));
+    put(v3, 'src/styles.css', '.p-4 { padding: 1rem; }\n');
+    put(v3, 'node_modules/tailwindcss/package.json', JSON.stringify({ name: 'tailwindcss', version: '3.4.17' }));
+    const old = await analyse(v3);
+    assert.deepEqual(old.collisions, ['p-4'], 'checked with this repo\'s Tailwind v4');
+  } finally {
+    [bare, broken, v3].forEach((d) => rmSync(d, { recursive: true, force: true }));
+  }
+});
+
+test('CLI makes no recommendation when angular.json could not be read', () => {
+  const bare = mkdtempSync(path.join(tmpdir(), 'collisions-cli-bare-'));
+  try {
+    const r = spawnSync(process.execPath, [script, bare], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /decide design\.legacyCss with the owner/);
+    assert.doesNotMatch(r.stdout, /recommend design\.legacyCss/);
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
+});
