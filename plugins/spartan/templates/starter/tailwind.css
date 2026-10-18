@@ -1,0 +1,42 @@
+/* Global styles for new code: Tailwind, the spartan preset and the design tokens.
+   Layout, spacing, typography and colour are classes in templates (docs/DESIGN_SYSTEM.md § 4).
+   List this file first in angular.json → styles. */
+{{^legacyCss}}
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
+@import '@spartan-ng/brain/hlm-tailwind-preset.css';
+{{/legacyCss}}
+{{#legacyCss}}
+/* Legacy setup: no Tailwind base reset (it would restyle legacy pages), every class prefixed
+   `tw:` (no clash with legacy class names — spartan's generated code is prefixed by
+   tools/autopilot/spartan/prefix.mjs), utilities unlayered (legacy CSS is unlayered too), only
+   new code scanned. spartan-preset.css is the spartan preset with its @apply prefixed
+   (tools/autopilot/spartan/spartan-css.mjs preset). */
+@layer theme;
+@import 'tailwindcss/theme.css' layer(theme) prefix(tw);
+@import 'tailwindcss/utilities.css' prefix(tw) source(none);
+@import './spartan-preset.css';
+{{/legacyCss}}
+@import './tokens/index.css';
+{{#brands}}
+__BRAND_IMPORTS__
+{{/brands}}
+{{#legacyCss}}
+
+/* Only new code (lint.strictScope) and index.html are scanned for classes. */
+__SOURCES__
+{{/legacyCss}}
+{{^legacyCss}}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+{{/legacyCss}}

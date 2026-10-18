@@ -1,0 +1,12 @@
+/* Brand "__BRAND__": only what differs from the default design (../tokens/). Applied by the
+   brand-__BRAND__ class on <html> (provideBrand in src/app/core/theme/brand.ts). Empty means the
+   same design as the default. */
+.brand-__BRAND__ {
+  /* --primary: oklch(…); */
+  /* --primary-foreground: oklch(…); */
+  /* --ring: oklch(…); */
+}
+
+:root.dark.brand-__BRAND__ {
+  /* dark values of the same tokens */
+}

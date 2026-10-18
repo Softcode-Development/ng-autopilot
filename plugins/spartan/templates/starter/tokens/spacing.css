@@ -1,0 +1,5 @@
+/* Spacing: Tailwind's 4px scale (p-1 = 0.25rem, gap-4 = 1rem, …). Default rhythm: gap-4 between
+   fields, gap-6 between sections, p-6 inside cards, p-4 on phone. */
+@theme {
+  --spacing: 0.25rem;
+}

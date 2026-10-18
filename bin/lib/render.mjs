@@ -41,7 +41,11 @@ export function normaliseConfig(raw) {
   c.packageManager ??= 'npm';
   c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
-  c.design = { starter: false, legacyCss: false, darkMode: true, ...(c.design ?? {}) };
+  c.design = { starter: false, legacyCss: false, darkMode: true, brands: [], ...(c.design ?? {}) };
+  for (const b of c.design.brands) if (!/^[a-z][a-z0-9-]*$/.test(b)) throw new Error(`design.brands: "${b}" — use a bare lowercase name (class brand-<name>)`);
+  if (c.design.starter && c.packs.includes('primeng') && c.packs.includes('spartan')) {
+    throw new Error('design.starter needs one UI library per project — primeng or spartan, not both');
+  }
   c.stylelint = { scss: false, tailwind: c.design.starter, ...(c.stylelint ?? {}) };
   c.api ??= {};
   return c;
@@ -69,6 +73,8 @@ export function designValues(c) {
   const legacy = c.design.legacyCss;
   return {
     __TW__: legacy ? 'tw:' : '',
+    __DARK_CLASS__: c.packs.includes('spartan') ? 'dark' : 'app-dark',
+    __BRAND_IMPORTS__: c.design.brands.map((b) => `@import './brands/${b}.css';`).join('\n'),
     __DARK_SELECTOR__: c.design.darkMode ? "'.app-dark'" : 'false',
     __CSS_LAYER__: legacy ? 'false' : "{ name: 'primeng', order: 'theme, base, primeng' }",
     // Legacy setup scans only new code — plus index.html, which carries the <body> classes.
@@ -152,6 +158,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     tooling.push(['angular', 'tooling/i18n/hardcoded-ratchet.mjs', 'i18n/hardcoded-ratchet.mjs']);
     if (c.i18n?.sets?.length) for (const f of ['lib.mjs', 'i18n-validate.mjs', 'i18n-unused.mjs']) tooling.push(['angular', `tooling/i18n/${f}`, `i18n/${f}`]);
   }
+  if (c.packs.includes('spartan')) for (const f of walk(path.join(autopilotRoot, 'plugins/spartan/tooling'))) tooling.push(['spartan', `tooling/${f}`, `spartan/${f}`]);
   if (c.packs.includes('openspec')) tooling.push(['openspec', 'tooling/tasks-gate.mjs', 'openspec/tasks-gate.mjs']);
   if (c.packs.includes('nestjs') && c.nestjs?.openapi) tooling.push(['nestjs', 'tooling/openapi.mjs', 'nestjs/openapi.mjs']);
   for (const [pack, src, dest] of tooling) add(`tools/autopilot/${dest}`, read(`plugins/${pack}/${src}`), 'generated');
@@ -177,14 +184,21 @@ export function renderFiles(autopilotRoot, rawConfig) {
   const startHere = [...projectDocs(c)].sort(([a], [b]) => (a.endsWith('GETTING_STARTED.md') ? -1 : b.endsWith('GETTING_STARTED.md') ? 1 : 0))
     .map(([p]) => `| ${DOC_NEEDS[path.posix.basename(p, '.md')]} | [${p}](${p}) |`).join('\n');
   add('README.md', fill(read('plugins/core/templates/project/README.md'), { __START_HERE__: startHere }), 'once');
-  const designFlags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode };
+  const designFlags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode, brands: c.design.brands.length > 0 };
   for (const [doc, template] of projectDocs(c)) add(doc, fill(fillBlocks(read(template), designFlags), designValues(c)), 'once');
-  if (c.packs.includes('primeng') && c.design.starter) {
-    const flags = { legacyCss: c.design.legacyCss, darkMode: c.design.darkMode };
-    const starter = (src, dest) => add(dest, fill(fillBlocks(read(`plugins/primeng/templates/starter/${src}`), flags), designValues(c)), 'once');
-    starter('app-preset.ts', 'src/app/core/theme/app-preset.ts');
-    starter('primeng.providers.ts', 'src/app/core/theme/primeng.providers.ts');
-    if (c.design.darkMode) starter('theme.service.ts', 'src/app/core/theme/theme.service.ts');
+  const ui = c.packs.includes('spartan') ? 'spartan' : c.packs.includes('primeng') ? 'primeng' : null;
+  if (ui && c.design.starter) {
+    const render = (src) => fill(fillBlocks(read(src), designFlags), designValues(c));
+    const starter = (src, dest) => add(dest, render(`plugins/${ui}/templates/starter/${src}`), 'once');
+    if (ui === 'primeng') {
+      starter('app-preset.ts', 'src/app/core/theme/app-preset.ts');
+      starter('primeng.providers.ts', 'src/app/core/theme/primeng.providers.ts');
+    } else {
+      for (const t of ['colors', 'app', 'typography', 'spacing', 'radius', 'motion', 'index']) starter(`tokens/${t}.css`, `src/styles/tokens/${t}.css`);
+      for (const b of c.design.brands) add(`src/styles/brands/${b}.css`, render('plugins/spartan/templates/starter/brand.css').replaceAll('__BRAND__', b), 'once');
+      if (c.design.brands.length) starter('brand.ts', 'src/app/core/theme/brand.ts');
+    }
+    if (c.design.darkMode) add('src/app/core/theme/theme.service.ts', render('plugins/core/templates/starter/theme.service.ts'), 'once');
     starter('tailwind.css', 'src/styles/tailwind.css');
     starter('postcssrc.json', '.postcssrc.json');
   }

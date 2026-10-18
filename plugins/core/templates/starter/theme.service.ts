@@ -1,6 +1,6 @@
 // Light / dark / system theme. The choice is kept in localStorage.theme; `system`
-// follows the OS live. The `app-dark` class on <html> switches both PrimeNG
-// (darkModeSelector) and Tailwind's `dark:` variant. index.html applies the stored
+// follows the OS live. The dark class on <html> (__DARK_CLASS__) switches the UI library's
+// dark tokens and Tailwind's `dark:` variant. index.html applies the stored
 // choice before the bundle loads, so the first paint is already right.
 
 import { DOCUMENT } from '@angular/common';
@@ -9,7 +9,7 @@ import { DestroyRef, Injectable, effect, inject, signal } from '@angular/core';
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const STORAGE_KEY = 'theme';
-const DARK_CLASS = 'app-dark';
+const DARK_CLASS = '__DARK_CLASS__';
 const MODES: readonly ThemeMode[] = ['light', 'dark', 'system'];
 
 @Injectable({ providedIn: 'root' })

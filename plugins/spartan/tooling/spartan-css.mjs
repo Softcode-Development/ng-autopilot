@@ -17,8 +17,10 @@ import { fileURLToPath } from 'node:url';
 
 import { prefixClassList } from './prefix.mjs';
 
+// The font stack belongs to tokens/typography.css; the generator's unlayered :root --font-*
+// would silently override it, so those declarations are dropped.
 export function extractTokens(css) {
-  const blocks = [...css.matchAll(/^:root(?:\.dark)?\s*\{[\s\S]*?^\}/gm)].map((m) => m[0]);
+  const blocks = [...css.matchAll(/^:root(?:\.dark)?\s*\{[\s\S]*?^\}/gm)].map((m) => m[0].replace(/\n[ \t]*--font-[\w-]+:[^;]*;\n?/g, '\n').replace(/\n{3,}/g, '\n\n'));
   return `${blocks.join('\n\n')}\n`;
 }
 

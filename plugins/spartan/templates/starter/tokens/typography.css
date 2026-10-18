@@ -1,0 +1,8 @@
+/* Typography: the system font stack (no web font to load) and Tailwind's type scale
+   (text-xs … text-4xl). The root font size stays 16px — everything is rem-based. */
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, 'Helvetica Neue', arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, 'Liberation Mono', 'Courier New', monospace;
+}

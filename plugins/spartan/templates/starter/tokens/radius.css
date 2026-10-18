@@ -1,0 +1,14 @@
+/* Radius: one knob (--radius) and a scale derived from it. Overrides the 0.625rem the
+   colour generator writes. */
+:root {
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-full: 9999px;
+}

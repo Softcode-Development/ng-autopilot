@@ -1,0 +1,19 @@
+/* Project colour tokens: the --app-* namespace, each with a -foreground pair and a light and a
+   dark value, exposed to Tailwind below so templates write `text-app-income`. Example: */
+
+/*
+:root {
+  --app-income: oklch(0.62 0.17 150);
+  --app-income-foreground: oklch(0.99 0 0);
+}
+
+:root.dark {
+  --app-income: oklch(0.72 0.15 150);
+  --app-income-foreground: oklch(0.15 0 0);
+}
+
+@theme inline {
+  --color-app-income: var(--app-income);
+  --color-app-income-foreground: var(--app-income-foreground);
+}
+*/
