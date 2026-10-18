@@ -187,3 +187,16 @@ test('doctor (legacy spartan): unprefixed generated classes, a missing or stale 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('doctor: the Tailwind v4 / PostCSS check covers the spartan starter too', () => {
+  const dir = project(SPARTAN);
+  try {
+    put(dir, 'node_modules/tailwindcss/package.json', JSON.stringify({ version: '3.4.17' }));
+    put(dir, 'postcss.config.json', '{}');
+    const text = doctor(dir).warnings.join('\n');
+    assert.match(text, /tailwindcss 3\.4\.17 installed/);
+    assert.match(text, /postcss\.config\.json shadows/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

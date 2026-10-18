@@ -175,7 +175,7 @@ export function doctor(projectRoot) {
   }
 
   // Design-system starter: Tailwind v4 through .postcssrc.json, or the classes silently stop.
-  if (config.packs.includes('primeng') && config.design.starter) {
+  if ((config.packs.includes('primeng') || config.packs.includes('spartan')) && config.design.starter) {
     const installed = path.join(projectRoot, 'node_modules', 'tailwindcss', 'package.json');
     const version = existsSync(installed) ? readJson(installed).version : null;
     if (version && Number(version.split('.')[0]) < 4) warnings.push(`tailwindcss ${version} installed — the design-system starter needs Tailwind v4 (npm install -D tailwindcss@4 @tailwindcss/postcss)`);

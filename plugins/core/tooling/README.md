@@ -43,6 +43,8 @@ Pack steps are inserted between the `# >>> autopilot pack steps` markers: the op
 - Everything else — latest.
 - **One deliberate hold:** `@primeuix/themes@2` (primeng pack with the design-system starter) — 3.x carries its own licence; 2.x is MIT and is what PrimeNG 21 styles against.
 
+With the spartan pack's starter the project needs `@spartan-ng/brain`, `@angular/cdk`, `@ng-icons/core`, `@ng-icons/lucide`, `class-variance-authority`, `clsx`, `tailwind-merge` (dependencies) and `@spartan-ng/cli`, `tailwindcss`, `@tailwindcss/postcss`, `tw-animate-css` (devDependencies). `@spartan-ng/brain`, `@angular/cdk` and `@ng-icons/core` take the newest major whose `@angular/core` peer accepts the project's Angular major; `@spartan-ng/cli` follows brain and `@ng-icons/lucide` follows `@ng-icons/core`.
+
 With the primeng pack's design-system starter (`design.starter`), the project also needs `tailwindcss`, `@tailwindcss/postcss` and `tailwindcss-primeui` (devDependencies) and `@primeuix/themes`, `@fontsource-variable/inter` and `primeicons` (dependencies); sync prints one install command for each kind.
 
 The import rules use `eslint-plugin-import-x` (registered under the `import/` rule prefix): the original `eslint-plugin-import` does not accept eslint 10. The presets are tested against angular-eslint 21 and 22 with eslint 10.

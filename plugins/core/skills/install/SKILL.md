@@ -29,6 +29,17 @@ Script launcher (used below): `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs
   5. Wire what Phase 5 step 4 lists that is still missing. `ng build` and the affected tests pass; the visual gate on two PrimeNG screens shows them unchanged — behaviour stays identical (architecture rule, Refactoring).
   6. Commit: `refactor(theme): adopt the autopilot design-system starter`.
 
+  **Switch the UI library (PrimeNG → spartan)** — when the owner moves a project's new code to spartan:
+  1. Clean tree. Launcher `collisions <project-dir>` for `design.legacyCss` (the project's own `src/styles/tailwind.css` is not counted).
+  2. Inventory every PrimeNG use, new code and legacy: `git grep -n "from 'primeng"`, `<p-` elements, `pInputText`-style directives, `pi pi-` icons. Show a table (file, new or legacy, what it uses) and ask per row: **rebuild in spartan**, **drop**, or (legacy only) **keep**.
+  3. Write `.claude/autopilot.json` (flag protocol): `primeng` → `spartan` in `packs`; `design` (`starter: true`, `legacyCss` from step 1, `darkMode`, `brands`); `lint.vendorGlobs`. Sync — it creates the spartan token files and tools; it never rewrites the existing `src/styles/tailwind.css`.
+  4. Amend `src/styles/tailwind.css` by hand, keeping the project's prefix, `important`, `@source` lines and anything else it added: replace `@import "tailwindcss-primeui";` with spartan's preset (modern: `@import '@spartan-ng/brain/hlm-tailwind-preset.css';`; legacy: `@import './spartan-preset.css';`), add `@import './tokens/index.css';` and the brand imports. Compare with launcher `template <project-dir> src/styles/tailwind.css`.
+  5. Rename PrimeNG-plugin classes in new code, showing the owner the table first: `text-color` → `text-foreground`, `text-muted-color` → `text-muted-foreground`, `bg-surface-0` → `bg-background`, `bg-surface-50…950` → `bg-muted` / `bg-card` (by intent), `border-surface` → `border-border`, `text-primary-contrast` → `text-primary-foreground`, `bg-emphasis` / `bg-highlight` → `bg-accent`, `rounded-border` → `rounded-md` (with the project's prefix).
+  6. Phase 5 step 4 **spartan**, then rebuild each "rebuild" row with spartan components and delete each "drop" row.
+  7. When no PrimeNG use is left: uninstall `primeng`, `@primeuix/themes`, `tailwindcss-primeui` and `primeicons` (unless `pi pi-` icons remain), delete `src/app/core/theme/app-preset.ts`, `primeng.providers.ts` and their specs, remove `PRIMENG_PROVIDERS` from `app.config.ts`. Legacy screens that keep PrimeNG keep the packages and a minimal legacy-only provider next to them.
+  8. Refresh `docs/DESIGN_SYSTEM.md` from launcher `template <project-dir> docs/DESIGN_SYSTEM.md` (the project's decisions stay; PrimeNG content goes) and show the owner the coverage map; doctor clean.
+  9. `ng build`, the affected tests, the visual gate on the rebuilt pages and on one legacy page (unchanged). Commit: `refactor(ui): switch the design system from PrimeNG to spartan`.
+
 ## Phase 0 — Branch
 
 1. The working tree must be clean (`git status --porcelain` empty). If not: stop and ask the owner to commit or stash.
@@ -42,7 +53,7 @@ Inspect the repo, then present **one** table with a proposed answer per question
 
 | Key in `.claude/autopilot.json` | Inspect | Default |
 |---|---|---|
-| `packs` | `package.json` dependencies | **Always** `core`, `angular`, `testing`, `openspec`. **UI library pack** — PrimeNG in use → `primeng`; spartan/ng in use → `spartan`; both → both; **neither → ask the owner which UI library the project will use** (PrimeNG or spartan/ng + Tailwind) and install that pack. **Backend pack** — `nestjs` only when the repo has a NestJS app; without a backend there is nothing for it to do. |
+| `packs` | `package.json` dependencies | **Always** `core`, `angular`, `testing`, `openspec`. **UI library pack** — one per project: PrimeNG in use → `primeng`; spartan/ng in use → `spartan`; both in use → ask which one new code uses (the other stays only for legacy screens, without its pack); **neither → ask the owner which UI library the project will use** (spartan/ng + Tailwind or PrimeNG) and install that pack. Moving an existing project from PrimeNG to spartan: reconfigure → Switch the UI library. **Backend pack** — `nestjs` only when the repo has a NestJS app; without a backend there is nothing for it to do. |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
 | `testTiers` | runner + spec files; e2e framework config | **`["unit", "integration", "e2e"]` — always all three.** A tier the repo does not run yet still gets its overrides and backlog (placeholders); the first `/write-<tier>-tests` sets the tier up (framework choice — Playwright for a new e2e suite — config, scripts) and fills the overrides. Note in the table which tiers start from zero. |
 | `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or, for a legacy repo, the modern folders: `["src/app/features/**", "src/app/shared/modern/**"]`** — inside it every autopilot rule is an error; outside is legacy: bug fixes only, never developed further (architecture rule, Legacy stays legacy). Shared new code goes in the modern shared folder; sync creates its README once (fill the legacy-counterpart column) |
@@ -54,9 +65,11 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `packageManager` | lockfile | `npm` / `pnpm` |
 | `commands.typecheck` | tsconfig files | incremental, e.g. `npx tsc -p tsconfig.app.json --noEmit --incremental` |
 | `commands.prePush` | `package.json` scripts | the affected lint + typecheck + test command; with a narrowed `strictScope`, lint the scope **and** the toolkit (e.g. `npx eslint --no-error-on-unmatched-pattern "src/app/features/**" "src/testing/**"`). The hook runs non-interactively: it must work on the owner's machine as it is, with no setup step. Don't add env vars or machine paths because a doc says "set X": tools usually find what they need themselves (karma-chrome-launcher finds Chrome in `%LOCALAPPDATA%`, `Program Files` and `Program Files (x86)` when `CHROME_BIN` is unset). Verify by asking the tool what it resolves, and never conclude "not installed" from one folder |
-| `design.starter` | primeng pack | **`true`** — sync creates the default design system's code once (preset, providers, theme service, `src/styles/tailwind.css`, `.postcssrc.json`) and `docs/DESIGN_SYSTEM.md` comes pre-filled. On a project that already configures PrimeNG, reconfigure → Adopt the design-system starter |
-| `design.legacyCss` | `angular.json` → `styles`, global stylesheets | **`true`** when the app loads global legacy CSS (Bootstrap, Material, Nebular, a large global SCSS): Tailwind without its base reset, classes prefixed `tw:`, PrimeNG unlayered. Otherwise `false`. Show the evidence |
+| `design.starter` | primeng or spartan pack | **`true`** — sync creates the default design system's code once (preset, providers, theme service, `src/styles/tailwind.css`, `.postcssrc.json`) and `docs/DESIGN_SYSTEM.md` comes pre-filled. On a project that already configures PrimeNG, reconfigure → Adopt the design-system starter |
+| `design.legacyCss` | launcher `collisions <project-dir>`: every global stylesheet `angular.json` loads (any library — Bootstrap, Material, Nebular, Foundation, Bulma, PrimeFlex, an old Tailwind, the app's own SCSS), its element-level rules, and the class names that collide with Tailwind utilities | **`true`** when the check finds collisions or element-level rules: Tailwind without its base reset, classes prefixed `tw:`, PrimeNG unlayered. Otherwise `false`. Show the owner the check's table and its recommendation |
+| `design.brands` | per-market / per-tenant builds, the owner's product decision — ask: *"Does each market or tenant need its own look?"* | `[]` (one design). Otherwise bare lowercase names (`["a", "b"]`): one override file each in `src/styles/brands/`, class `brand-<name>`, chosen per build by `environment.brand`. Brands can start empty (same design) and be filled later |
 | `design.darkMode` | existing theme switching, the owner's product decision | `true` (light + dark, follows the OS until the user picks); `false` for a single light theme |
+| `lint.vendorGlobs` | generated code (spartan helm) | `["<spartan components path>/**"]` with the spartan pack; `[]` otherwise — skipped by the strict lint, still type-checked |
 | `stylelint.scss`, `stylelint.tailwind` | style files, Tailwind config | `stylelint.tailwind`: `true` with `design.starter` |
 | `sourceGlobs` | layout | what counts as application code (default `src/**`) |
 | `api.baseUrl`, `api.docsUrl` | environment files (`apiUrl`, `baseUrl`, proxy config), README / docs / old AI files / your memory for Swagger / OpenAPI / `api-docs` links | the dev API base and its Swagger/OpenAPI docs URL. **Not found → ask the owner; never guess.** A project with no backend API: `api.none: true`. Sync writes them into the generated `CLAUDE.md`, so every session has them |
@@ -120,13 +133,25 @@ Nothing is touched until the owner approves the table.
 1. Write `.claude/autopilot.json` with the Phase 1 answers. It is a protected file: create the flag first and remove it after — `mkdir -p .claude/.flags && touch .claude/.flags/autopilot-sync`, write, then `rm .claude/.flags/autopilot-sync`.
 2. Dry run: launcher `sync <project-dir> --dry-run`; show the summary. Then apply: launcher `sync <project-dir>`.
 3. Run launcher `doctor <project-dir>`.
-4. **Design-system starter** (`design.starter`), wiring in project-owned files:
+4. **Design-system starter** (`design.starter`), in project-owned files.
+
+   **PrimeNG** (primeng pack):
    - `PRIMENG_PROVIDERS` (`src/app/core/theme/primeng.providers.ts`) into `app.config.ts` → `providers`;
    - `src/styles/tailwind.css` first in `angular.json` → `styles` (every build and test target), `primeicons/primeicons.css` after it;
    - `angular.json` → `schematics["@schematics/angular:component"].style = "none"`;
    - `<body class="font-sans bg-surface-0 text-color">` in `index.html` (`tw:`-prefixed in the legacy setup; with `design.darkMode` add `dark:bg-surface-950`);
-   - with `design.darkMode`: the inline script from the primeng pack's `templates/starter/no-flash.html` into `index.html` `<head>` (allow it by hash if the project sets a CSP);
+   - with `design.darkMode`: the inline script from the core pack's `templates/starter/no-flash.html` (`__DARK_CLASS__` → `app-dark`) into `index.html` `<head>` (allow it by hash if the project sets a CSP);
    - after the installs below: `ng build` passes; then `/write-unit-tests src/app/core/theme` covers the theme service in the project's runner.
+
+   **spartan** (spartan pack):
+   1. `components.json` at the root: `{ "componentsPath": "<components path>", "importAlias": "@spartan-ng/helm", "style": "nova" }` — components path inside the modern shared folder (`src/app/shared/modern/ui` in a legacy repo, `src/app/shared/ui` otherwise); the same path goes into `lint.vendorGlobs` as `<components path>/**`.
+   2. `ng g @spartan-ng/cli:init --theme=zinc --project=<project> --styles-entry-point=src/styles/tokens/colors.css --interactive=false` (Nx: `nx g`), then `node tools/autopilot/spartan/spartan-css.mjs tokens src/styles/tokens/colors.css` — init installs spartan's runtime packages and writes the colour tokens; the tool keeps only the token blocks (`src/styles/tailwind.css` owns the rest).
+   3. `ng g @spartan-ng/cli:ui --name={name} --interactive=false` for the catalog's "Available now" set: button, input, textarea, field, label, select, checkbox, radio-group, switch, dialog, sheet, alert-dialog, dropdown-menu, menubar, tabs, breadcrumb, popover, tooltip, card, separator, scroll-area, badge, alert, spinner, skeleton, progress, sonner, table, pagination, date-picker, calendar.
+   4. Legacy setup only: `node tools/autopilot/spartan/prefix.mjs <components path>` and `node tools/autopilot/spartan/spartan-css.mjs preset src/styles/spartan-preset.css`.
+   5. The official spartan skill: `npx skills add spartan-ng/spartan -a claude-code -y --copy` (writes `.claude/skills/spartan`; the installer reports the install to its maker).
+   6. Wiring: `src/styles/tailwind.css` first in `angular.json` → `styles` (every build and test target); `schematics["@schematics/angular:component"].style = "none"`; with `design.brands`: a `brand` field in every environment file and `provideBrand(environment.brand)` in `app.config.ts`; with `design.darkMode`: the no-flash script (core pack's `templates/starter/no-flash.html`, `__DARK_CLASS__` → `dark`) in `index.html` `<head>`; `.nx/` in `.gitignore` (spartan's CLI writes an Nx cache even in Angular CLI workspaces). Modern setup: the body is styled by the base layer in `tailwind.css`. Legacy setup: no body classes (they would restyle legacy pages) — each new page's root element sets `tw:bg-background tw:text-foreground tw:font-sans`.
+   7. Install the dependencies sync printed — it also re-resolves `@angular/cdk`, which spartan's init pins exactly, to the project's Angular major.
+   8. `ng build` passes; `/write-unit-tests src/app/core/theme` covers the theme service and `provideBrand`.
 5. Ask the owner before installing the missing dependencies and devDependencies — run the install command sync printed (each package at the newest version compatible with the project's Angular and eslint, never pinned) — and before running `npx husky` to activate the git hooks.
 6. Commit: `chore: install autopilot workspace`.
 

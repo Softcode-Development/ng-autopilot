@@ -53,7 +53,9 @@ Do not add `Bash(rm -rf *:*)`: its `*` matches every `rm -rf`, including repo-re
 
 `testTiers` lists the test tiers the project has (`unit`, `integration`, `e2e`). Sync creates `.claude/{tier}-testing/overrides.md` and `backlog.md` from the testing pack's templates for each one; the architect tags acceptance criteria only with these tiers; `/deliver` Step 5 dispatches only their orchestrators.
 
-`design` (primeng pack) sets up the default design system: `starter` (sync creates the preset, providers, theme service, `src/styles/tailwind.css` and `.postcssrc.json` once, and `docs/DESIGN_SYSTEM.md` comes pre-filled), `legacyCss` (no Tailwind base reset, `tw:` class prefix, PrimeNG unlayered — for apps that load Bootstrap / Material / Nebular CSS), `darkMode` (default `true`). `stylelint.tailwind` defaults to `design.starter`.
+`design` (primeng or spartan pack) sets up the default design system: `starter` (sync creates the preset, providers, theme service, `src/styles/tailwind.css` and `.postcssrc.json` once, and `docs/DESIGN_SYSTEM.md` comes pre-filled), `legacyCss` (no Tailwind base reset, `tw:` class prefix, PrimeNG unlayered — for apps that load Bootstrap / Material / Nebular CSS), `darkMode` (default `true`), `brands` (default `[]`; bare lowercase names, one override file each in `src/styles/brands/`, class `brand-<name>`). `stylelint.tailwind` defaults to `design.starter`. One UI library per project when the starter is on.
+
+`lint.vendorGlobs` lists generated vendor code (spartan helm components): the strict lint, the stylesheet rule and the hardcoded-text ratchet skip it; TypeScript still compiles it.
 
 `protectedBranches` adds trunks to the built-in `main`, `master` and `production`: `guard-bash` refuses any push that lands on one.
 
