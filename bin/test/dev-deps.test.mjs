@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { admitsMajor, installCommand, installSpecs } from '../lib/dev-deps.mjs';
+import { admitsMajor, installCommand, installPlan, installSpecs } from '../lib/dev-deps.mjs';
 
 // A registry shaped like npm on 2026-10-17, plus an older angular-eslint major capped at eslint 9.
 const REGISTRY = {
@@ -103,4 +103,16 @@ test('spartan companions follow the Angular major; lucide follows ng-icons core;
 test('an already installed ng-icons core decides lucide\'s major', () => {
   const pkg = { dependencies: { '@angular/core': '^21.2.0', '@ng-icons/core': '^33.2.2' } };
   assert.deepEqual(installSpecs(['@ng-icons/lucide'], pkg, spartanView).specs, ['@ng-icons/lucide@33']);
+});
+
+test('installPlan resolves dependencies and devDependencies together, so the CLI follows the brain chosen for dependencies', () => {
+  const registry = {
+    '@spartan-ng/brain peerDependencies': { '@angular/core': '>=21.0.0 <23.0.0' },
+    '@spartan-ng/brain versions': ['0.9.0', '1.8.0'],
+    '@spartan-ng/brain@1 peerDependencies': { '@angular/core': '>=21.0.0 <23.0.0' },
+    '@spartan-ng/brain@0 peerDependencies': { '@angular/core': '>=19.0.0 <21.0.0' },
+  };
+  const plan = installPlan(['@spartan-ng/brain'], ['@spartan-ng/cli'], { dependencies: { '@angular/core': '^20.3.0' } }, (s, f) => registry[`${s} ${f}`]);
+  assert.deepEqual(plan.dependencies.specs, ['@spartan-ng/brain@0']);
+  assert.deepEqual(plan.devDependencies.specs, ['@spartan-ng/cli@0']);
 });

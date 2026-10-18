@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
-import { installCommand, installSpecs } from './lib/dev-deps.mjs';
+import { installCommand, installPlan } from './lib/dev-deps.mjs';
 import { normaliseConfig, PACKS, pluginId, renderFiles, requiredDependencies, requiredDevDependencies } from './lib/render.mjs';
 
 export const AUTOPILOT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -155,10 +155,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const config = normaliseConfig(readJson(path.join(root, '.claude', 'autopilot.json'), {}));
     const pkg = readJson(path.join(root, 'package.json'), {});
     report.installs = {};
-    for (const [kind, missing, dev] of [['dependencies', report.missingDependencies, false], ['devDependencies', report.missingDevDependencies, true]]) {
-      if (!missing.length) continue;
-      const { specs, notes } = installSpecs(missing, pkg);
-      report.installs[kind] = { command: installCommand(specs, config.packageManager, { dev }), notes };
+    if (report.missingDependencies.length || report.missingDevDependencies.length) {
+      const plan = installPlan(report.missingDependencies, report.missingDevDependencies, pkg);
+      for (const [kind, dev] of [['dependencies', false], ['devDependencies', true]]) {
+        if (plan[kind].specs.length) report.installs[kind] = { command: installCommand(plan[kind].specs, config.packageManager, { dev }), notes: plan[kind].notes };
+      }
     }
     print(report, dryRun);
   } catch (e) {

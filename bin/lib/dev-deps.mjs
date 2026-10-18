@@ -117,3 +117,14 @@ export function installSpecs(missing, pkg, view = npmView) {
 
 export const installCommand = (specs, packageManager, { dev = true } = {}) =>
   `${packageManager === 'pnpm' ? 'pnpm add' : 'npm install'}${dev ? ' -D' : ''} ${specs.join(' ')}`;
+
+// Both install commands from one resolution, so a package that follows another (the spartan CLI
+// follows brain) sees the leader's major even when they install with different commands.
+export function installPlan(dependencies, devDependencies, pkg, view = npmView) {
+  const { specs, notes } = installSpecs([...dependencies, ...devDependencies], pkg, view);
+  const part = (names, offset) => {
+    const own = specs.slice(offset, offset + names.length);
+    return { specs: own, notes: notes.filter((n) => names.some((name) => n.startsWith(`${name}@`))) };
+  };
+  return { dependencies: part(dependencies, 0), devDependencies: part(devDependencies, dependencies.length) };
+}
