@@ -200,3 +200,34 @@ test('doctor: the Tailwind v4 / PostCSS check covers the spartan starter too', (
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('the starter stylesheets pass the stylelint preset; generated ones say so and are skipped', async () => {
+  const { default: stylelint } = await import('stylelint');
+  const { autopilotStylelint } = await import('../../plugins/angular/tooling/stylelint/preset.mjs');
+  const files = render({ ...SPARTAN, design: { starter: true, brands: ['a'] } });
+  const config = autopilotStylelint({ tailwind: true, strictScope: ['src/**'] });
+  for (const rel of ['src/styles/tailwind.css', 'src/styles/brands/a.css', ...TOKENS]) {
+    const { results } = await stylelint.lint({ code: files[rel].content, codeFilename: rel, config });
+    assert.deepEqual(results[0].warnings.map((w) => `${w.rule}: ${w.text}`), [], rel);
+  }
+  const generated = extractTokens(':root {\n  --primary: oklch(0.21 0.006 285.885);\n}\n');
+  assert.match(generated, /^\/\* stylelint-disable \*\//);
+  const { results } = await stylelint.lint({ code: generated, codeFilename: 'src/styles/tokens/colors.css', config });
+  assert.deepEqual(results[0].warnings, []);
+});
+
+test('the legacy starter tailwind.css passes the stylelint preset too', async () => {
+  const { default: stylelint } = await import('stylelint');
+  const { autopilotStylelint } = await import('../../plugins/angular/tooling/stylelint/preset.mjs');
+  const css = render({ ...SPARTAN, design: { starter: true, legacyCss: true, brands: ['a'] }, lint: { strictScope: ['src/app/features/**'] } })['src/styles/tailwind.css'].content;
+  const { results } = await stylelint.lint({ code: css, codeFilename: 'src/styles/tailwind.css', config: autopilotStylelint({ tailwind: true, strictScope: ['src/**'] }) });
+  assert.deepEqual(results[0].warnings.map((w) => w.rule), []);
+});
+
+test('token values written like spartan writes them pass (oklch numbers, not percentages and degrees)', async () => {
+  const { default: stylelint } = await import('stylelint');
+  const { autopilotStylelint } = await import('../../plugins/angular/tooling/stylelint/preset.mjs');
+  const code = '.brand-a {\n  --primary: oklch(0.55 0.22 27);\n}\n';
+  const { results } = await stylelint.lint({ code, codeFilename: 'src/styles/brands/a.css', config: autopilotStylelint({ tailwind: true, strictScope: ['src/**'] }) });
+  assert.deepEqual(results[0].warnings.map((w) => w.rule), []);
+});

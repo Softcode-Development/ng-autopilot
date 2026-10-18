@@ -1,8 +1,10 @@
 /* Global styles for new code: Tailwind, the spartan preset and the design tokens.
    Layout, spacing, typography and colour are classes in templates (docs/DESIGN_SYSTEM.md § 4).
    List this file first in angular.json → styles. */
+
 {{^legacyCss}}
 @layer theme, base, components, utilities;
+
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css';
@@ -14,7 +16,9 @@
    tools/autopilot/spartan/prefix.mjs), utilities unlayered (legacy CSS is unlayered too), only
    new code scanned. spartan-preset.css is the spartan preset with its @apply prefixed
    (tools/autopilot/spartan/spartan-css.mjs preset). */
+
 @layer theme;
+
 @import 'tailwindcss/theme.css' layer(theme) prefix(tw);
 @import 'tailwindcss/utilities.css' prefix(tw) source(none);
 @import './spartan-preset.css';

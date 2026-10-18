@@ -38,7 +38,7 @@ const GENERATED = `@layer theme, base, components, utilities;
 
 test('extractTokens keeps only the light and dark token blocks', () => {
   const out = extractTokens(GENERATED);
-  assert.match(out, /^:root \{\n  color-scheme: light;/);
+  assert.match(out, /^\/\* stylelint-disable \*\/\n:root \{\n  color-scheme: light;/);
   assert.match(out, /:root\.dark \{\n  color-scheme: dark;\n  --primary: oklch\(0\.92 0\.004 286\.32\);\n\}\n$/);
   assert.doesNotMatch(out, /@import|@layer|@apply/);
 });
@@ -80,4 +80,8 @@ test('CLI: tokens rewrites the file in place; preset copies the installed brain 
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('the prefixed preset copy is marked generated for stylelint', () => {
+  assert.match(prefixPreset('@utility a {\n\t@apply b;\n}\n', 'tw', '1.8.0'), /^\/\* @spartan-ng\/brain 1\.8\.0 [^\n]*\*\/\n\/\* stylelint-disable \*\//);
 });

@@ -32,6 +32,11 @@ export function autopilotStylelint(options = {}) {
         'at-rule-no-unknown': [true, { ignoreAtRules: TAILWIND_AT_RULES }],
         ...(o.scss ? { 'scss/at-rule-no-unknown': [true, { ignoreAtRules: TAILWIND_AT_RULES }] } : {}),
         'function-no-unknown': [true, { ignoreFunctions: ['theme'] }],
+        // @apply lists hold Tailwind classes, not CSS stylelint can parse.
+        'at-rule-prelude-no-invalid': [true, { ignoreAtRules: TAILWIND_AT_RULES }],
+        // Colour tokens follow the notation spartan's generator and Tailwind presets write: oklch(0.55 0.22 27).
+        'lightness-notation': 'number',
+        'hue-degree-notation': 'number',
         // Tailwind v4 imports by name: @import "tailwindcss";
         'import-notation': 'string',
       } : {}),

@@ -2,11 +2,12 @@
    brand-__BRAND__ class on <html> (provideBrand in src/app/core/theme/brand.ts). Empty means the
    same design as the default. */
 .brand-__BRAND__ {
-  /* --primary: oklch(…); */
-  /* --primary-foreground: oklch(…); */
-  /* --ring: oklch(…); */
+  /* Override what differs, e.g.
+     --primary: oklch(…);
+     --primary-foreground: oklch(…);
+     --ring: oklch(…); */
 }
 
 :root.dark.brand-__BRAND__ {
-  /* dark values of the same tokens */
+  /* Dark values of the same tokens. */
 }
