@@ -102,3 +102,8 @@ test('CLI rewrites .ts files under the components path and reports them', () => 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('typescript is resolved from the project the tool works on', () => {
+  assert.equal(prefixSource("cva('flex')", 'tw', { from: process.cwd() }), "cva('tw:flex')");
+  assert.throws(() => prefixSource("cva('flex')", 'tw', { from: path.parse(process.cwd()).root, fallback: false }), /typescript/);
+});

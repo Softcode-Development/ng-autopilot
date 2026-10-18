@@ -82,12 +82,16 @@ function spartanChecks(projectRoot, config) {
     if (!existsSync(path.join(projectRoot, 'src', 'styles', 'brands', `${b}.css`))) out.push(`brand "${b}": src/styles/brands/${b}.css missing — run sync to create it`);
   }
   if (!config.design.legacyCss) return out;
-  for (const dir of (config.lint.vendorGlobs ?? []).map(staticDir)) {
-    const unprefixed = walkFiles(path.join(projectRoot, dir)).filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts')).filter((f) => {
-      const text = readFileSync(f, 'utf8');
-      return prefixSource(text, 'tw') !== text;
-    });
-    if (unprefixed.length) out.push(`unprefixed classes in spartan-generated code (${unprefixed.length} file${unprefixed.length > 1 ? 's' : ''}) — run node tools/autopilot/spartan/prefix.mjs ${dir}`);
+  try {
+    for (const dir of (config.lint.vendorGlobs ?? []).map(staticDir)) {
+      const unprefixed = walkFiles(path.join(projectRoot, dir)).filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts')).filter((f) => {
+        const text = readFileSync(f, 'utf8');
+        return prefixSource(text, 'tw', { from: projectRoot }) !== text;
+      });
+      if (unprefixed.length) out.push(`unprefixed classes in spartan-generated code (${unprefixed.length} file${unprefixed.length > 1 ? 's' : ''}) — run node tools/autopilot/spartan/prefix.mjs ${dir}`);
+    }
+  } catch (e) {
+    out.push(`spartan prefix check skipped: ${e.message}`);
   }
   const presetFile = path.join(projectRoot, 'src', 'styles', 'spartan-preset.css');
   const brainFile = path.join(projectRoot, 'node_modules', '@spartan-ng', 'brain', 'package.json');

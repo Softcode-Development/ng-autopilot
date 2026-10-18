@@ -11,10 +11,23 @@
 // Idempotent — run it after every `ng g @spartan-ng/cli:ui`.
 
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import ts from 'typescript';
+// TypeScript comes from the project being worked on (every Angular project has it); this
+// file's own surroundings are the fallback.
+function loadTypescript(from, fallback) {
+  const bases = [path.join(path.resolve(from), 'package.json'), ...(fallback ? [fileURLToPath(import.meta.url)] : [])];
+  for (const base of bases) {
+    try {
+      return createRequire(base)('typescript');
+    } catch {
+      // try the next base
+    }
+  }
+  throw new Error(`typescript not found from ${from} — run this in the Angular project`);
+}
 
 const CLASS_CALLS = new Set(['classes', 'cva', 'hlm', 'cn']);
 // In compoundVariants entries only these hold classes; the other keys select variants.
@@ -38,10 +51,11 @@ export function prefixTwMerge(source, prefix) {
   );
 }
 
-const isText = (node) => ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
 const nameOf = (prop, sf) => (prop.name ? prop.name.getText(sf).replace(/^['"]|['"]$/g, '') : '');
 
-export function prefixSource(source, prefix) {
+export function prefixSource(source, prefix, { from = process.cwd(), fallback = true } = {}) {
+  const ts = loadTypescript(from, fallback);
+  const isText = (node) => ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
   const sf = ts.createSourceFile('x.ts', source, ts.ScriptTarget.Latest, true);
   const edits = [];
   const edit = (node, transform) => {
