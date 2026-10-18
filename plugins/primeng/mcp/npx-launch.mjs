@@ -1,15 +1,22 @@
 // Starts an npx-hosted MCP server and forwards stdio and signals.
 // On Windows `npx` is a .cmd shim that cannot be spawned without a shell,
 // which is why MCP configs launch through this file instead of `npx` directly.
+// The same file ships in every pack that runs an npx-hosted MCP server.
 //
-// `{primeng-major}` in an argument becomes the project's installed PrimeNG major,
-// so the docs server answers for the version the project runs (plain `latest`
-// would serve the newest major's APIs to an older project).
+// Placeholders in the arguments pick the server version the project needs, so the docs
+// answer for what the project runs (plain `latest` would serve the newest release's APIs):
+//   {major-of:<pkg>}    the installed major of <pkg> (raised to the first published server major)
+//   {version-of:<pkg>}  the installed version of <pkg> when the server published it, else the
+//                       server's newest release with the same major
+// Anything unknown (package not installed, registry unreachable) falls back to `latest`.
 
-import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// First published major of a server whose versions follow the library's majors.
+const FIRST_SERVER_MAJOR = { '@primeng/mcp': 21 };
 
 const readJson = (file) => {
   try {
@@ -18,31 +25,42 @@ const readJson = (file) => {
     return null;
   }
 };
-const firstNumber = (s) => /(\d+)/.exec(s ?? '')?.[1] ?? null;
+const versionIn = (range) => /(\d+(?:\.\d+){0,2})/.exec(range ?? '')?.[1] ?? null;
+const majorOf = (version) => (version ? Number(version.split('.')[0]) : null);
 
-// Major of the installed primeng, else of the range package.json declares, else null —
-// looked up from `cwd` upwards, so a session started in a sub-folder finds its project.
-export function primengMajor(cwd) {
+// Installed version of `pkg`, else the version its range names in package.json — looked up
+// from `cwd` upwards, so a session started in a sub-folder finds its project.
+export function installedVersion(pkg, cwd) {
   for (let dir = path.resolve(cwd); ; dir = path.dirname(dir)) {
-    const installed = path.join(dir, 'node_modules', 'primeng', 'package.json');
-    if (existsSync(installed)) {
-      const major = firstNumber(readJson(installed)?.version);
-      if (major) return major;
-    }
-    const pkg = readJson(path.join(dir, 'package.json'));
-    const declared = firstNumber(pkg?.dependencies?.primeng ?? pkg?.devDependencies?.primeng);
+    const installed = readJson(path.join(dir, 'node_modules', ...pkg.split('/'), 'package.json'));
+    if (installed?.version) return installed.version;
+    const project = readJson(path.join(dir, 'package.json'));
+    const declared = versionIn(project?.dependencies?.[pkg] ?? project?.devDependencies?.[pkg]);
     if (declared) return declared;
     if (path.dirname(dir) === dir) return null;
   }
 }
 
-// @primeng/mcp is published from 21 on; an older project gets the closest docs server.
-const FIRST_MCP_MAJOR = 21;
+function npmVersions(name) {
+  const r = spawnSync(`npm view ${name} versions --json`, { encoding: 'utf8', shell: true, timeout: 20000 });
+  try {
+    return r.status === 0 ? [].concat(JSON.parse(r.stdout)) : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
-export function resolveArgs(args, cwd) {
-  const installed = primengMajor(cwd);
-  const major = installed === null ? 'latest' : String(Math.max(Number(installed), FIRST_MCP_MAJOR));
-  return args.map((a) => a.replaceAll('{primeng-major}', major));
+// `view(name)` → published versions of `name` (array) or undefined.
+export function resolveArgs(args, cwd, view = npmVersions) {
+  return args.map((arg) => arg.replace(/^(.*)@\{(major|version)-of:([^}]+)\}$/, (all, target, kind, pkg) => {
+    const version = installedVersion(pkg, cwd);
+    if (!version) return `${target}@latest`;
+    if (kind === 'major') return `${target}@${Math.max(majorOf(version), FIRST_SERVER_MAJOR[target] ?? 0)}`;
+    const published = (view(target) ?? []).filter((v) => !v.includes('-'));
+    if (published.includes(version)) return `${target}@${version}`;
+    const sameMajor = published.filter((v) => majorOf(v) === majorOf(version));
+    return `${target}@${sameMajor.at(-1) ?? 'latest'}`;
+  }));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

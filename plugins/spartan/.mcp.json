@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "spartan-ui": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/npx-launch.mjs",
+        "-p", "@spartan-ng/mcp@{version-of:@spartan-ng/brain}",
+        "spartan-mcp"
+      ]
+    }
+  }
+}
