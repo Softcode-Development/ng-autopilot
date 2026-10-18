@@ -97,7 +97,7 @@ const DOC_NEEDS = {
 export function projectDocs(c) {
   const docs = ['TECH_STACK', 'ARCHITECTURE', 'DOMAIN', 'FEATURES', 'GETTING_STARTED'].map((d) => [`docs/${d}.md`, `plugins/core/templates/docs/${d}.md`]);
   if (c.packs.includes('angular')) {
-    const pack = c.packs.includes('primeng') ? 'primeng' : 'angular';
+    const pack = c.packs.includes('spartan') ? 'spartan' : c.packs.includes('primeng') ? 'primeng' : 'angular';
     docs.push(['docs/DESIGN_SYSTEM.md', `plugins/${pack}/templates/docs/DESIGN_SYSTEM.md`]);
   }
   if (c.packs.includes('nestjs')) docs.push(['docs/DATA_MODEL.md', 'plugins/nestjs/templates/docs/DATA_MODEL.md']);

@@ -1,9 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
 import { extractTokens } from '../../plugins/spartan/tooling/spartan-css.mjs';
+import { doctor } from '../doctor.mjs';
 import { normaliseConfig, renderFiles } from '../lib/render.mjs';
-import { AUTOPILOT_ROOT } from '../sync.mjs';
+import { AUTOPILOT_ROOT, sync } from '../sync.mjs';
 
 const render = (config) => Object.fromEntries(renderFiles(AUTOPILOT_ROOT, config).files.map((f) => [f.path, f]));
 const SPARTAN = { packs: ['angular', 'spartan'], design: { starter: true } };
@@ -84,4 +90,40 @@ test('token extraction leaves the font to typography.css', () => {
   const out = extractTokens(":root {\n  color-scheme: light;\n\n  --font-sans:\n    -apple-system, BlinkMacSystemFont, 'Segoe UI';\n\n  --radius: 0.625rem;\n}\n");
   assert.doesNotMatch(out, /--font-sans|BlinkMacSystemFont/);
   assert.match(out, /--radius: 0\.625rem;/);
+});
+
+test('spartan pack: DESIGN_SYSTEM.md comes pre-filled from the spartan template', () => {
+  const doc = render(SPARTAN)['docs/DESIGN_SYSTEM.md'].content;
+  for (const h of ['### 4.1 Colour', '### 4.2 Typography', '### 4.3 Spacing', '### 4.4 Radius', '### 4.5 Motion', '### 4.6 Usage rule']) assert.ok(doc.includes(h), h);
+  for (const s of ['spartan.ng/components', '@spartan-ng/helm/button', 'HlmButtonImports', '--app-', 'gap-*', 'size-*', 'class="flex', 'hlmField', 'ui-theme --theme=zinc', '"style": "nova"']) assert.ok(doc.includes(s), s);
+  assert.doesNotMatch(doc, /__TW__|\{\{|PrimeNG|primeng/);
+});
+
+test('spartan legacy design system: tw: classes and the scanning note; single theme drops dark', () => {
+  const doc = render({ ...SPARTAN, design: { starter: true, legacyCss: true, darkMode: false } })['docs/DESIGN_SYSTEM.md'].content;
+  assert.match(doc, /class="tw:flex/);
+  assert.match(doc, /only files inside `lint\.strictScope` and `src\/index\.html` are scanned/);
+  assert.match(doc, /prefix\.mjs/);
+  assert.doesNotMatch(doc, /tw:dark:|ThemeService/);
+});
+
+test('spartan design system names brands only when there are brands', () => {
+  assert.match(render({ ...SPARTAN, design: { starter: true, brands: ['a'] } })['docs/DESIGN_SYSTEM.md'].content, /src\/styles\/brands\//);
+  assert.doesNotMatch(render(SPARTAN)['docs/DESIGN_SYSTEM.md'].content, /src\/styles\/brands\//);
+});
+
+test('doctor: a fresh spartan design system reports only its real fill-ins', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'autopilot-spartan-'));
+  try {
+    spawnSync('git', ['init', '-q'], { cwd: dir });
+    writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'app' }));
+    mkdirSync(path.join(dir, '.claude'));
+    writeFileSync(path.join(dir, '.claude', 'autopilot.json'), JSON.stringify(SPARTAN));
+    sync(dir);
+    const line = doctor(dir).warnings.find((w) => w.startsWith('docs/DESIGN_SYSTEM.md:') && w.includes('unfilled'));
+    assert.match(line, /: 5 unfilled/);
+    for (const markup of ['<hlm-field', '<label', '<ng-icon', '<form ', '<div', '<button', '<p ']) assert.ok(!line.includes(markup), markup);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
