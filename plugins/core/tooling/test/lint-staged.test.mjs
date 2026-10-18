@@ -14,8 +14,8 @@ test('scope: strictScope plus the toolkit; a toolkit inside the scope is not rep
 test('narrowed scope: legacy files match no entry, so nothing lints or reformats them', () => {
   const entries = autopilotLintStaged({
     lint: { strictScope: ['src/app/features/**'] },
-    i18n: { sets: [{ source: 'src/assets/i18n/iceland/is.json', locales: ['src/assets/i18n/iceland/en.json'] },
-      { source: 'src/assets/i18n/brazil/pt-BR.json', locales: ['src/assets/i18n/brazil/en.json'] }] },
+    i18n: { sets: [{ source: 'src/assets/i18n/market-a/de.json', locales: ['src/assets/i18n/market-a/en.json'] },
+      { source: 'src/assets/i18n/market-b/pt-BR.json', locales: ['src/assets/i18n/market-b/en.json'] }] },
   });
   assert.deepEqual(Object.keys(entries).sort(), [
     '**/*.html',
@@ -25,7 +25,7 @@ test('narrowed scope: legacy files match no entry, so nothing lints or reformats
     'src/testing/**/*.{md,json,yml,yaml}',
     'src/testing/**/*.{scss,css}',
     'src/testing/**/*.{ts,mts,cts,js,mjs,cjs,html}',
-    '{src/assets/i18n/iceland,src/assets/i18n/brazil}/*.json',
+    '{src/assets/i18n/market-a,src/assets/i18n/market-b}/*.json',
   ]);
   assert.deepEqual(entries['src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}'], ['eslint --fix --max-warnings=0', 'prettier --write']);
 });
