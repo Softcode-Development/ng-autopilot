@@ -231,3 +231,8 @@ test('token values written like spartan writes them pass (oklch numbers, not per
   const { results } = await stylelint.lint({ code, codeFilename: 'src/styles/brands/a.css', config: autopilotStylelint({ tailwind: true, strictScope: ['src/**'] }) });
   assert.deepEqual(results[0].warnings.map((w) => w.rule), []);
 });
+
+test('design.legacyLibraries defaults to an empty list and takes UI library names', () => {
+  assert.deepEqual(normaliseConfig({}).design.legacyLibraries, []);
+  assert.throws(() => normaliseConfig({ design: { legacyLibraries: ['bootstrap'] } }), /legacyLibraries/);
+});

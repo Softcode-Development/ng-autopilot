@@ -41,7 +41,8 @@ export function normaliseConfig(raw) {
   c.packageManager ??= 'npm';
   c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
-  c.design = { starter: false, legacyCss: false, darkMode: true, brands: [], ...(c.design ?? {}) };
+  c.design = { starter: false, legacyCss: false, darkMode: true, brands: [], legacyLibraries: [], ...(c.design ?? {}) };
+  for (const l of c.design.legacyLibraries) if (!['primeng', 'spartan'].includes(l)) throw new Error(`design.legacyLibraries: "${l}" — only a UI library kept for legacy screens (primeng, spartan)`);
   for (const b of c.design.brands) if (!/^[a-z][a-z0-9-]*$/.test(b)) throw new Error(`design.brands: "${b}" — use a bare lowercase name (class brand-<name>)`);
   if (c.design.starter && c.packs.includes('primeng') && c.packs.includes('spartan')) {
     throw new Error('design.starter needs one UI library per project — primeng or spartan, not both');

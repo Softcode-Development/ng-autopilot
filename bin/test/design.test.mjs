@@ -29,7 +29,7 @@ test('fillBlocks works on CRLF templates and on several flags', () => {
 });
 
 test('design defaults; stylelint.tailwind follows the starter unless set', () => {
-  assert.deepEqual(normaliseConfig({}).design, { starter: false, legacyCss: false, darkMode: true, brands: [] });
+  assert.deepEqual(normaliseConfig({}).design, { starter: false, legacyCss: false, darkMode: true, brands: [], legacyLibraries: [] });
   assert.equal(normaliseConfig({ packs: ['primeng'], design: { starter: true } }).stylelint.tailwind, true);
   assert.equal(normaliseConfig({ packs: ['primeng'], design: { starter: true }, stylelint: { tailwind: false } }).stylelint.tailwind, false);
 });

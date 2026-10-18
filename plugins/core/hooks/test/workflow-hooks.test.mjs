@@ -122,3 +122,9 @@ test('stack drift: technology added after install is reported until autopilot.js
   const context = describeContext({ branch: 'main', lastCommit: '', dirty: 0, config, plans: [], drift });
   assert.match(context, /\[context\] stack drift: tailwindcss .* tell the owner before other work/);
 });
+
+test('stack drift: a UI library kept only for legacy screens (design.legacyLibraries) is covered without its pack', () => {
+  const config = { packs: ['core', 'angular', 'spartan'], stylelint: { tailwind: true }, design: { legacyLibraries: ['primeng'] } };
+  assert.deepEqual(stackDrift({ dependencies: { primeng: '21.1.10', '@spartan-ng/brain': '1.8.0' } }, config), []);
+  assert.equal(stackDrift({ dependencies: { primeng: '21.1.10' } }, { ...config, design: {} }).length, 1);
+});

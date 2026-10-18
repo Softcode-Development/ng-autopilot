@@ -6,10 +6,13 @@ import path from 'node:path';
 
 const FIX = 'run /autopilot:install (reconfigure) and sync';
 
+// A UI library kept only for legacy screens after a switch (autopilot.json design.legacyLibraries).
+const legacyOnly = (c, lib) => Array.isArray(c.design?.legacyLibraries) && c.design.legacyLibraries.includes(lib);
+
 const CHECKS = [
   { has: (deps) => 'tailwindcss' in deps, covered: (c) => c.stylelint?.tailwind === true, what: 'tailwindcss is installed but stylelint.tailwind is false' },
-  { has: (deps) => 'primeng' in deps, covered: (c) => c.packs.includes('primeng'), what: 'primeng is installed but the primeng pack is not' },
-  { has: (deps) => Object.keys(deps).some((d) => d.startsWith('@spartan-ng/')), covered: (c) => c.packs.includes('spartan'), what: 'spartan/ng is installed but the spartan pack is not' },
+  { has: (deps) => 'primeng' in deps, covered: (c) => c.packs.includes('primeng') || legacyOnly(c, 'primeng'), what: 'primeng is installed but the primeng pack is not' },
+  { has: (deps) => Object.keys(deps).some((d) => d.startsWith('@spartan-ng/')), covered: (c) => c.packs.includes('spartan') || legacyOnly(c, 'spartan'), what: 'spartan/ng is installed but the spartan pack is not' },
   { has: (deps) => '@nestjs/core' in deps, covered: (c) => c.packs.includes('nestjs'), what: 'NestJS is installed but the nestjs pack is not' },
 ];
 
