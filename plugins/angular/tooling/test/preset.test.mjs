@@ -147,3 +147,14 @@ test('testing toolkit: linted outside the strict scope, with the spec relaxation
 test('tsconfigRootDir is required', () => {
   assert.throws(() => autopilotAngular({}), /tsconfigRootDir is required/);
 });
+
+test('vendor code (lint.vendorGlobs) is not linted; the same code elsewhere in scope is', async () => {
+  write('src/app/features/ui/button/vendor.ts', 'export const loose: any = 1;\n');
+  const lintWith = async (vendorGlobs) => {
+    const linter = new ESLint({ cwd: root, overrideConfigFile: true, overrideConfig: autopilotAngular({ tsconfigRootDir: root, strictScope: ['src/app/features/**'], vendorGlobs }) });
+    const [result] = await linter.lintFiles([path.join(root, 'src/app/features/ui/button/vendor.ts')], { warnIgnored: false });
+    return (result?.messages ?? []).map((m) => m.ruleId).filter(Boolean);
+  };
+  assert.ok((await lintWith([])).includes('@typescript-eslint/no-explicit-any'));
+  assert.deepEqual(await lintWith(['src/app/features/ui/**']), []);
+});

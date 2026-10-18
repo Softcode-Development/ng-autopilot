@@ -50,13 +50,18 @@ function newestAdmitted(range, latestMajor) {
   return latestMajor;
 }
 
-// Newest major of `name` whose eslint peer range accepts `eslintMajor`; null = latest fits.
-function fittingMajor(name, eslintMajor, view) {
-  if (admitsMajor(view(name, 'peerDependencies')?.eslint, eslintMajor)) return null;
+// Newest major of `name` whose peer range on `peer` accepts `major`; null = its latest fits.
+function fittingMajor(name, peer, major, view) {
+  if (admitsMajor(view(name, 'peerDependencies')?.[peer], major)) return null;
   const majors = [...new Set((view(name, 'versions') ?? []).filter((v) => !v.includes('-')).map(majorOf))].sort((a, b) => b - a);
-  for (const m of majors) if (admitsMajor(view(`${name}@${m}`, 'peerDependencies')?.eslint, eslintMajor)) return m;
+  for (const m of majors) if (admitsMajor(view(`${name}@${m}`, 'peerDependencies')?.[peer], major)) return m;
   return null;
 }
+
+// Packages whose @angular/core peer range decides the version (spartan and its companions).
+const ANGULAR_PEERED = ['@spartan-ng/brain', '@angular/cdk', '@ng-icons/core'];
+// Packages that must share a major with another one.
+const FOLLOWS = { '@ng-icons/lucide': '@ng-icons/core', '@spartan-ng/cli': '@spartan-ng/brain' };
 
 // `missing`: package names not yet in package.json. `pkg`: the project's package.json.
 // Returns install specs (`name` or `name@major`) plus notes on how each pinned one was chosen.
@@ -75,8 +80,23 @@ export function installSpecs(missing, pkg, view = npmView) {
     if (eslintMajor !== null) notes.push(`eslint@${eslintMajor}: newest major angular-eslint${angularMajor ? `@${angularMajor}` : ''} peers on (${peer ?? 'any'})`);
   }
 
+  const majors = {};
+  if (angularMajor !== null) {
+    for (const name of missing.filter((n) => ANGULAR_PEERED.includes(n))) {
+      const m = fittingMajor(name, '@angular/core', angularMajor, view);
+      majors[name] = m;
+      if (m !== null) notes.push(`${name}@${m}: newest major whose @angular/core peer accepts ${angularMajor}`);
+    }
+  }
+  const leaderMajor = (leader) => (leader in majors ? majors[leader] : majorOf(have[leader]));
+
   for (const name of missing) {
-    if (HELD[name]) {
+    if (name in majors) {
+      specs.push(majors[name] === null ? name : `${name}@${majors[name]}`);
+    } else if (FOLLOWS[name]) {
+      const m = leaderMajor(FOLLOWS[name]);
+      specs.push(m === null ? name : `${name}@${m}`);
+    } else if (HELD[name]) {
       specs.push(`${name}@${HELD[name].major}`);
       notes.push(`${name}@${HELD[name].major}: ${HELD[name].why}`);
     } else if (name === 'angular-eslint' && angularMajor) {
@@ -85,7 +105,7 @@ export function installSpecs(missing, pkg, view = npmView) {
     } else if (name === 'eslint' && eslintMajor !== null) {
       specs.push(`eslint@${eslintMajor}`);
     } else if (ESLINT_PEERS.includes(name) && eslintMajor !== null) {
-      const m = fittingMajor(name, eslintMajor, view);
+      const m = fittingMajor(name, 'eslint', eslintMajor, view);
       specs.push(m === null ? name : `${name}@${m}`);
       if (m !== null) notes.push(`${name}@${m}: its latest needs a newer eslint than ${eslintMajor}`);
     } else {

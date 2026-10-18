@@ -70,3 +70,9 @@ test('justified-stylesheet: Angular 20+ file names without .component are covere
   assert.ok(!(await lint('.x {\n  display: flex;\n}\n', 'src/styles.scss', whole)).includes('autopilot/justified-stylesheet'));
   assert.ok(!(await lint('.x {\n  display: flex;\n}\n', 'src/styles/tailwind.css', whole)).includes('autopilot/justified-stylesheet'));
 });
+
+test('vendor stylesheets (lint.vendorGlobs) are skipped', async () => {
+  const config = autopilotStylelint({ scss: true, strictScope: ['src/app/features/**'], vendorGlobs: ['src/app/features/ui/**'] });
+  const { results } = await stylelint.lint({ code: '.x {\n  color: #fff;\n}\n', codeFilename: 'src/app/features/ui/x/x.scss', config });
+  assert.equal(results[0].ignored, true);
+});

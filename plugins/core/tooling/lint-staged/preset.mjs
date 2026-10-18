@@ -39,8 +39,8 @@ export function ratchetOn(autopilot = {}) {
 
 // Staged templates outside the lint scope → one ratchet command (none when all are in scope).
 export function ratchetCommands(autopilot, files, cwd = process.cwd()) {
-  const scope = lintScope(autopilot).map(globRegExp);
-  const legacy = files.filter((f) => !scope.some((re) => re.test(path.relative(cwd, f).replaceAll('\\', '/'))));
+  const skip = [...lintScope(autopilot), ...(autopilot.lint?.vendorGlobs ?? [])].map(globRegExp);
+  const legacy = files.filter((f) => !skip.some((re) => re.test(path.relative(cwd, f).replaceAll('\\', '/'))));
   return legacy.length ? [`node tools/autopilot/i18n/hardcoded-ratchet.mjs ${legacy.map((f) => `"${f}"`).join(' ')}`] : [];
 }
 
@@ -58,8 +58,9 @@ export function autopilotLintStaged(autopilot = {}) {
   const wholeApp = scope.includes('src/**');
   const entries = {};
   for (const glob of scope) {
-    entries[filesIn(glob, '{ts,mts,cts,js,mjs,cjs,html}')] = ['eslint --fix --max-warnings=0', 'prettier --write'];
-    entries[filesIn(glob, '{scss,css}')] = ['stylelint --fix', 'prettier --write'];
+    // Vendor code inside the scope is ignored by the linters' configs; staged ignored files must not fail the run.
+    entries[filesIn(glob, '{ts,mts,cts,js,mjs,cjs,html}')] = ['eslint --fix --max-warnings=0 --no-warn-ignored', 'prettier --write'];
+    entries[filesIn(glob, '{scss,css}')] = ['stylelint --fix --allow-empty-input', 'prettier --write'];
     if (!wholeApp) entries[filesIn(glob, '{md,json,yml,yaml}')] = ['prettier --write'];
   }
   if (wholeApp) entries['*.{md,json,yml,yaml}'] = ['prettier --write'];

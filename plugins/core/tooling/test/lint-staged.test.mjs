@@ -27,7 +27,7 @@ test('narrowed scope: legacy files match no entry, so nothing lints or reformats
     'src/testing/**/*.{ts,mts,cts,js,mjs,cjs,html}',
     '{src/assets/i18n/market-a,src/assets/i18n/market-b}/*.json',
   ]);
-  assert.deepEqual(entries['src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}'], ['eslint --fix --max-warnings=0', 'prettier --write']);
+  assert.deepEqual(entries['src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}'], ['eslint --fix --max-warnings=0 --no-warn-ignored', 'prettier --write']);
 });
 
 test('whole-app scope: code inside src, docs and config formatted repo-wide', () => {
@@ -52,4 +52,13 @@ test('hardcoded-text ratchet: only templates outside the scope are checked', () 
   assert.deepEqual(ratchetCommands(autopilot, [abs('src/app/features/a/a.html'), abs('src/app/shared/modern/b/b.html')], cwd), []);
   const [command] = ratchetCommands(autopilot, [abs('src/app/features/a/a.html'), abs('src/app/pages/old/old.html')], cwd);
   assert.match(command, /^node tools\/autopilot\/i18n\/hardcoded-ratchet\.mjs "[^"]*old\.html"$/);
+});
+
+test('vendor code: linters tolerate explicitly passed ignored files; the ratchet skips vendor templates', () => {
+  const autopilot = { lint: { strictScope: ['src/app/features/**'], vendorGlobs: ['src/app/features/ui/**'] } };
+  const entries = autopilotLintStaged(autopilot);
+  assert.deepEqual(entries['src/app/features/**/*.{ts,mts,cts,js,mjs,cjs,html}'], ['eslint --fix --max-warnings=0 --no-warn-ignored', 'prettier --write']);
+  assert.deepEqual(entries['src/app/features/**/*.{scss,css}'], ['stylelint --fix --allow-empty-input', 'prettier --write']);
+  const cwd = path.resolve('/repo');
+  assert.deepEqual(ratchetCommands({ lint: { strictScope: ['src/app/x/**'], vendorGlobs: ['src/app/shared/ui/**'] } }, [path.join(cwd, 'src/app/shared/ui/a/a.html')], cwd), []);
 });

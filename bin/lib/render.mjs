@@ -267,7 +267,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
       '',
       "const autopilot = JSON.parse(readFileSync(new URL('./.claude/autopilot.json', import.meta.url), 'utf8'));",
       '',
-      'export default autopilotStylelint({ tailwind: Boolean(autopilot.design?.starter), ...autopilot.stylelint, strictScope: autopilot.lint?.strictScope ?? ["src/**"] });',
+      'export default autopilotStylelint({ tailwind: Boolean(autopilot.design?.starter), ...autopilot.stylelint, strictScope: autopilot.lint?.strictScope ?? ["src/**"], vendorGlobs: autopilot.lint?.vendorGlobs ?? [] });',
       '',
     ].join('\n'), 'once');
   }
@@ -289,14 +289,18 @@ export function requiredDevDependencies(rawConfig) {
     deps.push('eslint', 'angular-eslint', 'typescript-eslint', 'eslint-plugin-import-x', 'eslint-plugin-security',
       'eslint-plugin-unicorn', 'eslint-config-prettier', 'stylelint', c.stylelint.scss ? 'stylelint-config-standard-scss' : 'stylelint-config-standard');
   }
-  if (designStarter(c)) deps.push('tailwindcss', '@tailwindcss/postcss', 'tailwindcss-primeui');
+  if (designStarter(c) && c.packs.includes('spartan')) deps.push('@spartan-ng/cli', 'tailwindcss', '@tailwindcss/postcss', 'tw-animate-css');
+  else if (designStarter(c)) deps.push('tailwindcss', '@tailwindcss/postcss', 'tailwindcss-primeui');
   return deps;
 }
 
-const designStarter = (c) => c.packs.includes('primeng') && c.design.starter;
+const designStarter = (c) => (c.packs.includes('primeng') || c.packs.includes('spartan')) && c.design.starter;
 
 // Runtime packages the presets need (dependencies, not devDependencies).
 export function requiredDependencies(rawConfig) {
   const c = normaliseConfig(rawConfig);
-  return designStarter(c) ? ['@primeuix/themes', '@fontsource-variable/inter', 'primeicons'] : [];
+  if (!designStarter(c)) return [];
+  return c.packs.includes('spartan')
+    ? ['@spartan-ng/brain', '@angular/cdk', '@ng-icons/core', '@ng-icons/lucide', 'class-variance-authority', 'clsx', 'tailwind-merge']
+    : ['@primeuix/themes', '@fontsource-variable/inter', 'primeicons'];
 }

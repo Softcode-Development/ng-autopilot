@@ -17,14 +17,14 @@ const TAILWIND_AT_RULES = [
 ];
 
 export function autopilotStylelint(options = {}) {
-  const o = { scss: false, tailwind: false, strictScope: ['src/**'], ignoreFiles: [], ...options };
+  const o = { scss: false, tailwind: false, strictScope: ['src/**'], ignoreFiles: [], vendorGlobs: [], ...options };
   const ext = o.scss ? '{scss,css}' : 'css';
   const files = o.strictScope.map((g) => (g.endsWith('/**') ? `${g}/*.${ext}` : `${g}/**/*.${ext}`));
 
   return {
     extends: [o.scss ? 'stylelint-config-standard-scss' : 'stylelint-config-standard'],
     plugins: [justifiedStylesheet],
-    ignoreFiles: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.angular/**', ...o.ignoreFiles],
+    ignoreFiles: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.angular/**', ...o.ignoreFiles, ...o.vendorGlobs],
     rules: {
       'selector-class-pattern': null,
       'no-descending-specificity': null,

@@ -62,6 +62,8 @@ export const DEFAULTS = {
   i18nAllowlistFile: undefined,
   storePatterns: ['Store$'],
   templateCallAllowList: [],
+  // Generated vendor code (e.g. spartan helm): never linted, still type-checked.
+  vendorGlobs: [],
 };
 
 const filesFor = (scope, ext) => scope.map((g) => (g.endsWith('/**') ? `${g}/*.${ext}` : `${g}/**/*.${ext}`));
@@ -100,6 +102,8 @@ export function autopilotAngular(options = {}) {
   const realtime = o.realtimeGlobs.map((g) => `${g}/*.ts`);
 
   return [
+    ...(o.vendorGlobs.length ? [{ ignores: o.vendorGlobs }] : []),
+
     // TypeScript: strict + stylistic, typed linting.
     ...inScope(tseslint.configs.strict, ts),
     ...inScope(tseslint.configs.stylistic, ts),

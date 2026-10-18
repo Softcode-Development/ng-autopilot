@@ -76,3 +76,31 @@ test('runtime dependencies install without -D', () => {
   assert.equal(installCommand(['a'], 'npm', { dev: false }), 'npm install a');
   assert.equal(installCommand(['a'], 'pnpm', { dev: false }), 'pnpm add a');
 });
+
+// spartan's companions, shaped like npm on 2026-10-18 (Angular 21 project).
+const SPARTAN_REGISTRY = {
+  '@spartan-ng/brain peerDependencies': { '@angular/core': '>=21.0.0 <23.0.0', tailwindcss: '>=4.0.0', clsx: '>=2.0.0' },
+  '@angular/cdk peerDependencies': { '@angular/core': '^22.0.0 || ^23.0.0' },
+  '@angular/cdk versions': ['20.2.0', '21.2.7', '22.2.3'],
+  '@angular/cdk@22 peerDependencies': { '@angular/core': '^22.0.0 || ^23.0.0' },
+  '@angular/cdk@21 peerDependencies': { '@angular/core': '^21.0.0' },
+  '@ng-icons/core peerDependencies': { '@angular/core': '>=22.0.0' },
+  '@ng-icons/core versions': ['33.2.2', '34.0.0', '36.1.0'],
+  '@ng-icons/core@36 peerDependencies': { '@angular/core': '>=22.0.0' },
+  '@ng-icons/core@34 peerDependencies': { '@angular/core': '>=22.0.0' },
+  '@ng-icons/core@33 peerDependencies': { '@angular/core': '>=21.0.0' },
+  'tailwindcss version': '4.3.3',
+};
+const spartanView = (spec, field) => SPARTAN_REGISTRY[`${spec} ${field}`];
+
+test('spartan companions follow the Angular major; lucide follows ng-icons core; the CLI follows brain', () => {
+  const missing = ['@spartan-ng/brain', '@spartan-ng/cli', '@angular/cdk', '@ng-icons/core', '@ng-icons/lucide', 'tailwindcss', 'class-variance-authority'];
+  const { specs, notes } = installSpecs(missing, { dependencies: { '@angular/core': '^21.2.0' } }, spartanView);
+  assert.deepEqual(specs, ['@spartan-ng/brain', '@spartan-ng/cli', '@angular/cdk@21', '@ng-icons/core@33', '@ng-icons/lucide@33', 'tailwindcss', 'class-variance-authority']);
+  assert.match(notes.join('\n'), /@ng-icons\/core@33: newest major whose @angular\/core peer accepts 21/);
+});
+
+test('an already installed ng-icons core decides lucide\'s major', () => {
+  const pkg = { dependencies: { '@angular/core': '^21.2.0', '@ng-icons/core': '^33.2.2' } };
+  assert.deepEqual(installSpecs(['@ng-icons/lucide'], pkg, spartanView).specs, ['@ng-icons/lucide@33']);
+});

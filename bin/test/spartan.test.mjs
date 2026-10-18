@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { extractTokens } from '../../plugins/spartan/tooling/spartan-css.mjs';
 import { doctor } from '../doctor.mjs';
-import { normaliseConfig, renderFiles } from '../lib/render.mjs';
+import { normaliseConfig, renderFiles, requiredDependencies, requiredDevDependencies } from '../lib/render.mjs';
 import { AUTOPILOT_ROOT, sync } from '../sync.mjs';
 
 const render = (config) => Object.fromEntries(renderFiles(AUTOPILOT_ROOT, config).files.map((f) => [f.path, f]));
@@ -126,4 +126,15 @@ test('doctor: a fresh spartan design system reports only its real fill-ins', () 
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('spartan dependencies: runtime and build packages; none of PrimeNG\'s', () => {
+  assert.deepEqual(requiredDependencies(SPARTAN), ['@spartan-ng/brain', '@angular/cdk', '@ng-icons/core', '@ng-icons/lucide', 'class-variance-authority', 'clsx', 'tailwind-merge']);
+  const dev = requiredDevDependencies(SPARTAN);
+  for (const d of ['@spartan-ng/cli', 'tailwindcss', '@tailwindcss/postcss', 'tw-animate-css']) assert.ok(dev.includes(d), d);
+  assert.ok(!dev.includes('tailwindcss-primeui'));
+});
+
+test('generated stylelint.config passes the vendor globs', () => {
+  assert.match(render(SPARTAN)['stylelint.config.mjs'].content, /vendorGlobs: autopilot\.lint\?\.vendorGlobs \?\? \[\]/);
 });
