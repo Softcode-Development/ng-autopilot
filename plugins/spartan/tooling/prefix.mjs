@@ -63,35 +63,72 @@ export function prefixSource(source, prefix, { from = process.cwd(), fallback = 
     const end = node.getEnd() - 1;
     edits.push({ start, end, value: transform(source.slice(start, end)) });
   };
-  // Every string under a class argument is a class list, except object keys.
-  const classStrings = (node) => {
+  const isClassCall = (node) => ts.isCallExpression(node) && ts.isIdentifier(node.expression) && CLASS_CALLS.has(node.expression.text);
+
+  // A node in class position: only the parts that become class names are prefixed — never
+  // comparison operands, conditions, or arguments of other calls (buttonVariants({ variant: 'ghost' })).
+  const classValue = (node) => {
+    if (!node) return;
     if (isText(node)) return edit(node, (t) => prefixClassList(t, prefix));
-    if (ts.isPropertyAssignment(node)) return classStrings(node.initializer);
-    ts.forEachChild(node, classStrings);
-  };
-  const visit = (node) => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && CLASS_CALLS.has(node.expression.text)) {
-      for (const arg of node.arguments) {
-        if (ts.isObjectLiteralExpression(arg)) {
-          for (const p of arg.properties) {
-            if (!ts.isPropertyAssignment(p)) continue;
-            if (nameOf(p, sf) === 'variants') classStrings(p.initializer);
-            if (nameOf(p, sf) === 'compoundVariants' && ts.isArrayLiteralExpression(p.initializer)) {
-              for (const entry of p.initializer.elements) {
-                if (!ts.isObjectLiteralExpression(entry)) continue;
-                for (const q of entry.properties) if (ts.isPropertyAssignment(q) && COMPOUND_CLASS_KEYS.has(nameOf(q, sf))) classStrings(q.initializer);
-              }
-            }
-          }
-        } else {
-          classStrings(arg);
-        }
+    if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression?.(node)) return classValue(node.expression);
+    if (ts.isArrayLiteralExpression(node)) return node.elements.forEach(classValue);
+    if (ts.isConditionalExpression(node)) return [node.whenTrue, node.whenFalse].forEach(classValue);
+    if (ts.isBinaryExpression(node)) {
+      const op = node.operatorToken.kind;
+      if (op === ts.SyntaxKind.AmpersandAmpersandToken) return classValue(node.right);
+      if ([ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.PlusToken].includes(op)) return [node.left, node.right].forEach(classValue);
+      return;
+    }
+    if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+      if (!ts.isBlock(node.body)) return classValue(node.body);
+      const returns = (n) => (ts.isReturnStatement(n) ? classValue(n.expression) : ts.isFunctionLike(n) ? undefined : ts.forEachChild(n, returns));
+      return ts.forEachChild(node.body, returns);
+    }
+    // clsx-style map: the keys are classes, the values are conditions.
+    if (ts.isObjectLiteralExpression(node)) {
+      for (const p of node.properties) {
+        if (!ts.isPropertyAssignment(p)) continue;
+        if (ts.isStringLiteral(p.name)) edit(p.name, (t) => prefixClassList(t, prefix));
+        else if (ts.isIdentifier(p.name)) edits.push({ start: p.name.getStart(sf), end: p.name.getEnd(), value: `'${prefix}:${p.name.text}'` });
       }
       return;
     }
+    if (isClassCall(node)) return classCall(node);
+  };
+
+  const classCall = (node) => {
+    const cva = node.expression.text === 'cva';
+    node.arguments.forEach((arg, i) => {
+      if (!(cva && i > 0 && ts.isObjectLiteralExpression(arg))) return classValue(arg);
+      for (const p of arg.properties) {
+        if (!ts.isPropertyAssignment(p)) continue;
+        // variants: { group: { key: classes } } — the keys select, the values are classes.
+        if (nameOf(p, sf) === 'variants' && ts.isObjectLiteralExpression(p.initializer)) {
+          for (const group of p.initializer.properties) {
+            if (ts.isPropertyAssignment(group) && ts.isObjectLiteralExpression(group.initializer)) {
+              for (const v of group.initializer.properties) if (ts.isPropertyAssignment(v)) classValue(v.initializer);
+            }
+          }
+        }
+        if (nameOf(p, sf) === 'compoundVariants' && ts.isArrayLiteralExpression(p.initializer)) {
+          for (const entry of p.initializer.elements) {
+            if (!ts.isObjectLiteralExpression(entry)) continue;
+            for (const q of entry.properties) if (ts.isPropertyAssignment(q) && COMPOUND_CLASS_KEYS.has(nameOf(q, sf))) classValue(q.initializer);
+          }
+        }
+      }
+    });
+  };
+
+  const visit = (node) => {
+    if (isClassCall(node)) return classCall(node);
     if (ts.isPropertyAssignment(node) && nameOf(node, sf) === 'template' && isText(node.initializer)) {
       edit(node.initializer, (t) => prefixTemplate(t, prefix));
       return;
+    }
+    // host: { class: '…' } on a component or directive.
+    if (ts.isPropertyAssignment(node) && nameOf(node, sf) === 'host' && ts.isObjectLiteralExpression(node.initializer)) {
+      for (const p of node.initializer.properties) if (ts.isPropertyAssignment(p) && nameOf(p, sf) === 'class') classValue(p.initializer);
     }
     ts.forEachChild(node, visit);
   };

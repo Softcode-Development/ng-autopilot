@@ -107,3 +107,45 @@ test('typescript is resolved from the project the tool works on', () => {
   assert.equal(prefixSource("cva('flex')", 'tw', { from: process.cwd() }), "cva('tw:flex')");
   assert.throws(() => prefixSource("cva('flex')", 'tw', { from: path.parse(process.cwd()).root, fallback: false }), /typescript/);
 });
+
+// Shapes taken from spartan 1.8's generated components (calendar, carousel, sidebar, checkbox, switch).
+const REAL = `
+@Component({ selector: 'hlm-checkbox', host: { class: 'contents peer', 'data-slot': 'checkbox' } })
+export class HlmCheckbox {}
+
+@Component({ selector: 'hlm-switch', host: { class: 'contents' } })
+export class HlmSwitch {}
+
+export class HlmCalendar {
+  protected readonly _btnClass = hlm(
+    buttonVariants({ variant: 'ghost', size: 'icon' }),
+    'data-[today=true]:bg-muted relative flex',
+  );
+}
+
+export class HlmCarousel {
+  constructor() {
+    classes(() => ['overflow-hidden', this._orientation() === 'horizontal' ? 'flex -ms-4' : 'flex flex-col -mt-4']);
+    classes(() => this.variant() !== 'floating' && 'border-e');
+    classes(() => this.label() || 'p-2');
+    classes(() => ({ 'opacity-50': this.disabled(), hidden: this.collapsed() }));
+    classes(() => {
+      return 'gap-2 ' + 'rounded-md';
+    });
+  }
+}
+`;
+
+test('real spartan shapes: only class positions are prefixed', () => {
+  const out = prefixSource(REAL, 'tw');
+  assert.match(out, /host: \{ class: 'tw:contents tw:peer', 'data-slot': 'checkbox' \}/, 'host class');
+  assert.match(out, /host: \{ class: 'tw:contents' \}/);
+  assert.match(out, /buttonVariants\(\{ variant: 'ghost', size: 'icon' \}\)/, 'arguments of other calls are not classes');
+  assert.match(out, /'tw:data-\[today=true\]:bg-muted tw:relative tw:flex'/);
+  assert.match(out, /this\._orientation\(\) === 'horizontal' \? 'tw:flex tw:-ms-4' : 'tw:flex tw:flex-col tw:-mt-4'/, 'comparison operands stay, branches are classes');
+  assert.match(out, /this\.variant\(\) !== 'floating' && 'tw:border-e'/);
+  assert.match(out, /this\.label\(\) \|\| 'tw:p-2'/);
+  assert.match(out, /\{ 'tw:opacity-50': this\.disabled\(\), 'tw:hidden': this\.collapsed\(\) \}/, 'clsx object keys are classes');
+  assert.match(out, /return 'tw:gap-2 ' \+ 'tw:rounded-md';/);
+  assert.equal(prefixSource(out, 'tw'), out, 'idempotent');
+});
