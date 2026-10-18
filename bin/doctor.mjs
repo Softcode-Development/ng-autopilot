@@ -18,6 +18,8 @@ import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
 import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
 import { apiMissing, normaliseConfig, pluginId, renderFiles, requiredDependencies, requiredDevDependencies } from './lib/render.mjs';
 import { brokenLinks } from './links.mjs';
+import { prefixSource } from '../plugins/spartan/tooling/prefix.mjs';
+import { presetHeaderVersion } from '../plugins/spartan/tooling/spartan-css.mjs';
 import { AUTOPILOT_ROOT } from './sync.mjs';
 
 const PLACEHOLDER = /<(?![!/]|https?:)[A-Za-z…][^<>\n]{2,}>/g;
@@ -68,6 +70,36 @@ export function unfilledPlaceholders(template, text) {
     }
   }
   return [...hits];
+}
+
+const walkFiles = (dir) => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)])) : []);
+const staticDir = (glob) => glob.split('/').filter((_, i, parts) => !parts.slice(0, i + 1).some((p) => /[*?{[]/.test(p))).join('/');
+
+// spartan starter: brand files, and in the legacy setup the prefixed generated code and preset copy.
+function spartanChecks(projectRoot, config) {
+  const out = [];
+  for (const b of config.design.brands) {
+    if (!existsSync(path.join(projectRoot, 'src', 'styles', 'brands', `${b}.css`))) out.push(`brand "${b}": src/styles/brands/${b}.css missing — run sync to create it`);
+  }
+  if (!config.design.legacyCss) return out;
+  for (const dir of (config.lint.vendorGlobs ?? []).map(staticDir)) {
+    const unprefixed = walkFiles(path.join(projectRoot, dir)).filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts')).filter((f) => {
+      const text = readFileSync(f, 'utf8');
+      return prefixSource(text, 'tw') !== text;
+    });
+    if (unprefixed.length) out.push(`unprefixed classes in spartan-generated code (${unprefixed.length} file${unprefixed.length > 1 ? 's' : ''}) — run node tools/autopilot/spartan/prefix.mjs ${dir}`);
+  }
+  const presetFile = path.join(projectRoot, 'src', 'styles', 'spartan-preset.css');
+  const brainFile = path.join(projectRoot, 'node_modules', '@spartan-ng', 'brain', 'package.json');
+  const fix = 'node tools/autopilot/spartan/spartan-css.mjs preset src/styles/spartan-preset.css';
+  if (!existsSync(presetFile)) {
+    out.push(`src/styles/spartan-preset.css missing — run ${fix}`);
+  } else if (existsSync(brainFile)) {
+    const copied = presetHeaderVersion(readFileSync(presetFile, 'utf8'));
+    const installed = readJson(brainFile).version;
+    if (copied !== installed) out.push(`spartan-preset.css was copied from @spartan-ng/brain ${copied ?? 'an unknown version'}; installed ${installed} — run ${fix}`);
+  }
+  return out;
 }
 
 export function doctor(projectRoot) {
@@ -153,11 +185,24 @@ export function doctor(projectRoot) {
   // Technology added since install.
   warnings.push(...stackDrift(readPackageJson(projectRoot), config).map((d) => `stack drift: ${d}`));
 
-  // Legacy AI setup left behind.
+  // Legacy AI setup left behind. Official skills the packs install are expected, not leftovers.
+  const officialSkills = config.packs.includes('spartan') ? ['spartan'] : [];
   for (const rel of LEGACY) {
     const full = path.join(projectRoot, rel);
-    if (existsSync(full)) warnings.push(`legacy AI file/folder still present: ${rel}`);
+    if (!existsSync(full)) continue;
+    if (rel === '.claude/skills') {
+      for (const skill of readdirSync(full)) {
+        if (!officialSkills.includes(skill)) warnings.push(`legacy AI file/folder still present: ${rel}/${skill}`);
+      }
+    } else {
+      warnings.push(`legacy AI file/folder still present: ${rel}`);
+    }
   }
+  for (const skill of officialSkills) {
+    if (!existsSync(path.join(projectRoot, '.claude', 'skills', skill))) warnings.push(`${skill} skill missing — npx skills add spartan-ng/spartan -a claude-code -y --copy`);
+  }
+
+  if (config.packs.includes('spartan') && config.design.starter) warnings.push(...spartanChecks(projectRoot, config));
   const rulesDir = path.join(projectRoot, '.claude', 'rules');
   if (existsSync(rulesDir)) {
     for (const entry of readdirSync(rulesDir)) {

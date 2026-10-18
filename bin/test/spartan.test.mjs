@@ -138,3 +138,52 @@ test('spartan dependencies: runtime and build packages; none of PrimeNG\'s', () 
 test('generated stylelint.config passes the vendor globs', () => {
   assert.match(render(SPARTAN)['stylelint.config.mjs'].content, /vendorGlobs: autopilot\.lint\?\.vendorGlobs \?\? \[\]/);
 });
+
+const project = (config) => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'autopilot-spartan-doctor-'));
+  spawnSync('git', ['init', '-q'], { cwd: dir });
+  writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'app' }));
+  mkdirSync(path.join(dir, '.claude'));
+  writeFileSync(path.join(dir, '.claude', 'autopilot.json'), JSON.stringify(config));
+  sync(dir);
+  return dir;
+};
+const put = (dir, rel, text) => {
+  mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+  writeFileSync(path.join(dir, rel), text);
+};
+
+test('doctor: the official spartan skill is expected and allowed; other project skills are still leftovers', () => {
+  const dir = project(SPARTAN);
+  try {
+    assert.match(doctor(dir).warnings.join('\n'), /spartan skill missing — npx skills add spartan-ng\/spartan -a claude-code -y --copy/);
+    put(dir, '.claude/skills/spartan/SKILL.md', '---\nname: spartan\n---\n');
+    let text = doctor(dir).warnings.join('\n');
+    assert.doesNotMatch(text, /spartan skill missing|legacy AI file\/folder still present: \.claude\/skills/);
+    put(dir, '.claude/skills/old-helper/SKILL.md', 'old');
+    text = doctor(dir).warnings.join('\n');
+    assert.match(text, /legacy AI file\/folder still present: \.claude\/skills\/old-helper/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('doctor (legacy spartan): unprefixed generated classes, a missing or stale preset copy, a missing brand file', () => {
+  const dir = project({ ...SPARTAN, design: { starter: true, legacyCss: true, brands: ['a'] }, lint: { strictScope: ['src/app/features/**', 'src/app/shared/modern/**'], vendorGlobs: ['src/app/shared/modern/ui/**'] } });
+  try {
+    put(dir, 'src/app/shared/modern/ui/button/src/lib/hlm-button.ts', "export const v = cva('inline-flex rounded-md');\n");
+    put(dir, 'node_modules/@spartan-ng/brain/package.json', JSON.stringify({ name: '@spartan-ng/brain', version: '1.9.0' }));
+    rmSync(path.join(dir, 'src/styles/brands/a.css'));
+    let text = doctor(dir).warnings.join('\n');
+    assert.match(text, /unprefixed classes in spartan-generated code \(1 file\) — run node tools\/autopilot\/spartan\/prefix\.mjs src\/app\/shared\/modern\/ui/);
+    assert.match(text, /src\/styles\/spartan-preset\.css missing — run node tools\/autopilot\/spartan\/spartan-css\.mjs preset src\/styles\/spartan-preset\.css/);
+    assert.match(text, /brand "a": src\/styles\/brands\/a\.css missing/);
+    put(dir, 'src/styles/spartan-preset.css', '/* @spartan-ng/brain 1.8.0 hlm-tailwind-preset.css, @apply prefixed with tw: by x */\n');
+    put(dir, 'src/app/shared/modern/ui/button/src/lib/hlm-button.ts', "export const v = cva('tw:inline-flex tw:rounded-md');\n");
+    text = doctor(dir).warnings.join('\n');
+    assert.match(text, /spartan-preset\.css was copied from @spartan-ng\/brain 1\.8\.0; installed 1\.9\.0/);
+    assert.doesNotMatch(text, /unprefixed classes/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
