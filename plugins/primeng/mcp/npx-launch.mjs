@@ -27,6 +27,11 @@ const readJson = (file) => {
 };
 const versionIn = (range) => /(\d+(?:\.\d+){0,2})/.exec(range ?? '')?.[1] ?? null;
 const majorOf = (version) => (version ? Number(version.split('.')[0]) : null);
+const compareVersions = (a, b) => {
+  const [x, y] = [a, b].map((v) => v.split('.').map(Number));
+  for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) - (y[i] ?? 0);
+  return 0;
+};
 
 // Installed version of `pkg`, else the version its range names in package.json — looked up
 // from `cwd` upwards, so a session started in a sub-folder finds its project.
@@ -58,8 +63,10 @@ export function resolveArgs(args, cwd, view = npmVersions) {
     if (kind === 'major') return `${target}@${Math.max(majorOf(version), FIRST_SERVER_MAJOR[target] ?? 0)}`;
     const published = (view(target) ?? []).filter((v) => !v.includes('-'));
     if (published.includes(version)) return `${target}@${version}`;
-    const sameMajor = published.filter((v) => majorOf(v) === majorOf(version));
-    return `${target}@${sameMajor.at(-1) ?? 'latest'}`;
+    // Same major: the newest release not newer than the installed one, else the oldest newer one.
+    const sameMajor = published.filter((v) => majorOf(v) === majorOf(version)).sort(compareVersions);
+    const pick = sameMajor.filter((v) => compareVersions(v, version) <= 0).at(-1) ?? sameMajor[0];
+    return `${target}@${pick ?? 'latest'}`;
   }));
 }
 

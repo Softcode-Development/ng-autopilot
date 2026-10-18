@@ -29,7 +29,7 @@ The UI layer is **spartan/ng**: `@spartan-ng/brain` (headless, accessible primit
 | Buttons | `button[hlmBtn]` (`variant`, `size`) | `HlmButtonImports` from `@spartan-ng/helm/button` |
 | Inputs | `input[hlmInput]`, `textarea[hlmTextarea]` | `HlmInputImports`, `HlmTextareaImports` |
 | Form fields | `hlm-field`, `hlm-field-label`, `hlm-field-description`, `hlm-field-error` | `HlmFieldImports` from `@spartan-ng/helm/field` |
-| Select | `hlm-select`, `native-select` | `HlmSelectImports` |
+| Select | `hlm-select` | `HlmSelectImports` from `@spartan-ng/helm/select` |
 | Dialog | `hlm-dialog`, `hlm-dialog-content`, `hlm-sheet`, `hlm-alert-dialog` | `HlmDialogImports`, `HlmSheetImports` |
 | Toast | `hlm-toaster` + `toast()` from `ngx-sonner` | `HlmToasterImports` from `@spartan-ng/helm/sonner` |
 | Menu | `hlm-dropdown-menu`, `hlm-menubar`, `hlm-tabs`, `hlm-breadcrumb` | `HlmDropdownMenuImports`, … |

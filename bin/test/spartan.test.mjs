@@ -236,3 +236,13 @@ test('design.legacyLibraries defaults to an empty list and takes UI library name
   assert.deepEqual(normaliseConfig({}).design.legacyLibraries, []);
   assert.throws(() => normaliseConfig({ design: { legacyLibraries: ['bootstrap'] } }), /legacyLibraries/);
 });
+
+test('design.brands must be a list of names', () => {
+  assert.throws(() => normaliseConfig({ design: { brands: 'ab' } }), /design\.brands must be a list/);
+  assert.throws(() => normaliseConfig({ design: { brands: null } }), /design\.brands must be a list/);
+});
+
+test('the spartan catalog lists only components install generates', () => {
+  const doc = render(SPARTAN)['docs/DESIGN_SYSTEM.md'].content;
+  assert.doesNotMatch(doc, /native-select/);
+});

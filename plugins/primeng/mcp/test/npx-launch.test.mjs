@@ -80,3 +80,16 @@ test('the MCP configs use the placeholders', () => {
   assert.ok(primeng.mcpServers.primeng.args.includes('@primeng/mcp@{major-of:primeng}'));
   assert.ok(spartan.mcpServers['spartan-ui'].args.includes('@spartan-ng/mcp@{version-of:@spartan-ng/brain}'));
 });
+
+test('{version-of:pkg} never serves a newer release than the installed one when an older one in the major exists', () => {
+  const published = { '@spartan-ng/mcp': ['1.7.0', '1.8.0', '1.8.1', '1.9.0'] };
+  const dir = mkdtempSync(path.join(tmpdir(), 'mcp-older-'));
+  try {
+    install(dir, '@spartan-ng/brain', '1.8.3');
+    assert.deepEqual(resolveArgs(['@spartan-ng/mcp@{version-of:@spartan-ng/brain}'], dir, (n) => published[n]), ['@spartan-ng/mcp@1.8.1']);
+    install(dir, '@spartan-ng/brain', '1.6.0');
+    assert.deepEqual(resolveArgs(['@spartan-ng/mcp@{version-of:@spartan-ng/brain}'], dir, (n) => published[n]), ['@spartan-ng/mcp@1.7.0'], 'nothing older in the major → the oldest newer one');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
