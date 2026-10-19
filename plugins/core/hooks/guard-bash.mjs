@@ -6,7 +6,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  readEnvelope, projectRoot, loadAutopilotConfig, protectedPaths, flagIsSet, globToRegExp, finish,
+  readEnvelope, projectRoot, installedConfigOrExit, protectedPaths, flagIsSet, globToRegExp, finish,
   canonicalisePath, fenceBlocks, autopilotFence, FENCE_REASON,
 } from './lib/hook-io.mjs';
 import { writeTargets } from './lib/shell-writes.mjs';
@@ -153,7 +153,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = projectRoot();
   finish(NAME, evaluateBash(envelope?.tool_input?.command ?? '', {
     root,
-    config: loadAutopilotConfig(root),
+    config: installedConfigOrExit(root),
     isFlagSet: (flag) => flagIsSet(root, flag),
     fence: autopilotFence(),
   }));

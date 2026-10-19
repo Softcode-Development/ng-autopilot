@@ -3,7 +3,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { projectRoot, loadAutopilotConfig } from './lib/hook-io.mjs';
+import { projectRoot, installedConfigOrExit } from './lib/hook-io.mjs';
 import { findActivePlans, lastWorklogHeading } from './lib/plans.mjs';
 import { readPackageJson, stackDrift } from './lib/stack-drift.mjs';
 
@@ -36,8 +36,8 @@ export function describeContext({ branch, lastCommit, dirty, config, plans, last
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = projectRoot();
+  const config = installedConfigOrExit(root);
   const status = git(root, ['status', '--porcelain']);
-  const config = loadAutopilotConfig(root);
   process.stdout.write(describeContext({
     branch: git(root, ['rev-parse', '--abbrev-ref', 'HEAD']),
     lastCommit: git(root, ['log', '-1', '--pretty=format:%h %s']),

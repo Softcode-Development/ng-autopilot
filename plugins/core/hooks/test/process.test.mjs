@@ -75,6 +75,8 @@ test('guard-bash reads the current branch: a bare push on main is blocked, on a 
   try {
     const git = (...args) => spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
     git('init', '-q', '-b', 'main');
+    mkdirSync(path.join(repo, '.claude'));
+    writeFileSync(path.join(repo, '.claude', 'autopilot.json'), '{"packs": []}');
     const onMain = runHook('guard-bash.mjs', bash('git push'), repo);
     assert.equal(onMain.code, 2);
     assert.match(onMain.stderr, /current branch is main/);
@@ -178,5 +180,38 @@ test('hooks allow on empty or malformed input instead of crashing', () => {
   for (const script of ['guard-bash.mjs', 'guard-paths.mjs', 'plan-ready.mjs', 'out-of-scope.mjs']) {
     assert.equal(runHook(script, '').code, 0, `${script} empty`);
     assert.equal(runHook(script, 'not json').code, 0, `${script} malformed`);
+  }
+});
+
+// The plugins are enabled at user level, so the hooks run in every project; only an
+// installed project (autopilot.json with packs) gets them.
+test('a project without autopilot is left alone: no hook blocks, session-context prints nothing', () => {
+  for (const config of [null, '{}', '{"packs": "not-a-list"}']) {
+    const other = mkdtempSync(path.join(tmpdir(), 'not-autopilot-'));
+    try {
+      spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: other });
+      if (config) {
+        mkdirSync(path.join(other, '.claude'), { recursive: true });
+        writeFileSync(path.join(other, '.claude', 'autopilot.json'), config);
+      }
+      const plan = path.join(other, '.claude', 'plans', 'x', 'plan.md');
+      mkdirSync(path.dirname(plan), { recursive: true });
+      writeFileSync(plan, '---\nslug: x\nstatus: draft\n---\n\n## Out of scope\n\n- no destination\n');
+      const autopilotFile = path.resolve(hooksDir, '..', 'rules', 'work-modes.md');
+      for (const command of ['git push', 'git push -f', 'git reset --hard', 'cat .env', `rm "${autopilotFile.replace(/\\/g, '/')}"`]) {
+        assert.equal(runHook('guard-bash.mjs', bash(command), other).code, 0, `${config}: ${command}`);
+      }
+      assert.equal(runHook('guard-paths.mjs', edit(autopilotFile), other).code, 0, `${config}: fence`);
+      assert.equal(runHook('plan-ready.mjs', edit(path.join(other, 'src', 'a.ts')), other).code, 0, `${config}: plan gate`);
+      const write = { tool_name: 'Write', tool_input: { file_path: plan, content: '## Out of scope\n\n- none\n' } };
+      assert.equal(runHook('out-of-scope.mjs', write, other).code, 0, `${config}: out of scope`);
+      const ctx = spawnSync(process.execPath, [path.join(hooksDir, 'session-context.mjs')], {
+        env: { ...process.env, CLAUDE_PROJECT_DIR: other }, encoding: 'utf8',
+      });
+      assert.equal(ctx.status, 0);
+      assert.equal(ctx.stdout, '', `${config}: session context`);
+    } finally {
+      rmSync(other, { recursive: true, force: true });
+    }
   }
 });

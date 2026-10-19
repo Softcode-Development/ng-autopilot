@@ -111,10 +111,16 @@ export const BUILT_IN_PROTECTED = [
   },
 ];
 
-// The main plugin is enabled in every project (so /autopilot:install exists
-// everywhere); generated-file protection applies only once a project is
-// installed, i.e. has an autopilot.json with packs.
+// The plugins are enabled at user level (so /autopilot:install exists everywhere),
+// so these hooks run in every project. Only an installed project — an
+// autopilot.json with packs — gets them; any other project is left alone.
 export const isInstalled = (config) => Array.isArray(config?.packs);
+
+export function installedConfigOrExit(root) {
+  const config = loadAutopilotConfig(root);
+  if (!isInstalled(config)) process.exit(0);
+  return config;
+}
 
 const OPENSPEC_PROTECTED = {
   glob: 'openspec/specs/**',

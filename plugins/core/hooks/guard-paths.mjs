@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import {
-  readEnvelope, projectRoot, loadAutopilotConfig, protectedPaths, flagIsSet, globToRegExp,
+  readEnvelope, projectRoot, installedConfigOrExit, protectedPaths, flagIsSet, globToRegExp,
   canonicalisePath, finish, fenceBlocks, autopilotFence, fromMsysPath, FENCE_REASON,
 } from './lib/hook-io.mjs';
 
@@ -30,7 +30,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const input = envelope?.tool_input ?? {};
   finish(NAME, evaluatePath(input.file_path ?? input.notebook_path ?? '', {
     root,
-    config: loadAutopilotConfig(root),
+    config: installedConfigOrExit(root),
     isFlagSet: (flag) => flagIsSet(root, flag),
     fence: autopilotFence(),
   }));

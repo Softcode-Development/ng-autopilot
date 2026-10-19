@@ -4,7 +4,7 @@
 
 import { fileURLToPath } from 'node:url';
 import {
-  readEnvelope, projectRoot, loadAutopilotConfig, globToRegExp, canonicalisePath, finish,
+  readEnvelope, projectRoot, installedConfigOrExit, globToRegExp, canonicalisePath, finish,
 } from './lib/hook-io.mjs';
 import { findActivePlans } from './lib/plans.mjs';
 
@@ -37,7 +37,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const input = envelope?.tool_input ?? {};
   finish(NAME, evaluatePlanReady(input.file_path ?? input.notebook_path ?? '', {
     root,
-    config: loadAutopilotConfig(root),
+    config: installedConfigOrExit(root),
     plans: findActivePlans(root),
   }));
 }

@@ -70,7 +70,7 @@ dependencies.json                 external plugins the workflow depends on
 Inside a plugin:
 - `rules/` — synced into a project's `.claude/rules/autopilot/<pack>/` (plugins cannot load rules themselves; one folder per pack because packs share file names like `security.md`).
 - `templates/` — starting points for a project's docs and `.claude/` files.
-- `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it.
+- `agents/`, `skills/`, `hooks/hooks.json`, `.mcp.json` — load directly from the plugin when a project enables it. The core plugin is enabled at user level so `/autopilot:install` exists everywhere; its hooks act only in installed projects (a `.claude/autopilot.json` with `packs`) and do nothing anywhere else.
 
 ## Pacing an agent-built project
 
