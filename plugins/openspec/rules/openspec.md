@@ -14,7 +14,7 @@ Applies when the project's planning format is `openspec` (or a task opted into i
 - Out of scope: `proposal.md` → `## Out of scope`, every bullet `→ <destination>`. — **Enforcement:** `out-of-scope` hook (sync adds `openspec/changes/*/proposal.md` to `outOfScopeDocs`).
 
 ## Scenarios drive coverage, not test names
-Every scenario in the change's spec deltas has a matching test at its tier — the coverage contract — or a worklog deferral with a destination. The WHEN/THEN text is a template, not a mandate: test authors name tests by their own conventions; the plan-reviewer matches scenario ↔ test by behaviour.
+Every scenario in the change's spec deltas has a matching test at its tier — the coverage contract — or a worklog deferral with a destination (for a paused tier: the hand-off in `.claude/plans/handoff/`, work-modes rule). The WHEN/THEN text is a template, not a mandate: test authors name tests by their own conventions; the plan-reviewer matches scenario ↔ test by behaviour.
 
 ## Scenario numbers stay inside the spec
 Scenario ids (`AS-N`, `1.2`, …) are transient: they reset or merge when a change archives. Never put them in production code, tests, scripts, top-level docs, ADRs or configs — reference the behaviour text instead. Allowed only inside `openspec/changes/**` and `openspec/specs/**`.

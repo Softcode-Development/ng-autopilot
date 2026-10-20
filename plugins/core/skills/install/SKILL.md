@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install the ng-autopilot AI workspace into a project, or adopt an existing AI setup into it — inspects the repo, asks the setup questions (packs, planning format, test tiers, lint strict scope, i18n), extracts project-specific knowledge from old AI files into .claude/rules/project.md, removes the old AI setup, then syncs the autopilot files. On a project that already has .claude/autopilot.json it reconfigures instead (change any answer — widen the lint scope, add a test tier or pack — then sync). Use on "/autopilot:install", "install the ng-autopilot workspace", "adopt autopilot in this repo", "reconfigure autopilot", "widen the lint scope", "add the e2e tier".
+description: Install the ng-autopilot AI workspace into a project, or adopt an existing AI setup into it — inspects the repo, asks the setup questions (packs, planning format, test tiers, lint strict scope, i18n), extracts project-specific knowledge from old AI files into .claude/rules/project.md, removes the old AI setup, then syncs the autopilot files. On a project that already has .claude/autopilot.json it reconfigures instead (change any answer — widen the lint scope, add, pause or resume a test tier, add a pack — then sync). Use on "/autopilot:install", "install the ng-autopilot workspace", "adopt autopilot in this repo", "reconfigure autopilot", "widen the lint scope", "add the e2e tier", "pause the e2e tests", "resume the integration tier", "use the single-review test phase".
 ---
 
 # Install the ng-autopilot workspace
@@ -56,6 +56,9 @@ Inspect the repo, then present **one** table with a proposed answer per question
 | `packs` | `package.json` dependencies | **Always** `core`, `angular`, `testing`, `openspec`. **UI library pack** — one per project: PrimeNG in use → `primeng`; spartan/ng in use → `spartan`; both in use → ask which one new code uses (the other stays only for legacy screens, without its pack); **neither → ask the owner which UI library the project will use** (spartan/ng + Tailwind or PrimeNG) and install that pack. Moving an existing project from PrimeNG to spartan: reconfigure → Switch the UI library. **Backend pack** — `nestjs` only when the repo has a NestJS app; without a backend there is nothing for it to do. |
 | `planning` | — | `plan-file` unless the owner chooses `openspec` |
 | `testTiers` | runner + spec files; e2e framework config | **`["unit", "integration", "e2e"]` — always all three.** A tier the repo does not run yet still gets its overrides and backlog (placeholders); the first `/write-<tier>-tests` sets the tier up (framework choice — Playwright for a new e2e suite — config, scripts) and fills the overrides. Note in the table which tiers start from zero. |
+| `testing.<tier>.enabled` | the owner's call | **`true` for every tier.** `false` pauses a tier: no new specs or cases there (criteria go to a hand-off), the implementer keeps its existing specs in step with the code it edits, and they still run in every gate. Flip it back to resume — nothing else changes |
+| `testing.phase` | — | `orchestrated` (sequential author → reviewer → fix per subject); `single-review` (shared helpers, parallel authors, one review pass, one fix pass) when the owner wants a faster test phase |
+| `limits.parallelTestAgents` | machine size | `3`; lower on a machine under 16 GB RAM or with a heavy runner (Karma, Cypress, Playwright) |
 | `lint.strictScope` | folder layout | **whole app (`["src/**"]`) or, for a legacy repo, the modern folders: `["src/app/features/**", "src/app/shared/modern/**"]`** — inside it every autopilot rule is an error; outside is legacy: bug fixes only, never developed further (architecture rule, Legacy stays legacy). Shared new code goes in the modern shared folder; sync creates its README once (fill the legacy-counterpart column) |
 | `lint.selectorPrefix` | `angular.json` → `prefix` | |
 | `lint.translatePipes` | i18n library | `translate` (ngx-translate), `transloco`, … |
@@ -114,7 +117,7 @@ Nothing is touched until the owner approves the table.
    - each rule keeps its why, enforcement and precedent;
    - nothing stale (old versions, finished migrations, superseded advice).
    - Also extract project facts from the owner's auto-memory for this repo (`~/.claude/projects/<repo>/memory/`) by the same test — it exists on one machine only.
-2. Draft `.claude/gates.md` (commands, smoke map, visual-gate setup, security triggers) and, per test tier, `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs) from the same sources and `package.json`.
+2. Draft `.claude/gates.md` (commands, smoke map, dev servers, visual-gate setup, security triggers) and, per test tier, `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs) from the same sources and `package.json`. Every gate command is an `npm run …` script: a gate that is a shell script (`bash tools/x.sh`) gets a `package.json` wrapper first, so agents run it without a permission prompt.
 3. Show the owner the docs, the README and `project.md` with a coverage map: every section of every extract → delete file and of the old README → where it went (a doc / `project.md` / `gates.md` / overrides / "covered by autopilot rule X" / "legacy only — dropped"). The owner approves.
 4. Commit: `docs: extract project knowledge into project docs and rules`.
 

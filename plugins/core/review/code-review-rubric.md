@@ -91,11 +91,15 @@ The project's `docs/ARCHITECTURE.md` + autopilot `architecture` and `state` rule
 
 ## F — Design system (UI diffs only)
 
-The project's `docs/DESIGN_SYSTEM.md` + autopilot `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion.
+The project's `docs/DESIGN_SYSTEM.md` + autopilot `design-discipline`: primitives first, tokens only (no raw colors/spacing), theme works without per-component overrides, a11y minimums, one icon set, motion respects reduced-motion, loading skeletons mirror the loaded UI (same container, grid, item count per variant, close sizes — a generic block of grey bars or a mismatched count is a finding).
 
 ## G — Tests (gross level only)
 
 Tier reviewers own depth. Flag: tests that always pass (no assertion, unawaited expectation, asserting what the test just built); tests deleted or weakened to turn red green; a spec asserting a constant equals itself; orphan specs for deleted files; `fdescribe`/`fit`/`xit` committed.
+
+Paused tiers (`.claude/autopilot.json` → `testing.<tier>.enabled: false`): a **new** spec file, or new cases, at a paused tier → `BLOCKING` (work-modes rule, Paused test tiers). Missing tests at that tier are never a finding. Edits to the tier's existing specs that keep them in step with the change are expected — flag the opposite: a changed file whose existing spec at a paused tier now asserts the old behaviour.
+
+Scratch test infrastructure in the diff — a copied runner config with its own port, temp build folders, isolation folders — → `BLOCKING` (agent-conduct rule, Tool discipline).
 
 ## H — Performance (hot paths only)
 

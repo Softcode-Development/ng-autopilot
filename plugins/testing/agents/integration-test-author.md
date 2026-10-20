@@ -282,6 +282,12 @@ These layer on top of `core.md`. They are agent-execution rules, not testing rul
 - **Toolkit additions must be self-contained.** Single new fake / handler set / builder, single concept, no cross-cutting refactor. Stop and ask otherwise.
 - **Specs only — never production code.** If a fix would require modifying production code (e.g. the app needs a DI seam to be testable), surface to the user.
 - **Rules beat codebase convention (`core.md` §2.1).** When existing specs in the project use a pattern that violates `core.md` / `framework-<framework>.md` / `overrides.md`, do **not** copy that pattern into the new spec. Flag the pre-existing violations in your report.
+- **Never `git add` or commit.** The driver (or the orchestrator's caller) commits once every test agent has stopped — authors may run in parallel, and a commit would sweep in another agent's half-written files.
+- **Tool discipline (agent-conduct rule).** Edits only through Edit/Write; shell only as single allowlisted commands (the scoped test command, lint, typecheck, read-only `git`). No edit scripts (`sed -i`, python, heredocs), no `cd … &&` chains, no shell launchers, no process kills. A check that needs an off-list command is skipped and reported.
+- **No isolation machinery.** No scratch runner configs (a copied `karma.conf` / `playwright.config` / `vitest.config` with its own port), no temp builds, no extra folders or copies of the repo. Specs run inside the project, with its own config, against the running dev server. Run output goes to `.claude/tmp/`.
+- **Processes.** Start nothing long-running except as a background task; stop only what you started; list started / stopped / still running in the report. Never stop a dev server you did not start.
+- **Parallel brief (`single-review` phase).** When the brief says you run in parallel: touch only the spec files on your list and never the testing toolkit — a helper you need that does not exist is reported, not written inline. When the brief says the runner is heavy (browser or app boot), do not run it: type-check and lint your specs, and the driver runs them once after all authors stop.
+- **Paused tier.** If this tier is paused (`.claude/autopilot.json` → `testing.<tier>.enabled: false`) and the brief is not the owner's explicit request, stop: no new specs at a paused tier.
 
 ---
 

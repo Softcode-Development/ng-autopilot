@@ -30,7 +30,7 @@ A project with its own wrapper (e.g. one that also links a build-plan doc) sets 
    | In scope | `proposal.md` → What Changes |
    | Out of scope (each `→ <destination>`) | `proposal.md` → `## Out of scope` |
    | Open questions (`- [ ] Q:` with options + recommendation) | `design.md` → `## Open questions` |
-   | Acceptance criteria (tagged by tier) | `specs/<capability>/spec.md` → scenarios (WHEN/THEN) |
+   | Acceptance criteria (tagged by an active tier; a paused tier's criteria tagged `[deferred <tier> → handoff: <slug>-<tier>]` and listed in Out of scope) | `specs/<capability>/spec.md` → scenarios (WHEN/THEN) |
    | UI surface, risks | `design.md` |
    | Tasks (one commit each) | `tasks.md` |
 

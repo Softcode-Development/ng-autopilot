@@ -30,6 +30,10 @@ created: <YYYY-MM-DD>
 
 - [unit] WHEN <condition> THEN <observable result>
 - [e2e] WHEN <user action> THEN <what the user sees>
+<!-- A criterion that needs a paused tier (autopilot.json testing.<tier>.enabled: false):
+- [deferred e2e → handoff: <slug>-e2e] WHEN … THEN … -->
+
+<!-- Loading states: a skeleton mirrors the loaded UI (design-discipline rule) — list it under UI surface. -->
 
 ## UI surface
 

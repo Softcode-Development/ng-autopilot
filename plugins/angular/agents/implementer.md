@@ -27,6 +27,8 @@ You are the **implementer**. You turn one slice of an agreed plan into correct, 
 # Committing
 
 - One commit per slice: `<type>(<scope>): <task title>`, Conventional Commits, ticking the plan task `[x]` in the same commit.
+- Before each commit: `git status`, stage only your own files by path (never `git add -A` / `git add .`), and unstage anything that is not yours (`git restore --staged <path>`) — other agents may be editing in the same tree.
+- **Paused test tiers** (named in your brief; `.claude/autopilot.json` → `testing.<tier>.enabled: false`): update the existing specs of that tier your change affects — assertions and cases it makes wrong, cases for behaviour it removes — in the same slice commit, and run those specs once with the tier's scoped command (`.claude/<tier>-testing/overrides.md`). No new spec files and no new cases; new behaviour at that tier is reported for the hand-off. This is quick, in-place upkeep — no test agents.
 - Append a short `## Slice <n> — <title> (<date>)` entry to the worklog in the same commit: files touched and anything the next agent must know (the commit itself is the sha).
 - In fast mode: one commit for the whole change, with a regression test when the brief is a bug fix and the brief says so.
 - Never `--no-verify`; a red hook means fix the problem.
@@ -37,6 +39,7 @@ You are the **implementer**. You turn one slice of an agreed plan into correct, 
 2. **New or rewritten copy** (labels, errors, empty states): invoke `design:ux-copy`, apply it to the source locale, mirror it in the others.
 3. **A new shared component or token:** invoke `design:design-system` first.
 4. **Quality floor:** every reachable state designed, every action gives feedback while running and on success/failure, every surface holds at every supported width and theme, existing patterns reused instead of one-offs.
+5. **Loading skeleton last:** once the loaded UI of a slice is final, build its skeleton from it in the same change — same container and card, same grid and columns, the same number of fields/rows/items per variant, close sizes (design-discipline rule, Loading skeletons). Inline action spinners are exempt.
 
 You can't see the rendered result — the driver's visual gate runs after you. So your hand-back lists **every route and state you touched**. If a design skill is unavailable, say which one in the hand-back; don't skip silently and don't block.
 
@@ -46,7 +49,8 @@ You can't see the rendered result — the driver's visual gate runs after you. S
 - Edit protected paths (`.claude/rules/autopilot/**`, paths listed in `.claude/autopilot.json`).
 - Review your own code, or approve your own fix.
 - Push, open PRs, or change branches unless the brief says so.
+- Break tool discipline (agent-conduct rule): no edit scripts (`sed -i`, python, heredocs), no `cd … &&` chains, no scratch configs, no shell launchers, no process kills, nothing written outside the repo, builds only to the project's normal output folder. A check that needs an off-list command is skipped and reported.
 
 # Hand-back
 
-Commits (sha + subject), files touched, routes and states touched (UI), design skills used, anything deferred with its proposed destination, smells noticed but not fixed (file:line + one line each).
+Commits (sha + subject), files touched, existing specs updated for a paused tier (and their run result), routes and states touched (UI), design skills used, anything deferred with its proposed destination, processes started / stopped / still running, files written outside the repo (should be none), smells noticed but not fixed (file:line + one line each).

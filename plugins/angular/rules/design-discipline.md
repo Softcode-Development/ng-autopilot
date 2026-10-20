@@ -68,10 +68,24 @@ How a template gets its look; the project's `docs/DESIGN_SYSTEM.md` § 4.6 names
 - Durations and easings come from motion tokens (fast ≈ 100–150 ms micro-interactions, base ≈ 200 ms popovers/toasts, slow ≈ 300 ms dialogs/pages). Every animation has a functional purpose.
 - One icon set, named in the project's `docs/DESIGN_SYSTEM.md`. No inline SVG in templates except logos, charts and bespoke illustrations.
 
+## Loading skeletons
+A loading skeleton mirrors the loaded UI it stands in for:
+- the same container and card;
+- the same grid and columns;
+- the same number of fields, rows or items — per variant when the counts differ (per locale, market, role, …);
+- placeholder sizes close to the real ones (line heights, input heights, image boxes).
+
+Build it **after the loaded UI is final, in the same change**, from the loaded template — not from a generic block of grey bars. Use the library's skeleton primitive. Exempt: inline action spinners (a button's pending state).
+- **Why:** a skeleton that does not match the loaded layout makes the page jump when data arrives, which reads as a bug; one built before the UI settles drifts from it.
+- **Enforcement:** the visual gate compares loading and loaded side by side; review (rubric F).
+
 ## Visual gate — every UI change
 Before committing UI work, open each changed screen in the connected browser and check it at **desktop and phone width (~360–375 px)**, in **light and dark** theme if the app has both, in every state the change touched (empty, loading, error, filled). Check against the project's `docs/DESIGN_SYSTEM.md`. A failure is fixed in the same scope before committing.
 - **Why:** specs and unit tests can't see overflowing dialogs, missing spinners or dark-mode breakage.
-- Use the dev server that is already running; never start a second one, never kill one you did not start.
+- **Loading vs loaded:** capture the loading state (hold the request — DevTools network throttling, or a blocked API request) and the loaded state at the same width, and compare them side by side: container, grid, item count, sizes. A mismatch is a failure.
+- **Phone width without the owner:** never ask the owner to resize or un-maximise the browser. Inject a same-origin overlay instead — an `<iframe src="<route>" style="position:fixed;inset:0 auto auto 0;width:375px;height:812px;z-index:2147483647;background:white">` added through the page's JavaScript — and screenshot it.
+- Reuse the dev server that is already listening (`node tools/autopilot/server/listening.mjs <port>`); otherwise start it with `npm run start…` as a background task. Never start a second one; never stop or restart one you did not start.
+- Screenshots go to `.claude/tmp/`, never elsewhere on disk.
 - The project's `.claude/gates.md` § Visual gate names the dev servers, accounts, widths and start points to check.
 
 ## Design skills

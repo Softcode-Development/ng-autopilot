@@ -295,6 +295,12 @@ These layer on top of `core.md`. They are agent-execution rules, not testing rul
 - **Specs only — never production code.** If a fix would require modifying production code (a missing `data-cy`, a missing event the production code doesn't emit, a misnamed handler), surface to the user. Adding a `data-cy` to a template is allowed; changing logic is not.
 - **No real-API specs without explicit authorisation.** Real-API runs against real services with real auth. If the orchestrator did not pass `mode: real-api`, do not write real-API specs.
 - **Rules beat codebase convention (`core.md` §2.1).** When existing specs in the project use a pattern that violates `core.md` / `runner-<runner>.md` / `stack-<stack>.md` / `overrides.md`, do **not** copy that pattern into the new spec. "The other specs do it this way" is not a defence — it makes the new spec wrong too. Flag the pre-existing violations in your report so the team can clean them up. Do not propagate.
+- **Never `git add` or commit.** The driver (or the orchestrator's caller) commits once every test agent has stopped — authors may run in parallel, and a commit would sweep in another agent's half-written files.
+- **Tool discipline (agent-conduct rule).** Edits only through Edit/Write; shell only as single allowlisted commands (the scoped test command, lint, typecheck, read-only `git`). No edit scripts (`sed -i`, python, heredocs), no `cd … &&` chains, no shell launchers, no process kills. A check that needs an off-list command is skipped and reported.
+- **No isolation machinery.** No scratch runner configs (a copied `karma.conf` / `playwright.config` / `vitest.config` with its own port), no temp builds, no extra folders or copies of the repo. Specs run inside the project, with its own config, against the running dev server. Run output goes to `.claude/tmp/`.
+- **Processes.** Start nothing long-running except as a background task; stop only what you started; list started / stopped / still running in the report. Never stop a dev server you did not start.
+- **Parallel brief (`single-review` phase).** When the brief says you run in parallel: touch only the spec files on your list and never the testing toolkit — a helper you need that does not exist is reported, not written inline. When the brief says the runner is heavy (browser or app boot), do not run it: type-check and lint your specs, and the driver runs them once after all authors stop.
+- **Paused tier.** If this tier is paused (`.claude/autopilot.json` → `testing.<tier>.enabled: false`) and the brief is not the owner's explicit request, stop: no new specs at a paused tier.
 
 ---
 
@@ -307,7 +313,7 @@ These layer on top of `core.md`. They are agent-execution rules, not testing rul
 - The §6 forbid list is unclear for this feature — quote the section, ask for a ruling.
 - A reviewer finding would require production-code changes — surface to the user.
 - A rule is missing from the references — stop and ask. Never invent.
-- The dev server is required but the user hasn't confirmed it's running.
+- The dev server is required and `node tools/autopilot/server/listening.mjs <port>` says it is not listening (the orchestrator starts it; an author does not).
 
 In any escalation, do **not** write the structured report and do **not** tick the backlog.
 

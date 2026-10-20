@@ -13,7 +13,7 @@ Every task runs in one of three modes. If no mode is named, the agent picks by t
 | **Commits** | One | One per feature slice | One per task |
 | **Lint + typecheck** | Pre-commit hook (automatic) | Pre-commit hook (automatic) | Pre-commit hook (automatic) |
 | **Existing tests** | Affected tests, once, before review | End of implementation + final gate | End of each task + end of implementation + final gate |
-| **New tests** | Fix tests the change broke; a bug fix adds one regression test where testable | Test phase after the feature; **coverage contract**: every acceptance criterion has a test at its tier, or a recorded deferral with a destination | As balanced; `[manual]` criteria only with the owner's approval |
+| **New tests** (active tiers only — see Paused test tiers) | Fix tests the change broke; a bug fix adds one regression test where testable | Test phase after the feature; **coverage contract**: every acceptance criterion has a test at its tier, or a recorded deferral with a destination | As balanced; `[manual]` criteria only with the owner's approval |
 | **Review** | `code-reviewer`, one pass on the diff | `plan-reviewer` + `code-reviewer` on the whole change (+ `security-reviewer` when a security trigger path is touched) | `plan-reviewer` + `code-reviewer` + `security-reviewer` |
 | **Smoke gate** | If runtime wiring changed | Once, when the feature is done | Once, when the feature is done |
 | **Visual gate** | If UI changed | Once, when the feature is done | Once, when the feature is done |
@@ -46,7 +46,16 @@ The step-by-step sequence — who does what, in what order, with which artifacts
 Boot the runtime the change touched and confirm it starts: the dev server compiles and the touched route renders without console errors; for a backend, the app boots and its health endpoint answers.
 - **Why:** it is the cheapest catch of runtime/DI/boot breaks that unit tests miss. A build compiles TypeScript but never instantiates the DI container, so **a build is not a smoke test**.
 - **Precedent:** two un-bootable commits (a missing DI export, a crashing queue name) passed every spec tier and were caught only by booting.
-- Use the dev server that is already running, or boot on an alternate port; never kill a server you did not start.
+- Reuse a dev server already listening (`node tools/autopilot/server/listening.mjs <port>`); otherwise start one with the project's `npm run start…` as a background task. Never stop or restart a server you did not start — one the owner asked for is the owner's.
+
+## Paused test tiers
+`.claude/autopilot.json` → `testing.<tier>.enabled: false` pauses a tier (`unit`, `integration`, `e2e` each have their own switch). While it is paused:
+- **No new tests at that tier** — no new spec files, no new cases. The architect tags no criterion with it; a criterion that needs it is written `[deferred <tier> → handoff: <slug>-<topic>]` and goes verbatim into the hand-off (`.claude/plans/handoff/`).
+- **Existing specs stay in step, fast:** the implementer that edits a file updates the tier's existing specs the change affects — assertions and cases the change makes wrong — in the same commit, with one scoped run. No test agents, no orchestration.
+- **Existing specs of every tier still run** in the checkpoint and the final gate; a change that breaks one fixes it.
+- Reviewers do not flag missing tests at that tier, and do flag a new spec file at it.
+- Setting `enabled: true` again restores the full test phase for the tier; nothing else changes.
+- **Why:** the owner can stop investing in a tier for a while without the existing suite rotting or the deferred coverage being lost.
 
 ## Visual gate
 See the design-discipline rule of the UI stack pack.

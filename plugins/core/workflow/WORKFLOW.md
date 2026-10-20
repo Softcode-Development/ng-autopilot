@@ -10,11 +10,11 @@ Development here is AI-only. The owner decides — scope, open questions, produc
 
 | Role | Who | Writes | Never |
 |---|---|---|---|
-| **Driver** | The main session running `/deliver` | Branch, commits of plan/worklog, gate records, triage decisions | Reviews its own implementation; skips a gate |
+| **Driver** | The main session running `/deliver` | Branch, commits of plan/worklog and of the test phase's specs, gate records, triage decisions, hand-offs, the process report | Reviews its own implementation; skips a gate; commits while a parallel agent is still running |
 | **architect** | `autopilot:architect` (opus) | The plan | Writes application code |
 | **implementer** | the stack pack's implementer (e.g. `autopilot-angular:implementer`, sonnet) | Production code, one commit per slice; fixes from review | Writes new test files; edits protected paths; reviews its own code |
 | **db-migrator** | `autopilot-nestjs:db-migrator` (when the pack is enabled) | Schema + migrations (flag-protected paths) | Edits application code |
-| **Test orchestrators** | `autopilot-testing:<tier>-test-orchestrator` | Specs, `test(...)` commits | Edits production code |
+| **Test orchestrators / authors** | `autopilot-testing:<tier>-test-orchestrator`, or the tier's `-test-author` agents directly in the `single-review` phase | Specs and shared test helpers | Edits production code; runs `git add` or commits (the driver commits) |
 | **plan-reviewer** | `autopilot:plan-reviewer` (opus, read-only) | Review report | Judges code quality; patches anything |
 | **code-reviewer** | `autopilot:code-reviewer` (opus, read-only) | Review report | Re-checks plan conformance; patches anything |
 | **security-reviewer** | `autopilot:security-reviewer` (sonnet, read-only) | Review report | Weakens a control to make something pass |
@@ -32,6 +32,8 @@ Development here is AI-only. The owner decides — scope, open questions, produc
 | Gate config | `.claude/gates.md` | yes | owner / once per project |
 | Project rules | `.claude/rules/project.md` | yes | owner (created once by install) |
 | Backlog | `.claude/plans/backlog.md` | yes | driver/architect |
+| Hand-off | `.claude/plans/handoff/<slug>-<topic>.md` (template: the core plugin's `templates/plans/handoff.md`) | yes | driver, whenever criteria are deferred (a paused tier, a gate deferral); stays after the plan is archived |
+| Run output | `.claude/tmp/` — gate output, screenshots, logs (git-ignored) | no | any agent; emptied by the Close-step cleanup |
 | Finished plans | `.claude/plans/archive/<YYYY-MM-DD>-<slug>/` | yes | driver at close |
 
 With the `openspec` planning format, the plan is the OpenSpec change folder (`openspec/changes/<slug>/`: proposal, design, spec deltas, tasks) and the worklog lives in it; everything else is identical.
@@ -44,7 +46,7 @@ Frontmatter: `slug`, `title`, `mode`, `planning`, `status` (`draft` → `approve
 2. **In scope** — bullets; each one must end up with a code path.
 3. **Out of scope** — every bullet ends with `→ <destination>` (a later plan, `→ backlog: <item>` in `.claude/plans/backlog.md`, or `→ not doing: <reason>`).
 4. **Open questions** — `- [ ] Q: …` with options and a recommendation; answered as `- [x] Q: … → A: … (YYYY-MM-DD)`.
-5. **Acceptance criteria** — `WHEN … THEN …`, each tagged with its test tier: `[unit]`, `[e2e]`, `[integration]`, or `[manual]` with a reason.
+5. **Acceptance criteria** — `WHEN … THEN …`, each tagged with an active test tier: `[unit]`, `[e2e]`, `[integration]`, or `[manual]` with a reason. A criterion that needs a **paused** tier (§ 3 Step 5) is tagged `[deferred <tier> → handoff: <slug>-<topic>]` and goes verbatim into that hand-off.
 6. **UI surface** — routes and states the change touches (empty, loading, error, filled, dialog open, validation shown); where the visual gate starts looking.
 7. **Tasks** — ordered checklist, sliced so each slice is one commit.
 8. **Risks / notes** — optional.
@@ -58,8 +60,10 @@ Append-only, newest last, one `##` heading per entry:
 - `## Test phase (<date>)` — tiers run, spec files, criteria covered, criteria deferred with destination.
 - `### Smoke — <scope> (<date>) — GREEN|RED` and `### Visual — <route/state> round <n> (<date>) — GREEN|RED` — one line per screen × width × theme checked; findings and fixes.
 - `## Review triage (<date>)` — per finding: `fix` / `decline: <reason>` / `defer → <destination>` / `owner: <question + answer>`.
-- `## Decision — <topic> (<date>)` — a choice made mid-flight and why.
+- `## Decision — <topic> (<date>)` — a choice made mid-flight and why: housekeeping and anything a rule or the plan already settles is decided by the driver and recorded here, not asked.
 - `## Handoff (<date>)` — where the flow stopped, the next step, anything in progress. Written whenever a session ends mid-flow.
+- `## Processes (<date>)` — at Close (and in every Handoff): each process the driver or an agent started (command, by whom), whether it was stopped, and what is still running and why (§ 12).
+- `## Cleanup (<date>)` — what was written outside the repo, sizes, what the owner chose to delete or keep.
 
 ## 3. The sequence
 
@@ -77,7 +81,7 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - Driver creates the branch `<type>/<slug>` and commits the plan.
 
 ### Step 2 — Plan gate (owner)
-- The driver walks the open questions **one at a time**, each with options and a recommendation, and writes every answer into the plan.
+- The driver puts the open questions to the owner **in batches of up to 4 in one question set** (each with options and a recommendation first), and writes every answer into the plan.
 - The owner approves the plan; the driver sets `status: approved` and commits.
 - **Enforced:** the `plan-ready` hook blocks source edits while the active plan is `draft` or has an unanswered open question.
 
@@ -87,22 +91,34 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - UI slices follow the implementer's UI protocol (design skills before markup; routes and states touched reported in the hand-back).
 - A slice that turns out too big is **split in the plan**, never trimmed.
 - No new test files in this step.
+- **Paused tiers** (`.claude/autopilot.json` → `testing.<tier>.enabled: false`): the implementer keeps the **existing** specs of that tier in step with the files it edits — it updates the assertions and cases the change makes wrong, and removes cases for behaviour the change removes — in the same slice commit, with one scoped run of those specs. No new spec files, no new cases; no test agent or orchestrator is dispatched for it. New behaviour at that tier goes to the hand-off.
+- Before each commit the implementer runs `git status` and unstages anything that is not its own (`git restore --staged <path>`).
 
 ### Step 4 — Checkpoint
-- Driver runs the existing affected tests (the project's test command from `.claude/gates.md`). Failures are fixed by the implementer in the slice's scope. Worklog: `## Checkpoint`.
+- Driver runs the existing affected tests (the project's test command from `.claude/gates.md`) — **of every tier, paused ones included**. Failures are fixed by the implementer in the slice's scope. Worklog: `## Checkpoint`.
 
 ### Step 5 — Test phase
-- On the finished feature, dispatch the tiers listed in `.claude/autopilot.json` → `testTiers`, in this order, sequentially:
-  1. `autopilot-testing:unit-test-orchestrator` — new and changed code;
-  2. `autopilot-testing:e2e-test-orchestrator` — mocked journeys for new and changed pages;
-  3. `autopilot-testing:integration-test-orchestrator` — re-run the **pre-existing** integration specs of every module touched, too.
-- Each orchestrator applies the project's `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs).
-- The plan's acceptance criteria are the coverage list. **Coverage contract:** every criterion has a test at its tagged tier, or a worklog deferral with a destination.
-- Worklog: `## Test phase`.
+- On the finished feature, run the **active** tiers — those in `.claude/autopilot.json` → `testTiers` whose `testing.<tier>.enabled` is not `false` — in this order:
+  1. unit — new and changed code;
+  2. e2e — mocked journeys for new and changed pages;
+  3. integration — re-run the **pre-existing** integration specs of every module touched, too.
+- **Paused tiers** get no authors and no orchestrator: their affected existing specs were already updated by the implementer (Step 3), and every criterion that needs them is `[deferred <tier> → handoff: …]` in the hand-off (below). Re-enabling a tier (`enabled: true`) restores this step unchanged; nothing else needs configuring.
+- The shape per tier follows `testing.phase`:
+  - **`orchestrated`** (default) — dispatch `autopilot-testing:<tier>-test-orchestrator`; it runs author → reviewer → fix per subject, sequentially.
+  - **`single-review`** — (1) one author builds the **shared test helpers** the specs will need first (service pins, builders, DOM/form readers) in the testing toolkit; (2) up to `limits.parallelTestAgents` (default 3) `<tier>-test-author` agents in parallel, the work split by area, each writing only its own spec files and never the toolkit (a missing helper is reported, not inlined); (3) **one** review pass — `<tier>-test-reviewer` agents over the new specs, read-only; (4) **one** fix pass — a single author applies the findings that stand and makes the specs green. Then the tier is done: no author ↔ reviewer loops.
+- **One heavy test runner at a time** across all agents. Heavy = it boots a browser or the app (Karma, Cypress, Playwright, an Angular builder test target). In `single-review` with a heavy runner, the parallel authors only type-check and lint their specs; the driver runs the scoped specs once after they stop and hands the failures to the fix pass. Light runners (Vitest, Jest) may run per author.
+- Each tier applies the project's `.claude/<tier>-testing/overrides.md` (toolkit, scoped commands, carve-outs). Tests and visual checks run **inside the project**, against its own config and the running dev server — never in scratch runner configs, extra ports, temp builds or copies of the repo.
+- Test agents never `git add` or commit. The driver commits the tier's specs (`test(<scope>): …`) once every agent of that tier has stopped.
+- The plan's acceptance criteria are the coverage list. **Coverage contract:** every criterion has a test at its tagged tier, or a deferral with a destination recorded in the worklog — and, for every deferred criterion, in the hand-off.
+- **Hand-off:** when any criterion or gate check is deferred, the driver writes `.claude/plans/handoff/<slug>-<topic>.md` from the template — every deferred criterion verbatim with its reason, the gate deferrals, test data created on shared environments, starting points (routes, test-id prefixes, accounts file, flags), and what not to redo.
+- Worklog: `## Test phase` — tiers run, tiers paused, spec files, criteria covered, criteria deferred with destination.
 
 ### Step 6 — Smoke and visual gates
 - **Smoke:** boot what the change touched, per the smoke map in `.claude/gates.md`. A build is not a smoke test.
-- **Visual** (UI changed): per the design-discipline rule — every changed route × state, desktop and phone width, light and dark, interactions driven, console read, design-critique (+ accessibility-review for new interactive surfaces) on the screenshots.
+- **Visual** (UI changed): per the design-discipline rule — every changed route × state, desktop and phone width, light and dark, interactions driven, console read, design-critique (+ accessibility-review for new interactive surfaces) on the screenshots. **Loading skeletons are compared side by side with the loaded state** at the same width.
+- **Dev server:** reuse one already listening (`node tools/autopilot/server/listening.mjs <port>`); a server the owner started is the owner's — never stopped or restarted unless the owner says so. Otherwise start it with `npm run start…` as a background task and record it for the process report.
+- **Never ask the owner for what a tool can do.** Phone width without resizing the owner's window: inject a same-origin `<iframe src="<route>" style="width:375px;height:812px">` overlay into the page and screenshot it.
+- Screenshots and gate output go to `.claude/tmp/`.
 - Red → implementer fixes in scope, re-run both gates. **Browser not connected → blocked: stop and ask the owner. Never skipped.**
 - Worklog: one record per screen and round.
 
@@ -119,13 +135,16 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - If any **BLOCKING** finding was fixed, the reviewer that raised it re-checks **only those findings** (one targeted round, not a full review).
 
 ### Step 9 — Final gate
-- Lint, typecheck, affected tests, and build when `.claude/gates.md` requires it — the project's final-gate command.
+- Lint, typecheck, affected tests of **every** tier (paused ones included — a change that breaks an existing spec fixes it), and build when `.claude/gates.md` requires it — the project's final-gate command. Builds go to the project's normal output folder, never to a temp folder.
 - Version bump as the last commit when the project versions its app (git-safety rule).
 
 ### Step 10 — Close
 - **Driver pushes and opens the PR** without asking (title = conventional subject; body = goal, scope, test summary, link to the plan); later PR edits and comments need no stop either. **The owner approves the merge** — agents never merge and never push to a trunk (git-safety rule).
-- Plan `status: done`, folder moved to `.claude/plans/archive/<date>-<slug>/`, committed. A durable, non-obvious decision gets an ADR (`docs/adr/`).
+- Plan `status: done`, folder moved to `.claude/plans/archive/<date>-<slug>/`, committed. A durable, non-obvious decision gets an ADR (`docs/adr/`). Hand-offs stay in `.claude/plans/handoff/`.
 - With `openspec`: the archive step promotes the spec instead.
+- **Process report** (`## Processes`): what the driver and its agents started, what was stopped, what is still running and why (§ 12). Stop what the delivery started and no longer needs; a server the owner asked for stays.
+- **Cleanup** (`## Cleanup`): list every file and folder the driver or its agents wrote outside the repo during the delivery, plus `.claude/tmp/`, with sizes — `/autopilot:cleanup` does it — and offer to delete them with one confirmation.
+- **Long delivery** (several slices, a fix round, or a session that has run for hours): end with `## Handoff` and recommend continuing in a fresh session — it releases the MCP servers and background processes the session holds.
 
 ## 4. Mode differences
 
@@ -153,7 +172,9 @@ Only these:
 6. A red gate the driver cannot fix within the change's scope.
 7. Merge. Pushing a feature branch and opening, editing or commenting on its PR are not stops.
 
-**How to ask:** one question per message, 2–4 options, a recommendation with its reason first. Never forward a raw finding or error without a proposed answer.
+Everything else the driver decides: housekeeping, choices a rule or the plan already settles, and anything a tool can find out or do (is the server up, how the page looks at 375 px, which test command to run). It records the choice as `## Decision` in the worklog and goes on.
+
+**How to ask:** gather what is pending into **one question set of up to 4 questions**, each with 2–4 options and a recommendation with its reason first. Never forward a raw finding or error without a proposed answer, and never ask the owner to do something a tool can do.
 
 ## 6. Resuming
 
@@ -183,6 +204,9 @@ Every brief to a sub-agent contains:
 - **Done-criteria** and what to report back (for UI: routes and states touched, design skills used).
 - **Constraints:** commit or not, no new tests (implementer), stay in scope, escalate instead of deferring.
 - When a shared contract changes: update every typed consumer in the same pass.
+- **The tool-discipline block, verbatim** (agent-conduct rule, "Tool discipline"): edits only through Edit/Write, reads through Read/Grep/Glob; shell only as single allowlisted commands; no python, `sed -i` or heredoc edit scripts, no `cd … &&` chains, no temporary or scratch config files, no shell launchers (`powershell`, `cmd start`), no process kills; a check that needs an unlisted command is skipped and reported.
+- **Parallel agents:** "Do not `git add` or commit; do not touch files outside your list." The driver commits only after every parallel agent has stopped.
+- **Processes:** start long-running processes only as background tasks, stop only your own, and list both in the hand-back.
 
 A tight brief has been measured to run the same work about four times faster than a loose one.
 
@@ -194,7 +218,8 @@ A tight brief has been measured to run the same work about four times faster tha
 4. Smoke gate green; visual gate green for every UI change, recorded in the worklog.
 5. Reviews done; every finding triaged and recorded; no open BLOCKING.
 6. Final gate green; version bumped when the project versions its app.
-7. PR opened with the owner's approval; plan archived.
+7. PR opened with the owner's approval; plan archived; every deferred criterion in a hand-off.
+8. Process report and cleanup recorded in the worklog.
 
 ## 10. Failure modes this workflow guards against
 
@@ -211,6 +236,11 @@ A tight brief has been measured to run the same work about four times faster tha
 | Hand-edited generated rules or schema | `guard-paths` hook + flag protocol |
 | Lost context between sessions | Worklog + handoff entries + session-context hook |
 | Review noise stalling the change | Severity conventions + driver triage; owner sees only product questions |
+| Machine slows down over a long session | Parallel-agent cap, one heavy runner at a time, agents stop only what they started, process report at Close, fresh session after a long delivery |
+| Files left all over the disk | `Edit(./**)`/`Write(./**)` permissions, run output in `.claude/tmp/`, Close-step cleanup |
+| A commit sweeps in another agent's files | Parallel agents never stage or commit; driver commits after they stop; implementer unstages what is not its own |
+| Deferred work forgotten | Hand-off file, checked against the worklog by the plan-reviewer |
+| Permission prompts stall an unattended run | Tool-discipline block in every brief; read-only shell allowed; `guard-bash` refuses edit scripts, launchers and kill-by-name |
 
 ## 11. Other skills inside the loop
 
@@ -222,3 +252,21 @@ Use them where they fit; they never replace a step:
 - `superpowers:dispatching-parallel-agents` — genuinely independent investigation only.
 
 `writing-plans` / `executing-plans` / `subagent-driven-development` do not replace Steps 1–3; `test-driven-development` does not replace the test phase.
+
+## 12. Processes and workspace
+
+A delivery runs for hours on the owner's machine. It leaves the machine as it found it.
+
+**Processes**
+- At most `limits.parallelTestAgents` (`.claude/autopilot.json`, default 3) test agents run at once, and at most **one heavy test runner** (one that boots a browser or the app) runs at any moment across all agents.
+- Long-running processes (dev server, watch build, test runner in watch mode) start only as **background tasks**, and dev servers only through `npm run start…` (the project's scripts). No detached OS windows: on Windows, Git Bash mangles `cmd //c start … /k`. A server that must outlive the session gets a cross-platform launcher script in the project, documented in `.claude/gates.md`.
+- **Reuse before starting:** `node tools/autopilot/server/listening.mjs <port>` says whether a server already answers. A server the owner asked for or started is the owner's: never stopped or restarted unless the owner says so.
+- Every agent stops **only the processes it started**, through the background task that runs them — never by killing processes by name — and lists started / stopped / still running in its hand-back. The driver merges these into the `## Processes` worklog entry at Close.
+- MCP servers: an agent that does not use one declares a `tools:` allowlist without `mcp__` entries, as every autopilot agent does, so it gets no MCP tools. Whether Claude Code then skips starting the server for that agent is not documented; ending a long delivery with a handoff and a fresh session is what reliably releases them.
+
+**Workspace**
+- Agents write only inside the project (the settings allow `Edit(./**)` and `Write(./**)`, not bare `Edit` / `Write`).
+- Gate output, screenshots, logs and dumps go to `.claude/tmp/` (git-ignored). Builds go to the project's normal output folder, never to temp.
+- No copies of the repo, spike folders or reference checkouts outside it unless the owner asks; anything that does get written outside is listed in the Close-step cleanup.
+- No scratch runner configs (a copied `karma.conf` / `playwright.config` with its own port), temp builds or extra folders to isolate parallel runs: the cap and the one-heavy-runner rule make them unnecessary.
+- Gate commands are `npm run …` scripts (a `bash tools/x.sh` gate is wrapped in a `package.json` script), so they are allowlisted and run the same for every agent.

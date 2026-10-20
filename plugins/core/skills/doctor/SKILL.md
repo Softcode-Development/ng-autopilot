@@ -1,11 +1,11 @@
 ---
 name: doctor
-description: Check this project against the ng-autopilot workspace — hand-edited or missing generated files, autopilot repo ahead of the last sync, plugins not enabled, test tiers without overrides, unfilled placeholders, broken links in the project docs, missing devDependencies, leftover legacy AI files, inactive git hooks. Use on "/autopilot:doctor", "check autopilot drift", "is the workspace healthy".
+description: Check this project against the ng-autopilot workspace — hand-edited or missing generated files, autopilot repo ahead of the last sync, plugins not enabled, test tiers without overrides or paused, unfilled placeholders, broken links in the project docs, missing devDependencies, leftover legacy AI files, inactive git hooks. Use on "/autopilot:doctor", "check autopilot drift", "is the workspace healthy".
 ---
 
 # Autopilot doctor
 
-Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" doctor .` and report the result grouped by severity, each finding with its fix:
+Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" doctor .` and report the result grouped by severity (errors, warnings, then notes), each finding with its fix:
 
 | Finding | Fix |
 |---|---|
@@ -13,6 +13,8 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/autopilot.mjs" doctor .` and report the
 | autopilot repo changed since the last sync | `/autopilot:sync` |
 | plugin not enabled | `/autopilot:sync` (it rewrites `enabledPlugins`) |
 | tier without overrides/backlog | `/autopilot:sync` creates them; fill the overrides |
+| note: test tier paused | not a problem — the owner paused it (`testing.<tier>.enabled: false`). Report it with the hand-offs waiting in `.claude/plans/handoff/`; resume with `/autopilot:install` (reconfigure) |
+| `testing.<tier>` set for a tier not in `testTiers` | add the tier to `testTiers` or drop the setting (reconfigure) |
 | unfilled placeholders | fill them (owner decisions go to the owner as questions with options) |
 | broken link | find where the target went (`git log --diff-filter=DR -- <path>`) and relink; a target deleted on purpose → restore it to a tracked home, or remove the link with the owner's go |
 | dependencies / devDependencies missing | run the install commands `/autopilot:sync` prints (ask before running them) |

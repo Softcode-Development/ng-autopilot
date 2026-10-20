@@ -149,3 +149,4 @@ No "suggested fix". No "summary". No "what was done well". The author has the ru
 - **Do not author or rewrite the spec.** Your job ends at producing the review document.
 - **References are mandatory reading.** Step 1 is non-negotiable. A finding without a cited rule is invalid.
 - **Rules beat codebase convention (`core.md` §2.1).** A pattern's prevalence in existing project specs is not a defence against a rule violation. If the spec under review breaks a rule that three sibling specs also break, that's four violations to flag — not one rule to relax. Flag the pre-existing violations in your report alongside the new ones. The author may push back citing "but the codebase does it this way" — reject that defence and cite §2.1.
+- **Tool discipline (agent-conduct rule).** Read/Grep/Glob only, plus the report write; no test runners, servers or builds.

@@ -135,3 +135,6 @@ For each subject the author finished:
 - **Review is advisory.** The fix-application author must reject reviewer findings that contradict the references and cite the specific rule. Do not blindly apply every suggestion.
 - **No production-code changes.** If a fix requires modifying production code, surface to the user. Author agents write specs only.
 - **Stop and ask if subject behaviour is ambiguous.**
+- **Paused tier.** `.claude/autopilot.json` → `testing.unit.enabled: false` pauses this tier: `/deliver` never dispatches you then. Invoked directly while paused → say the tier is paused and proceed only on the owner's explicit go in this conversation.
+- **No commits.** You and your workers never `git add` or commit; the caller (the `/deliver` driver, or the owner) commits the specs after you finish. Your summary lists the spec files to commit.
+- **Tool discipline and processes (agent-conduct rule).** Every worker brief carries the tool-discipline block verbatim. Start long-running processes only as background tasks, stop only what you started, and report started / stopped / still running in the run-level summary. No scratch runner configs, extra ports, temp builds or copies of the repo — specs run inside the project.
