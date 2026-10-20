@@ -31,6 +31,27 @@ function walk(dir, base = dir) {
   return out.sort();
 }
 
+export const TEST_PHASES = ['orchestrated', 'single-review'];
+
+// testing: { unit: { enabled }, integration: { enabled }, e2e: { enabled }, phase }.
+// A disabled tier is paused: no new specs at it, its existing specs still run.
+function normaliseTesting(raw = {}) {
+  const t = { phase: 'orchestrated', ...raw };
+  for (const key of Object.keys(t)) {
+    if (key !== 'phase' && !TIERS.includes(key)) throw new Error(`testing.${key}: unknown test tier (known: ${TIERS.join(', ')})`);
+  }
+  if (!TEST_PHASES.includes(t.phase)) throw new Error(`testing.phase: "${t.phase}" (known: ${TEST_PHASES.join(', ')})`);
+  for (const tier of TIERS) {
+    t[tier] = { enabled: true, ...(t[tier] ?? {}) };
+    if (typeof t[tier].enabled !== 'boolean') throw new Error(`testing.${tier}.enabled must be true or false`);
+  }
+  return t;
+}
+
+// The project's tiers that take new specs, and the ones paused with testing.<tier>.enabled: false.
+export const activeTiers = (c) => c.testTiers.filter((t) => c.testing[t].enabled);
+export const pausedTiers = (c) => c.testTiers.filter((t) => !c.testing[t].enabled);
+
 export function normaliseConfig(raw) {
   const c = structuredClone(raw ?? {});
   c.packs = [...new Set(['core', ...(c.packs ?? [])])];
@@ -38,6 +59,11 @@ export function normaliseConfig(raw) {
   c.planning ??= 'plan-file';
   c.testTiers ??= [];
   for (const t of c.testTiers) if (!TIERS.includes(t)) throw new Error(`Unknown test tier "${t}"`);
+  c.testing = normaliseTesting(c.testing);
+  c.limits = { parallelTestAgents: 3, ...(c.limits ?? {}) };
+  if (!Number.isInteger(c.limits.parallelTestAgents) || c.limits.parallelTestAgents < 1) {
+    throw new Error('limits.parallelTestAgents must be a whole number of at least 1');
+  }
   c.packageManager ??= 'npm';
   c.lint = { strictScope: ['src/**'], testingToolkit: 'src/testing', ...(c.lint ?? {}) };
   c.commands = { typecheck: 'npx tsc -p tsconfig.app.json --noEmit --incremental', prePush: 'npm run lint && npm test', ...(c.commands ?? {}) };
@@ -114,6 +140,16 @@ function apiLine(c) {
   return `base \`${c.api.baseUrl}\` · docs ${c.api.docsUrl} — verify every endpoint, param and enum spelling in the docs before wiring; the docs win over existing code.`;
 }
 
+function tiersLine(c) {
+  if (!c.testTiers.length) return 'none';
+  const active = activeTiers(c);
+  const paused = pausedTiers(c);
+  const line = active.length ? active.join(', ') : 'none active';
+  return paused.length
+    ? `${line} (paused: ${paused.join(', ')} — no new specs there, criteria go to a hand-off; existing specs still run)`
+    : line;
+}
+
 const exec = (c) => (c.packageManager === 'pnpm' ? 'pnpm exec' : 'npx --no-install');
 
 function huskySteps(c) {
@@ -153,6 +189,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
     ['core', 'tooling/lock/verify.mjs', 'lock/verify.mjs'],
     ['core', 'tooling/lock/fingerprint.mjs', 'lock/fingerprint.mjs'],
     ['core', 'tooling/lint-staged/preset.mjs', 'lint-staged/preset.mjs'],
+    ['core', 'tooling/server/listening.mjs', 'server/listening.mjs'],
   ];
   if (c.packs.includes('angular')) {
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
@@ -169,7 +206,9 @@ export function renderFiles(autopilotRoot, rawConfig) {
   add('CLAUDE.md', fill(read('plugins/core/templates/claude/CLAUDE.md'), {
     __PLANNING__: c.planning,
     __PACKS__: c.packs.join(', '),
-    __TEST_TIERS__: c.testTiers.length ? c.testTiers.join(', ') : 'none',
+    __TEST_TIERS__: tiersLine(c),
+    __TEST_PHASE__: c.testing.phase,
+    __PARALLEL__: String(c.limits.parallelTestAgents),
     __STRICT_SCOPE__: c.lint.strictScope.map((g) => `\`${g}\``).join(', '),
     __API__: apiLine(c),
     __DOCS__: projectDocs(c).map(([p]) => `[${path.posix.basename(p)}](${p})`).join(' · '),

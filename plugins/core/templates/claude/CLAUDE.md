@@ -16,10 +16,12 @@ This project runs on the **ng-autopilot AI workspace**. Development is AI-only: 
 | Active work (plan + worklog) | `.claude/plans/{slug}/` |
 | Workspace settings (packs, planning, lint scope, i18n) | [.claude/autopilot.json](.claude/autopilot.json) |
 | Backlog (deferred work, parked ideas) | [.claude/plans/backlog.md](.claude/plans/backlog.md) |
+| Hand-offs (deferred criteria and starting points for later work) | `.claude/plans/handoff/` |
+| Run output (gate output, screenshots, logs — git-ignored) | `.claude/tmp/` |
 
 ## How work happens
 
 - **Every change goes through `/deliver`**: plan → plan gate (owner) → implement → checkpoint → test phase → smoke/visual gates → review → triage → final gate → push + PR (owner approves the merge). `/review` reviews any branch or PR.
 - **Mode:** `fast` / `balanced` (default) / `strict`. **Planning format:** __PLANNING__.
-- **Packs:** __PACKS__. **Test tiers:** __TEST_TIERS__. **Lint strict scope:** __STRICT_SCOPE__ — every autopilot rule applies there with no exceptions. Code outside it is legacy: bug fixes only, in the file's existing style; new work goes inside the scope.
+- **Packs:** __PACKS__. **Test tiers:** __TEST_TIERS__. **Test phase:** `__TEST_PHASE__`, at most __PARALLEL__ test agents at once. **Lint strict scope:** __STRICT_SCOPE__ — every autopilot rule applies there with no exceptions. Code outside it is legacy: bug fixes only, in the file's existing style; new work goes inside the scope.
 - **API:** __API__

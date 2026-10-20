@@ -104,6 +104,8 @@ test('session context: no plan, then an active plan with its next step', () => {
   assert.match(none, /branch: feat\/x .* uncommitted files: 2/);
   assert.match(none, /packs: core, angular · planning: plan-file · test tiers: unit, e2e/);
   assert.match(describeContext({ ...base, config: {}, plans: [] }), /test tiers: none declared/);
+  const paused = describeContext({ ...base, config: { ...base.config, testing: { e2e: { enabled: false } } }, plans: [] });
+  assert.match(paused, /test tiers: unit \(paused: e2e — no new specs, defer criteria to a hand-off; existing specs still run\)/);
   assert.match(none, /active plan: none/);
   const one = describeContext({ ...base, plans: [plan({ openQuestions: 1, mode: 'balanced' })], lastEntry: () => 'Slice 1 — data-access' });
   assert.match(one, /orders-list \(approved, balanced\) · tasks 1\/3 · 1 open question\(s\) · next task: list page · last worklog: Slice 1/);

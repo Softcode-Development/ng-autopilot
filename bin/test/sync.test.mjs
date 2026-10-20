@@ -7,6 +7,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { mergeSettings, sync } from '../sync.mjs';
+import { activeTiers, normaliseConfig, pausedTiers } from '../lib/render.mjs';
 import { verifyStaged, verifyAll } from '../../plugins/core/tooling/lock/verify.mjs';
 
 let root;
@@ -218,6 +219,50 @@ test('settings merge: an autopilot entry that moved tiers leaves its old tier; p
   assert.deepEqual(merged.permissions.allow, ['Bash(make:*)', 'Bash(git push:*)']);
   assert.deepEqual(merged.permissions.ask, ['Bash(docker:*)', 'Bash(gh pr merge:*)']);
   assert.deepEqual(merged.permissions.deny, ['Bash(git push origin main:*)']);
+});
+
+test('testing switches: tiers on by default, a paused tier named in CLAUDE.md, its overrides still synced; bad values refused', () => {
+  const c = normaliseConfig({ testTiers: ['unit', 'e2e'] });
+  assert.deepEqual(c.testing, { phase: 'orchestrated', unit: { enabled: true }, integration: { enabled: true }, e2e: { enabled: true } });
+  assert.deepEqual(c.limits, { parallelTestAgents: 3 });
+  const paused = normaliseConfig({ testTiers: ['unit', 'e2e'], testing: { e2e: { enabled: false }, phase: 'single-review' }, limits: { parallelTestAgents: 2 } });
+  assert.deepEqual([activeTiers(paused), pausedTiers(paused)], [['unit'], ['e2e']]);
+  assert.throws(() => normaliseConfig({ testing: { smoke: { enabled: false } } }), /testing\.smoke: unknown test tier/);
+  assert.throws(() => normaliseConfig({ testing: { phase: 'parallel' } }), /testing\.phase: "parallel"/);
+  assert.throws(() => normaliseConfig({ testing: { e2e: { enabled: 'no' } } }), /testing\.e2e\.enabled must be true or false/);
+  assert.throws(() => normaliseConfig({ limits: { parallelTestAgents: 0 } }), /parallelTestAgents/);
+
+  config({ testTiers: ['unit', 'e2e'], testing: { e2e: { enabled: false }, phase: 'single-review' }, limits: { parallelTestAgents: 2 } });
+  sync(root);
+  assert.match(read('CLAUDE.md'), /\*\*Test tiers:\*\* unit \(paused: e2e — no new specs there, criteria go to a hand-off; existing specs still run\)\. \*\*Test phase:\*\* `single-review`, at most 2 test agents at once\./);
+  assert.ok(existsSync(p('.claude/e2e-testing/overrides.md')), 'a paused tier keeps its overrides: its existing specs still run');
+  config({ testTiers: ['unit', 'e2e'] });
+  sync(root);
+  assert.match(read('CLAUDE.md'), /\*\*Test tiers:\*\* unit, e2e\. \*\*Test phase:\*\* `orchestrated`, at most 3 test agents at once\./, 're-enabling needs no other change');
+  config();
+  sync(root);
+});
+
+test('run output goes to the git-ignored .claude/tmp/; the dev-server check is synced', () => {
+  sync(root);
+  assert.match(read('.claude/.gitignore'), /^\/tmp\/$/m);
+  assert.ok(existsSync(p('tools/autopilot/server/listening.mjs')));
+});
+
+test('settings merge: retired autopilot entries leave an older project (bare Edit/Write, ask on rm and git checkout)', () => {
+  const autopilot = { permissions: { allow: ['Edit(./**)', 'Write(./**)'], ask: ['Bash(git merge:*)'], deny: [] } };
+  const existing = { permissions: { allow: ['Read', 'Edit', 'Write', 'Bash(make:*)'], ask: ['Bash(rm:*)', 'Bash(git checkout:*)', 'Bash(docker:*)'], deny: [] } };
+  const merged = mergeSettings(existing, autopilot, []);
+  assert.deepEqual(merged.permissions.allow, ['Read', 'Bash(make:*)', 'Edit(./**)', 'Write(./**)']);
+  assert.deepEqual(merged.permissions.ask, ['Bash(docker:*)', 'Bash(git merge:*)']);
+});
+
+test('the settings template keeps writes inside the project and allows read-only shell', () => {
+  sync(root);
+  const { allow, ask } = JSON.parse(read('.claude/settings.json')).permissions;
+  for (const e of ['Edit(./**)', 'Write(./**)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(grep:*)', 'Bash(wc:*)', 'Bash(date:*)']) assert.ok(allow.includes(e), e);
+  for (const e of ['Edit', 'Write']) assert.ok(!allow.includes(e), `bare ${e} would allow writes anywhere`);
+  for (const e of ['Bash(rm:*)', 'Bash(git checkout:*)']) assert.ok(!ask.includes(e), e);
 });
 
 test('a modern shared folder in the strict scope gets its README once, with links that resolve', () => {

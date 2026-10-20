@@ -6,7 +6,8 @@
 // Errors (exit 1): invalid autopilot.json, generated files edited/deleted/added,
 // generated files out of date with the autopilot repo. Warnings: plugins not
 // enabled, tiers without overrides, unfilled placeholders, broken doc links,
-// missing devDependencies, legacy AI files, inactive git hooks.
+// missing devDependencies, legacy AI files, inactive git hooks. Notes (no effect
+// on the verdict): test tiers the owner paused.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -16,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint.mjs';
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
 import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
-import { apiMissing, normaliseConfig, pluginId, renderFiles, requiredDependencies, requiredDevDependencies } from './lib/render.mjs';
+import { apiMissing, normaliseConfig, pausedTiers, pluginId, renderFiles, requiredDependencies, requiredDevDependencies, TIERS } from './lib/render.mjs';
 import { brokenLinks } from './links.mjs';
 import { prefixSource } from '../plugins/spartan/tooling/prefix.mjs';
 import { presetHeaderVersion } from '../plugins/spartan/tooling/spartan-css.mjs';
@@ -109,14 +110,17 @@ function spartanChecks(projectRoot, config) {
 export function doctor(projectRoot) {
   const errors = [];
   const warnings = [];
+  const notes = [];
   const configFile = path.join(projectRoot, '.claude', 'autopilot.json');
-  if (!existsSync(configFile)) return { errors: ['.claude/autopilot.json missing — run /autopilot:install'], warnings };
+  if (!existsSync(configFile)) return { errors: ['.claude/autopilot.json missing — run /autopilot:install'], warnings, notes };
 
   let config;
+  let raw;
   try {
-    config = normaliseConfig(readJson(configFile));
+    raw = readJson(configFile);
+    config = normaliseConfig(raw);
   } catch (e) {
-    return { errors: [`.claude/autopilot.json: ${e.message}`], warnings };
+    return { errors: [`.claude/autopilot.json: ${e.message}`], warnings, notes };
   }
 
   // Generated files vs their fingerprints.
@@ -136,7 +140,13 @@ export function doctor(projectRoot) {
   const enabled = existsSync(settingsFile) ? readJson(settingsFile).enabledPlugins ?? {} : {};
   for (const p of config.packs) if (enabled[pluginId(p)] !== true) warnings.push(`plugin ${pluginId(p)} not enabled in .claude/settings.json`);
 
-  // Test tiers.
+  // Test tiers. A paused tier is a note, not a problem: the owner chose it.
+  for (const tier of pausedTiers(config)) {
+    notes.push(`test tier "${tier}" paused (testing.${tier}.enabled: false) — no new ${tier} specs; criteria that need it go to a hand-off in .claude/plans/handoff/; its existing specs still run in the checkpoint and final gate`);
+  }
+  for (const tier of TIERS.filter((t) => !config.testTiers.includes(t) && raw.testing?.[t])) {
+    warnings.push(`testing.${tier} is set but "${tier}" is not in testTiers — the setting does nothing`);
+  }
   for (const tier of config.testTiers) {
     for (const f of ['overrides.md', 'backlog.md']) {
       if (!existsSync(path.join(projectRoot, '.claude', `${tier}-testing`, f))) warnings.push(`test tier "${tier}": .claude/${tier}-testing/${f} missing`);
@@ -218,7 +228,7 @@ export function doctor(projectRoot) {
   const hooksPath = spawnSync('git', ['config', '--get', 'core.hooksPath'], { cwd: projectRoot, encoding: 'utf8' }).stdout.trim();
   if (!hooksPath.startsWith('.husky')) warnings.push('git hooks not active — run `npx husky` once (sets core.hooksPath to .husky/_)');
 
-  return { errors, warnings };
+  return { errors, warnings, notes };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -227,9 +237,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error('usage: node bin/doctor.mjs <project-dir>');
     process.exit(2);
   }
-  const { errors, warnings } = doctor(path.resolve(target));
+  const { errors, warnings, notes } = doctor(path.resolve(target));
   for (const e of errors) console.log(`ERROR    ${e}`);
   for (const w of warnings) console.log(`warning  ${w}`);
+  for (const n of notes) console.log(`note     ${n}`);
   if (!errors.length && !warnings.length) console.log('ok — the project matches the ng-autopilot workspace');
   process.exit(errors.length ? 1 : 0);
 }

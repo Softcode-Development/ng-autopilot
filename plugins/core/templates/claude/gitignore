@@ -9,6 +9,11 @@
 /reviews/*.md
 !/reviews/.gitkeep
 
+# Run output agents write during a delivery: gate output, screenshots, logs,
+# coverage dumps. Kept inside the repo so nothing lands elsewhere on disk;
+# /autopilot:cleanup empties it.
+/tmp/
+
 # Personal settings and local-only notes (credentials for the visual gate, etc.).
 /settings.local.json
 *.local.md

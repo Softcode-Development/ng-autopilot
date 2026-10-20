@@ -9,6 +9,7 @@ What sync writes into a project. Autopilot-owned files go under `tools/autopilot
 | `angular/tooling/i18n/*` | `tools/autopilot/i18n/` | autopilot |
 | `core/tooling/commitlint/autopilot-base.cjs` | `tools/autopilot/commitlint/autopilot-base.cjs` | autopilot |
 | `core/tooling/lint-staged/preset.mjs` | `tools/autopilot/lint-staged/preset.mjs` (linters + Prettier on staged files inside `lint.strictScope` and the testing toolkit only; locale validation on the `i18n.sets` files) | autopilot |
+| `core/tooling/server/listening.mjs` | `tools/autopilot/server/listening.mjs` — `node tools/autopilot/server/listening.mjs <port \| url>`: does a dev server already answer? Agents reuse a listening server instead of asking the owner or starting a second one | autopilot |
 | `openspec/tooling/tasks-gate.mjs` (openspec pack) | `tools/autopilot/openspec/tasks-gate.mjs` | autopilot |
 | `nestjs/tooling/openapi.mjs` (nestjs pack) | `tools/autopilot/nestjs/openapi.mjs` | autopilot |
 | `core/tooling/husky/*` | `.husky/pre-commit`, `commit-msg`, `pre-push` | autopilot (regenerated); project steps in `.husky/pre-commit.local` |

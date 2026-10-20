@@ -88,6 +88,19 @@ test('a hand-edited generated file is an error', () => {
   assert.deepEqual(doctor(root).errors, []);
 });
 
+test('a paused test tier is a note, not a warning; a switch for a tier the project lacks is a warning', () => {
+  write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing'], testTiers: ['unit', 'e2e'], testing: { e2e: { enabled: false }, integration: { enabled: false } } }));
+  sync(root);
+  const { notes, warnings } = doctor(root);
+  assert.deepEqual(notes.length, 1);
+  assert.match(notes[0], /test tier "e2e" paused \(testing\.e2e\.enabled: false\).*existing specs still run/);
+  assert.match(warnings.join('\n'), /testing\.integration is set but "integration" is not in testTiers/);
+  assert.doesNotMatch(warnings.join('\n'), /e2e-testing\/overrides\.md missing/, 'a paused tier keeps its overrides — its specs still run');
+  write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing'], testTiers: ['unit'] }));
+  sync(root);
+  assert.deepEqual(doctor(root).notes, []);
+});
+
 test('a config change not yet synced is an error', () => {
   write('.claude/autopilot.json', JSON.stringify({ packs: ['angular', 'testing', 'primeng'], testTiers: ['unit'] }));
   assert.ok(doctor(root).errors.some((e) => /run sync/.test(e)));

@@ -16,7 +16,11 @@ export function describeContext({ branch, lastCommit, dirty, config, plans, last
   const lines = [];
   lines.push(`[context] branch: ${branch || '(unknown)'} · last commit: ${lastCommit || '(none)'} · uncommitted files: ${dirty}`);
   const packs = Array.isArray(config.packs) ? config.packs.join(', ') : '(no .claude/autopilot.json)';
-  const tiers = Array.isArray(config.testTiers) && config.testTiers.length ? config.testTiers.join(', ') : 'none declared';
+  const declared = Array.isArray(config.testTiers) ? config.testTiers : [];
+  const paused = declared.filter((t) => config.testing?.[t]?.enabled === false);
+  const active = declared.filter((t) => !paused.includes(t));
+  const tiers = !declared.length ? 'none declared'
+    : `${active.join(', ') || 'none active'}${paused.length ? ` (paused: ${paused.join(', ')} — no new specs, defer criteria to a hand-off; existing specs still run)` : ''}`;
   lines.push(`[context] packs: ${packs} · planning: ${config.planning || 'plan-file'} · test tiers: ${tiers} · default mode: balanced`);
   if (plans.length === 0) {
     lines.push('[context] active plan: none — deliver changes with /deliver');
