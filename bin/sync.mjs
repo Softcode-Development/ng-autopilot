@@ -21,7 +21,6 @@ import { normaliseConfig, PACKS, pluginId, renderFiles, requiredDependencies, re
 export const AUTOPILOT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const readJson = (file, fallback) => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : fallback);
-const union = (a = [], b = []) => [...a, ...b.filter((x) => !a.includes(x))];
 
 // Entries earlier autopilot versions wrote and no longer do. They go on merge, or a
 // project synced before the change keeps them: bare Edit/Write allowed writes
@@ -33,21 +32,42 @@ export const RETIRED_PERMISSIONS = {
   ask: ['Bash(rm:*)', 'Bash(git checkout:*)'],
 };
 
+// Tiers an autopilot entry used to live in before autopilot moved it. A copy found
+// there is autopilot's own stale copy, not the owner's choice.
+export const MOVED_PERMISSIONS = {
+  'Bash(git push:*)': ['ask'],
+  'Bash(gh pr create:*)': ['ask'],
+};
+
+const TIERS = ['allow', 'ask', 'deny'];
+
 export function mergeSettings(existing, autopilot, packs) {
   const merged = structuredClone(existing ?? {});
   merged.$schema ??= autopilot.$schema;
   merged.permissions ??= {};
-  const tiers = ['allow', 'ask', 'deny'];
-  for (const list of tiers) {
-    const retired = RETIRED_PERMISSIONS[list] ?? [];
-    merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]).filter((e) => !retired.includes(e));
+  const project = Object.fromEntries(TIERS.map((t) => [t, (merged.permissions[t] ?? []).filter((e) => !(RETIRED_PERMISSIONS[t] ?? []).includes(e))]));
+  const result = structuredClone(project);
+  const remove = (tier, e) => (result[tier] = result[tier].filter((x) => x !== e));
+  const add = (tier, e) => result[tier].includes(e) || result[tier].push(e);
+
+  for (const tier of TIERS) {
+    for (const e of autopilot.permissions[tier] ?? []) {
+      const others = TIERS.filter((t) => t !== tier);
+      // A deny entry is a safety floor: it always applies, whatever the project says.
+      if (tier === 'deny') {
+        for (const t of others) remove(t, e);
+        add('deny', e);
+        continue;
+      }
+      for (const t of others.filter((o) => (MOVED_PERMISSIONS[e] ?? []).includes(o))) remove(t, e);
+      // The owner put this entry in another tier (npm install in allow, say): that
+      // choice stands, and the autopilot copy goes, or ask would still win over allow.
+      const ownerTiers = others.filter((t) => result[t].includes(e));
+      if (ownerTiers.length) remove(tier, e);
+      else add(tier, e);
+    }
   }
-  // An autopilot entry lives only in the tier autopilot puts it in: when it moves
-  // (git push: ask → allow), the old tier's copy goes, or ask/deny would still win.
-  for (const list of tiers) {
-    const elsewhere = new Set(tiers.filter((t) => t !== list).flatMap((t) => autopilot.permissions[t] ?? []));
-    merged.permissions[list] = merged.permissions[list].filter((e) => (autopilot.permissions[list] ?? []).includes(e) || !elsewhere.has(e));
-  }
+  for (const t of TIERS) merged.permissions[t] = result[t];
   merged.enabledPlugins ??= {};
   for (const p of PACKS) merged.enabledPlugins[pluginId(p)] = packs.includes(p);
   return merged;

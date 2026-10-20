@@ -4,7 +4,7 @@ Sync writes these into a project:
 
 | Template | Written to | Notes |
 |---|---|---|
-| `settings.json` | `.claude/settings.json` | Merged, not overwritten: project-specific allow/ask/deny entries are kept; autopilot entries are added, and an autopilot entry that moved tier is removed from its old one. Lists both npm and pnpm forms; sync drops the unused package manager. |
+| `settings.json` | `.claude/settings.json` | Merged, not overwritten: project-specific allow/ask/deny entries are kept and autopilot entries are added. An autopilot entry the owner put in another tier stays there (e.g. `npm install` moved to allow) and its autopilot copy is dropped; the exceptions are deny entries, which always apply, and an entry autopilot itself moved (`MOVED_PERMISSIONS` in `bin/sync.mjs`), whose old-tier copy is removed. Lists both npm and pnpm forms; sync drops the unused package manager. |
 | `gitignore` | `.claude/.gitignore` | Ignores flags, review reports, local notes and `.claude/tmp/` — the run output agents write (gate output, screenshots, logs), so nothing lands elsewhere on disk. |
 
 ## Why the permission lists look like this

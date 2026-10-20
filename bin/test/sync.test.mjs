@@ -249,6 +249,24 @@ test('run output goes to the git-ignored .claude/tmp/; the dev-server check is s
   assert.ok(existsSync(p('tools/autopilot/server/listening.mjs')));
 });
 
+test('settings merge: the owner\'s tier for an autopilot entry stands; deny entries always apply', () => {
+  const autopilot = { permissions: {
+    allow: ['Bash(git commit:*)', 'Bash(node:*)'],
+    ask: ['Bash(npm install:*)', 'Bash(npm ci:*)', 'Bash(curl:*)', 'Bash(wget:*)', 'Bash(git merge:*)'],
+    deny: ['Bash(git reset --hard:*)'],
+  } };
+  const existing = { permissions: {
+    allow: ['Bash(npm install:*)', 'Bash(npm ci:*)', 'Bash(curl:*)', 'Bash(wget:*)', 'Bash(git reset --hard:*)'],
+    ask: ['Bash(npm install:*)'],
+    deny: ['Bash(node:*)'],
+  } };
+  const merged = mergeSettings(existing, autopilot, []);
+  assert.deepEqual(merged.permissions.allow, ['Bash(npm install:*)', 'Bash(npm ci:*)', 'Bash(curl:*)', 'Bash(wget:*)', 'Bash(git commit:*)'], 'installs and curl stay allowed; node stays denied');
+  assert.deepEqual(merged.permissions.ask, ['Bash(git merge:*)'], 'no ask copy left to override the owner\'s allow');
+  assert.deepEqual(merged.permissions.deny, ['Bash(node:*)', 'Bash(git reset --hard:*)']);
+  assert.deepEqual(mergeSettings(merged, autopilot, []).permissions, merged.permissions, 'a second merge changes nothing');
+});
+
 test('settings merge: retired autopilot entries leave an older project (bare Edit/Write, ask on rm and git checkout)', () => {
   const autopilot = { permissions: { allow: ['Edit(./**)', 'Write(./**)'], ask: ['Bash(git merge:*)'], deny: [] } };
   const existing = { permissions: { allow: ['Read', 'Edit', 'Write', 'Bash(make:*)'], ask: ['Bash(rm:*)', 'Bash(git checkout:*)', 'Bash(docker:*)'], deny: [] } };
