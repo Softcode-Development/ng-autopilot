@@ -45,6 +45,23 @@ const BLOCK = {
   'redirect into specs': 'cat tmp.md > openspec/specs/transactions/spec.md',
   'tee into specs': 'echo data | tee openspec/specs/transactions/spec.md',
   'redirect into autopilot rules': 'echo x > .claude/rules/autopilot/state.md',
+  'rm climbing out of the repo': 'rm .claude/.flags/../../package.json',
+  'rm -rf with ..': 'rm -rf ../other-repo',
+  'sed -i': "sed -i 's/a/b/' src/app/a.ts",
+  'sed -i.bak': "sed -i.bak 's/a/b/' src/app/a.ts",
+  'sed --in-place': "sed --in-place 's/a/b/' src/app/a.ts",
+  'perl -pi': "perl -pi -e 's/a/b/' src/app/a.ts",
+  'cmd //c start (Git Bash)': 'cmd //c start "dev" npm run start',
+  'cmd /c start': 'cmd.exe /c start npm run start',
+  'powershell launcher': 'powershell -Command "npm run start"',
+  'pwsh after cd': 'cd app && pwsh -c "npm run start"',
+  'Start-Process': 'Start-Process npm -ArgumentList start',
+  'taskkill by image name': 'taskkill /F /IM node.exe',
+  'taskkill //IM (Git Bash)': 'taskkill //F //IM chrome.exe',
+  'pkill': 'pkill -f karma',
+  'killall': 'killall node',
+  'Stop-Process by name': 'Stop-Process -Name node',
+  'Get-Process | Stop-Process': 'Get-Process chrome | Stop-Process',
 };
 
 const ALLOW = {
@@ -68,6 +85,14 @@ const ALLOW = {
   'npm run test:ci': 'npm run test:ci',
   'git status': 'git status',
   'empty command': '',
+  'remove a flag file': 'rm .claude/.flags/autopilot-sync',
+  'sed without -i': "sed -n '1,20p' src/app/a.ts",
+  'grep -i': 'grep -i start src/app/a.ts',
+  'npm run start': 'npm run start',
+  'npm run start:detached': 'npm run start:detached',
+  'start in a message': 'git commit -m "start the dev server with npm run start"',
+  'dot-dot in a non-rm command': 'ls ../',
+  'taskkill by pid': 'taskkill /PID 4242',
 };
 
 for (const [name, cmd] of Object.entries(BLOCK)) {

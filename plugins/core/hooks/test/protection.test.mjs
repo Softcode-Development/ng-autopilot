@@ -71,7 +71,7 @@ test('shell: sed -i, cp, mv, rm, git checkout, node -e into generated files are 
 
 test('shell: ordinary work is allowed', () => {
   for (const cmd of [
-    "sed -i 's/x/y/' src/app/a.ts",
+    "sed -n '1,20p' src/app/a.ts",
     'cp .claude/rules/autopilot/core/work-modes.md /tmp/copy.md',
     'cat CLAUDE.md',
     'rm -rf dist/web-app',

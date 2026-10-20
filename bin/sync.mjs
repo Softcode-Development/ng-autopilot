@@ -23,12 +23,25 @@ export const AUTOPILOT_ROOT = path.resolve(path.dirname(fileURLToPath(import.met
 const readJson = (file, fallback) => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : fallback);
 const union = (a = [], b = []) => [...a, ...b.filter((x) => !a.includes(x))];
 
+// Entries earlier autopilot versions wrote and no longer do. They go on merge, or a
+// project synced before the change keeps them: bare Edit/Write allowed writes
+// anywhere on disk (now Edit(./**) / Write(./**)); ask rules prompt even in auto
+// mode, and rm / git checkout prompted on harmless repo-relative operations
+// (guard-bash still refuses their destructive forms).
+export const RETIRED_PERMISSIONS = {
+  allow: ['Edit', 'Write'],
+  ask: ['Bash(rm:*)', 'Bash(git checkout:*)'],
+};
+
 export function mergeSettings(existing, autopilot, packs) {
   const merged = structuredClone(existing ?? {});
   merged.$schema ??= autopilot.$schema;
   merged.permissions ??= {};
   const tiers = ['allow', 'ask', 'deny'];
-  for (const list of tiers) merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]);
+  for (const list of tiers) {
+    const retired = RETIRED_PERMISSIONS[list] ?? [];
+    merged.permissions[list] = union(merged.permissions[list], autopilot.permissions[list]).filter((e) => !retired.includes(e));
+  }
   // An autopilot entry lives only in the tier autopilot puts it in: when it moves
   // (git push: ask → allow), the old tier's copy goes, or ask/deny would still win.
   for (const list of tiers) {

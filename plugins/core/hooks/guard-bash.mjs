@@ -9,7 +9,7 @@ import {
   readEnvelope, projectRoot, installedConfigOrExit, protectedPaths, flagIsSet, globToRegExp, finish,
   canonicalisePath, fenceBlocks, autopilotFence, FENCE_REASON,
 } from './lib/hook-io.mjs';
-import { writeTargets } from './lib/shell-writes.mjs';
+import { segments, writeTargets } from './lib/shell-writes.mjs';
 
 const NAME = 'guard-bash';
 
@@ -60,7 +60,36 @@ const RULES = [
     test: (c) => readsSecretFile(c),
     reason: 'shell reads of .env / secrets / key files refused (example/sample/template env files are allowed).',
   },
+  {
+    test: (c) => /\brm\s[^;&|]*?(?:^|[\s/\\'"])\.\.(?=[/\\\s'"]|$)/.test(c),
+    reason: 'rm with a path that climbs out with .. refused. Name the repo-relative path directly.',
+  },
+  {
+    test: (c) => commands(c).some(([cmd, ...args]) => (cmd === 'sed' || cmd === 'perl') && args.some((a) => /^-[a-zA-Z]*i/.test(a) || a.startsWith('--in-place'))),
+    reason: 'in-place edit scripts (sed -i, perl -i) refused. Edit files with the Edit or Write tool.',
+  },
+  {
+    test: (c) => commands(c).some(([cmd, ...args]) => /^(?:powershell|pwsh|start|start-process)(?:\.exe)?$/i.test(cmd)
+      || (/^cmd(?:\.exe)?$/i.test(cmd) && args.some((a) => /^start$/i.test(a)))),
+    reason: 'shell launchers and detached windows (powershell, cmd /c start, Start-Process) refused. Start a dev server with `npm run start…` as a background task; one that must outlive the session needs a launcher script in the project (see .claude/gates.md).',
+  },
+  {
+    test: (c) => commands(c).some(([cmd, ...args]) => /^(?:pkill|killall)$/i.test(cmd)
+      || (/^taskkill(?:\.exe)?$/i.test(cmd) && args.some((a) => /^\/{1,2}im$/i.test(a)))
+      || (/^stop-process$/i.test(cmd) && args.some((a) => /^-name$/i.test(a))))
+      || /\bget-process\b[^;&]*\|\s*stop-process\b/i.test(c),
+    reason: 'killing processes by name refused — it also kills the owner\'s servers and other sessions\' processes. Stop only what you started, through the background task that runs it, and report it.',
+  },
 ];
+
+// The words of each command in the line (env assignments and a leading `(` skipped).
+function commands(command) {
+  return segments(command).map((segment) => {
+    const words = (segment.replace(/^\(\s*/, '').match(/'[^']*'|"(?:\\.|[^"\\])*"|[^\s'"]+/g) ?? []).map((w) => w.replace(/^['"]|['"]$/g, ''));
+    while (/^[A-Za-z_]\w*=/.test(words[0] ?? '')) words.shift();
+    return words;
+  }).filter((w) => w.length);
+}
 
 export const DEFAULT_TRUNKS = ['main', 'master', 'production'];
 
