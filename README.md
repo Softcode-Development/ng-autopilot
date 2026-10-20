@@ -45,10 +45,17 @@ Outside the scope, autopilot lint rules are off and legacy code keeps its curren
 | `/autopilot:doctor` | Drift check: edited generated files, autopilot repo ahead, placeholders, broken doc links, missing devDependencies, legacy files |
 | `/deliver` | Every change |
 | `/review` | Full review of a branch or PR |
+| `/autopilot:cleanup` | List what agent sessions left on disk for the project (session scratch, tool-result dumps, `.claude/tmp/`, anything written outside the repo) with sizes; delete after one confirmation. `/deliver` does this at Close |
+
+### Test tiers, parallelism and the machine
+
+`.claude/autopilot.json` → `testing.<tier>.enabled` (one switch each for `unit`, `integration`, `e2e`) pauses a tier: no new tests there — criteria that need it go to a hand-off in `.claude/plans/handoff/` — while the implementer keeps that tier's existing specs in step with the code it edits and every gate still runs them. `testing.phase` picks the test-phase shape (`orchestrated` or `single-review`); `limits.parallelTestAgents` (default 3) caps parallel test agents, and only one heavy runner (browser or app boot) runs at a time. Change them with `/autopilot:install` (reconfigure).
+
+Agents write only inside the project (run output in the git-ignored `.claude/tmp/`), start servers only as background tasks, stop only what they started, and `/deliver` ends with a process report and a cleanup. After a long delivery, continue in a fresh session: it releases the MCP servers and processes the old one holds.
 
 Generated files (`CLAUDE.md`, `.claude/rules/autopilot/`, `tools/autopilot/`, `.husky/*`, `.claude/autopilot*.json`) change only through sync: hooks refuse edits, and the pre-commit fingerprint check refuses commits of edited copies. Project-owned files — `.claude/rules/project.md`, the `docs/` doc set, `.claude/gates.md`, test overrides and backlogs, plans, and the project's own `eslint.config.mjs` / `stylelint.config.mjs` / `commitlint.config.cjs` — are yours.
 
-The scripts behind the skills can also run directly from the autopilot repo: `node bin/sync.mjs <project> [--dry-run]`, `node bin/doctor.mjs <project>`.
+The scripts behind the skills can also run directly from the autopilot repo: `node bin/sync.mjs <project> [--dry-run]`, `node bin/doctor.mjs <project>`, `node bin/cleanup.mjs <project> [--path <p>]... [--delete]`.
 
 ## Layout
 
@@ -64,6 +71,7 @@ plugins/
   openspec/   `autopilot-openspec` — OpenSpec planning format (plan/archive skills, doc-writer)
 bin/setup.mjs                     machine setup
 bin/sync.mjs, bin/doctor.mjs      project sync and drift check (behind /autopilot:sync and /autopilot:doctor)
+bin/cleanup.mjs                   leftover session files for a project (behind /autopilot:cleanup)
 dependencies.json                 external plugins the workflow depends on
 ```
 
