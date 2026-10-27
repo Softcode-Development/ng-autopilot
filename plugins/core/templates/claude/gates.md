@@ -32,10 +32,10 @@ Paths matching no row: record `smoke: n/a ({paths})`.
 ## Visual gate
 
 - **Dev server:** `<command>` on `<port>` (per market/tenant: …).
-- **Accounts:** `<path to a *.local.md file — never the values>`.
-- **Widths:** 1280 and 375 (375 through a same-origin iframe overlay — no window resizing). **Themes:** <light, dark | light only>.
+- **Browser:** the Playwright MCP server `playwright` (headless Chrome, `tools/autopilot/browser/mcp.mjs`). **Sign-in:** the owner runs `node tools/autopilot/browser/sign-in.mjs <login URL per origin>` once; agents never type credentials. Accounts to sign in with: `<path to a *.local.md file — never the values>`.
+- **Widths:** 1280 and 375 (`browser_resize`). **Themes:** <light, dark | light only> (`browser_emulate_media`, or the app's theme switch).
 - **Start points:** <routes worth checking for most changes>.
-- **Loading states:** how to hold one for the loading-vs-loaded comparison: <e.g. DevTools network throttling | block `/api/*` | a dev-only delay flag>.
+- **Loading states:** the API pattern to hold pending for the loading-vs-loaded comparison: <e.g. `**/api/**`> (`page.route` through `browser_run_code_unsafe`, never fulfilled).
 
 ## Security triggers
 

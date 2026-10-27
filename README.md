@@ -42,7 +42,7 @@ Outside the scope, autopilot lint rules are off and legacy code keeps its curren
 | Command | Use |
 |---|---|
 | `/autopilot:sync` | Bring the project up to date after the autopilot repo changes (dry run first) |
-| `/autopilot:doctor` | Drift check: edited generated files, autopilot repo ahead, placeholders, broken doc links, missing devDependencies, legacy files |
+| `/autopilot:doctor` | Drift check: edited generated files, autopilot repo ahead, placeholders, broken doc links, machine-specific paths, missing devDependencies or `prepare: husky`, legacy files |
 | `/deliver` | Every change |
 | `/review` | Full review of a branch or PR |
 | `/autopilot:cleanup` | List what agent sessions left on disk for the project (session scratch, tool-result dumps, `.claude/tmp/`, anything written outside the repo) with sizes; delete after one confirmation. `/deliver` does this at Close |
@@ -54,6 +54,16 @@ Outside the scope, autopilot lint rules are off and legacy code keeps its curren
 Agents write only inside the project (run output in the git-ignored `.claude/tmp/`), start servers only as background tasks, stop only what they started, and `/deliver` ends with a process report and a cleanup. After a long delivery, continue in a fresh session: it releases the MCP servers and processes the old one holds.
 
 Generated files (`CLAUDE.md`, `.claude/rules/autopilot/`, `tools/autopilot/`, `.husky/*`, `.claude/autopilot*.json`) change only through sync: hooks refuse edits, and the pre-commit fingerprint check refuses commits of edited copies. Project-owned files — `.claude/rules/project.md`, the `docs/` doc set, `.claude/gates.md`, test overrides and backlogs, plans, and the project's own `eslint.config.mjs` / `stylelint.config.mjs` / `commitlint.config.cjs` — are yours.
+
+### The agents' browser
+
+The visual gate runs in a Playwright browser, not the owner's Chrome: sync registers the MCP server `playwright` in the project's `.mcp.json` (`tools/autopilot/browser/mcp.mjs` → `@playwright/mcp`, headless, on the installed Chrome or Edge). Agents resize to phone width, switch the colour scheme, hold a request pending for a loading state and read the console themselves. Set `AUTOPILOT_BROWSER_HEADED=1` to watch.
+
+Agents never type credentials. The owner signs in once: `node tools/autopilot/browser/sign-in.mjs <login URL>...` opens a window, and the session is saved to `.claude/browser/storage-state.json` (git-ignored) for every agent browser after it.
+
+### Cloud sessions (optional)
+
+Off by default. `"cloud": true` in `.claude/autopilot.json` makes sync install what a Claude Code cloud session needs — see [docs/CLOUD.md](docs/CLOUD.md).
 
 The scripts behind the skills can also run directly from the autopilot repo: `node bin/sync.mjs <project> [--dry-run]`, `node bin/doctor.mjs <project>`, `node bin/cleanup.mjs <project> [--path <p>]... [--delete]`.
 

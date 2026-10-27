@@ -2,7 +2,7 @@
 // writes. Pure: reads autopilot sources, returns { path, content, kind } items.
 //   kind 'generated' — autopilot-owned, rewritten every sync, fingerprinted, protected
 //   kind 'once'      — project-owned, created when missing, never overwritten
-//   kind 'merge'     — merged into an existing file (settings.json)
+//   kind 'merge'     — merged into an existing file (settings.json, .mcp.json)
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -13,6 +13,9 @@ export const MARKETPLACE = 'ng-autopilot';
 export const pluginId = (pack) => `${pack === 'core' ? 'autopilot' : `autopilot-${pack}`}@${MARKETPLACE}`;
 export const PACKS = ['core', 'angular', 'testing', 'nestjs', 'spartan', 'primeng', 'openspec'];
 export const TIERS = ['unit', 'integration', 'e2e'];
+// The agents' browser (tools/autopilot/browser/, cloud/setup.sh): exact versions, so every
+// project and the cloud setup's npx cache run the same build.
+export const BROWSER_VERSIONS = { __PLAYWRIGHT_MCP__: '0.0.83', __PLAYWRIGHT__: '1.64.0' };
 
 const posix = (p) => p.replace(/\\/g, '/');
 
@@ -30,6 +33,12 @@ function walk(dir, base = dir) {
   }
   return out.sort();
 }
+
+// The SessionStart hook that prepares a cloud session (cloud: true in autopilot.json).
+export const CLOUD_HOOK = {
+  matcher: 'startup|resume',
+  hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/tools/autopilot/cloud/session-start.mjs"', timeout: 600 }],
+};
 
 export const TEST_PHASES = ['orchestrated', 'single-review'];
 
@@ -76,6 +85,8 @@ export function normaliseConfig(raw) {
   }
   c.stylelint = { scss: false, tailwind: c.design.starter, ...(c.stylelint ?? {}) };
   c.api ??= {};
+  c.cloud ??= false;
+  if (typeof c.cloud !== 'boolean') throw new Error('cloud must be true or false');
   return c;
 }
 
@@ -190,7 +201,10 @@ export function renderFiles(autopilotRoot, rawConfig) {
     ['core', 'tooling/lock/fingerprint.mjs', 'lock/fingerprint.mjs'],
     ['core', 'tooling/lint-staged/preset.mjs', 'lint-staged/preset.mjs'],
     ['core', 'tooling/server/listening.mjs', 'server/listening.mjs'],
+    ['core', 'tooling/browser/mcp.mjs', 'browser/mcp.mjs'],
+    ['core', 'tooling/browser/sign-in.mjs', 'browser/sign-in.mjs'],
   ];
+  if (c.cloud) tooling.push(['core', 'tooling/cloud/setup.sh', 'cloud/setup.sh'], ['core', 'tooling/cloud/session-start.mjs', 'cloud/session-start.mjs']);
   if (c.packs.includes('angular')) {
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/eslint'))) tooling.push(['angular', `tooling/eslint/${f}`, `eslint/${f}`]);
     for (const f of walk(path.join(autopilotRoot, 'plugins/angular/tooling/stylelint'))) tooling.push(['angular', `tooling/stylelint/${f}`, `stylelint/${f}`]);
@@ -200,7 +214,7 @@ export function renderFiles(autopilotRoot, rawConfig) {
   if (c.packs.includes('spartan')) for (const f of walk(path.join(autopilotRoot, 'plugins/spartan/tooling'))) tooling.push(['spartan', `tooling/${f}`, `spartan/${f}`]);
   if (c.packs.includes('openspec')) tooling.push(['openspec', 'tooling/tasks-gate.mjs', 'openspec/tasks-gate.mjs']);
   if (c.packs.includes('nestjs') && c.nestjs?.openapi) tooling.push(['nestjs', 'tooling/openapi.mjs', 'nestjs/openapi.mjs']);
-  for (const [pack, src, dest] of tooling) add(`tools/autopilot/${dest}`, read(`plugins/${pack}/${src}`), 'generated');
+  for (const [pack, src, dest] of tooling) add(`tools/autopilot/${dest}`, fill(read(`plugins/${pack}/${src}`), BROWSER_VERSIONS), 'generated');
 
   // Generated index and git hooks.
   add('CLAUDE.md', fill(read('plugins/core/templates/claude/CLAUDE.md'), {
@@ -313,12 +327,16 @@ export function renderFiles(autopilotRoot, rawConfig) {
     ].join('\n'), 'once');
   }
 
-  // Settings: autopilot permissions + the packs enabled for this project.
+  // Settings: autopilot permissions, the packs enabled for this project, the agents' browser
+  // approved, and with cloud: true the hook that prepares a cloud session.
   const settings = JSON.parse(read('plugins/core/templates/claude/settings.json'));
   settings.enabledPlugins = Object.fromEntries(c.packs.map((p) => [pluginId(p), true]));
   const pmPrefix = c.packageManager === 'pnpm' ? 'Bash(npm' : 'Bash(pnpm';
   for (const list of ['allow', 'ask']) settings.permissions[list] = settings.permissions[list].filter((e) => !e.startsWith(pmPrefix));
+  settings.hooks = c.cloud ? { SessionStart: [CLOUD_HOOK] } : {};
+  settings.enabledMcpjsonServers = ['playwright'];
   add('.claude/settings.json', settings, 'merge');
+  add('.mcp.json', { mcpServers: { playwright: { command: 'node', args: ['tools/autopilot/browser/mcp.mjs'] } } }, 'merge');
 
   return { config: c, files };
 }

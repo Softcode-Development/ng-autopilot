@@ -46,6 +46,7 @@ test('after sync: no errors; warnings name what the owner still has to do', () =
   assert.match(text, /legacy AI file\/folder still present: \.claude\/agents/);
   assert.match(text, /unexpected rule file \.claude\/rules\/old-rules\.md/);
   assert.match(text, /git hooks not active/);
+  assert.match(text, /package\.json has no "prepare": "husky" script/);
   assert.match(text, /api\.baseUrl \/ api\.docsUrl not set/);
   assert.match(text, /docs\/TECH_STACK\.md: \d+ unfilled/);
   assert.doesNotMatch(text, /not enabled/);
@@ -73,6 +74,29 @@ test('a freshly synced project has no broken links; a broken one in a project do
   const text = doctor(root).warnings.join('\n');
   assert.match(text, /broken link in docs\/upgrade\/notes\.md: \.\.\/\.\.\/\.claude\/reviews\/upgrade\.md/);
   assert.doesNotMatch(text, /FEATURES\.md$/m);
+  rmSync(path.join(root, 'docs/upgrade'), { recursive: true });
+});
+
+test('a prepare script that runs husky, alone or after another command, satisfies the check', () => {
+  for (const prepare of ['husky', 'node tools/x.mjs && husky']) {
+    write('package.json', JSON.stringify({ name: 'app', scripts: { prepare } }));
+    assert.doesNotMatch(doctor(root).warnings.join('\n'), /"prepare": "husky"/, prepare);
+  }
+  write('package.json', JSON.stringify({ name: 'app' }));
+});
+
+test('machine-specific paths in project docs are warnings; URLs and repo-relative paths are not', () => {
+  write('docs/upgrade/notes.md', [
+    'Storefront config: `C:\\apps\\shop\\src\\config\\` (the sibling `../shop` repo).',
+    'Old copy in /Users/ana/Desktop/shop is stale; also D:/work/shop.',
+    'See https://github.com/org/shop and file:///C:/ignored, and `/home` alone.',
+  ].join('\n'));
+  const hits = doctor(root).warnings.filter((w) => /machine-specific path/.test(w));
+  assert.deepEqual(hits.map((w) => w.match(/in (\S+) \((.+?)\) —/).slice(1)), [
+    ['docs/upgrade/notes.md:1', 'C:\\apps\\shop\\src\\config\\'],
+    ['docs/upgrade/notes.md:2', '/Users/ana/Desktop/shop'],
+    ['docs/upgrade/notes.md:2', 'D:/work/shop'],
+  ]);
   rmSync(path.join(root, 'docs/upgrade'), { recursive: true });
 });
 

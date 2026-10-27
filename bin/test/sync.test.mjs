@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { mergeSettings, sync } from '../sync.mjs';
+import { mergeMcp, mergeSettings, sync } from '../sync.mjs';
 import { activeTiers, normaliseConfig, pausedTiers } from '../lib/render.mjs';
 import { verifyStaged, verifyAll } from '../../plugins/core/tooling/lock/verify.mjs';
 
@@ -273,6 +273,62 @@ test('settings merge: retired autopilot entries leave an older project (bare Edi
   const merged = mergeSettings(existing, autopilot, []);
   assert.deepEqual(merged.permissions.allow, ['Read', 'Bash(make:*)', 'Edit(./**)', 'Write(./**)']);
   assert.deepEqual(merged.permissions.ask, ['Bash(docker:*)', 'Bash(git merge:*)']);
+});
+
+test('settings merge: the cloud SessionStart hook is added once, next to the project\'s own hooks', () => {
+  const hook = { matcher: 'startup|resume', hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/tools/autopilot/cloud/session-start.mjs"', timeout: 600 }] };
+  const own = { hooks: [{ type: 'command', command: 'echo hello' }] };
+  const autopilot = { permissions: {}, hooks: { SessionStart: [hook] } };
+  const merged = mergeSettings({ permissions: {}, hooks: { SessionStart: [own], Stop: [own] } }, autopilot, []);
+  assert.deepEqual(merged.hooks, { SessionStart: [own, hook], Stop: [own] });
+  assert.deepEqual(mergeSettings(merged, autopilot, []).hooks, merged.hooks, 'a second merge changes nothing');
+  const tuned = structuredClone(merged);
+  tuned.hooks.SessionStart[1].hooks[0].timeout = 900;
+  assert.deepEqual(mergeSettings(tuned, autopilot, []).hooks, tuned.hooks, 'the owner\'s change to the entry stands');
+  assert.deepEqual(mergeSettings(merged, { permissions: {} }, []).hooks, { SessionStart: [own], Stop: [own] }, 'an autopilot hook no longer asked for goes; the project\'s stay');
+});
+
+test('cloud: off by default; cloud: true syncs the setup and session-start scripts and the hook, false removes them again', () => {
+  const commands = () => Object.values(JSON.parse(read('.claude/settings.json')).hooks ?? {}).flat().flatMap((e) => e.hooks.map((h) => h.command));
+  sync(root);
+  assert.equal(existsSync(p('tools/autopilot/cloud/setup.sh')), false);
+  assert.ok(!commands().some((c) => c.includes('cloud/session-start.mjs')));
+
+  config({ cloud: true });
+  sync(root);
+  assert.ok(lockHas('tools/autopilot/cloud/setup.sh') && lockHas('tools/autopilot/cloud/session-start.mjs'));
+  assert.doesNotMatch(read('tools/autopilot/cloud/setup.sh'), /__PLAYWRIGHT/);
+  assert.ok(commands().includes('node "$CLAUDE_PROJECT_DIR/tools/autopilot/cloud/session-start.mjs"'));
+
+  config();
+  const r = sync(root);
+  assert.ok(r.removed.includes('tools/autopilot/cloud/setup.sh'));
+  assert.ok(!commands().some((c) => c.includes('cloud/session-start.mjs')));
+  assert.throws(() => normaliseConfig({ cloud: 'yes' }), /cloud must be true or false/);
+});
+
+test('browser: .mcp.json registers the Playwright server, settings approve it, the sign-in is git-ignored, versions are filled', () => {
+  write('.mcp.json', JSON.stringify({ mcpServers: { db: { command: 'db-mcp' } } }));
+  sync(root);
+  const mcp = JSON.parse(read('.mcp.json'));
+  assert.deepEqual(mcp.mcpServers.db, { command: 'db-mcp' }, 'the project\'s own server stays');
+  assert.deepEqual(mcp.mcpServers.playwright, { command: 'node', args: ['tools/autopilot/browser/mcp.mjs'] });
+  const settings = JSON.parse(read('.claude/settings.json'));
+  assert.ok(settings.enabledMcpjsonServers.includes('playwright'));
+  assert.ok(settings.permissions.allow.includes('mcp__playwright'));
+  assert.match(read('.claude/.gitignore'), /^\/browser\/$/m);
+  for (const f of ['tools/autopilot/browser/mcp.mjs', 'tools/autopilot/browser/sign-in.mjs']) {
+    assert.doesNotMatch(read(f), /__PLAYWRIGHT/, f);
+  }
+  assert.match(read('tools/autopilot/browser/mcp.mjs'), /@playwright\/mcp@\d+\.\d+\.\d+/);
+  const again = read('.mcp.json');
+  sync(root);
+  assert.equal(read('.mcp.json'), again, 'a second sync changes nothing');
+});
+
+test('mergeMcp: autopilot entries are rewritten, the project\'s entries stay', () => {
+  const merged = mergeMcp({ mcpServers: { playwright: { command: 'old' }, db: { command: 'db' } } }, { mcpServers: { playwright: { command: 'node' } } });
+  assert.deepEqual(merged.mcpServers, { playwright: { command: 'node' }, db: { command: 'db' } });
 });
 
 test('the settings template keeps writes inside the project and allows read-only shell', () => {

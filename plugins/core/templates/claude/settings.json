@@ -48,7 +48,8 @@
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr edit:*)",
-      "Bash(gh pr comment:*)"
+      "Bash(gh pr comment:*)",
+      "mcp__playwright"
     ],
     "ask": [
       "Bash(npm install:*)",

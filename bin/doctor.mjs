@@ -6,7 +6,8 @@
 // Errors (exit 1): invalid autopilot.json, generated files edited/deleted/added,
 // generated files out of date with the autopilot repo. Warnings: plugins not
 // enabled, tiers without overrides, unfilled placeholders, broken doc links,
-// missing devDependencies, legacy AI files, inactive git hooks. Notes (no effect
+// missing devDependencies, legacy AI files, inactive git hooks or no prepare
+// script, machine-specific paths in the project docs. Notes (no effect
 // on the verdict): test tiers the owner paused.
 
 import { spawnSync } from 'node:child_process';
@@ -18,7 +19,7 @@ import { fingerprint, LOCK_PATH } from '../plugins/core/tooling/lock/fingerprint
 import { verifyAll } from '../plugins/core/tooling/lock/verify.mjs';
 import { readPackageJson, stackDrift } from '../plugins/core/hooks/lib/stack-drift.mjs';
 import { apiMissing, normaliseConfig, pausedTiers, pluginId, renderFiles, requiredDependencies, requiredDevDependencies, TIERS } from './lib/render.mjs';
-import { brokenLinks } from './links.mjs';
+import { brokenLinks, projectDocs } from './links.mjs';
 import { prefixSource } from '../plugins/spartan/tooling/prefix.mjs';
 import { presetHeaderVersion } from '../plugins/spartan/tooling/spartan-css.mjs';
 import { AUTOPILOT_ROOT } from './sync.mjs';
@@ -71,6 +72,16 @@ export function unfilledPlaceholders(template, text) {
     }
   }
   return [...hits];
+}
+
+// A drive-letter path (C:\apps\…, D:/work/…) or a home folder (/Users/ana/…, /home/ana/…).
+// URLs don't match: their scheme letters sit right after another letter.
+const MACHINE_PATH = /(?<![\w/])(?:[A-Za-z]:[\\/]|\/(?:Users|home)\/)(?:[^\s`'"()<>|,;]*[^\s`'"()<>|,;.:])?/g;
+
+// Machine-specific paths in the project's own docs, one entry per occurrence.
+export function machinePaths(projectRoot) {
+  return projectDocs(projectRoot).flatMap((full) => readFileSync(full, 'utf8').split(/\r?\n/).flatMap((text, i) =>
+    [...text.matchAll(MACHINE_PATH)].map((m) => ({ file: path.relative(projectRoot, full).replaceAll('\\', '/'), line: i + 1, path: m[0].length > 60 ? `${m[0].slice(0, 58)}…` : m[0] }))));
 }
 
 const walkFiles = (dir) => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)])) : []);
@@ -227,6 +238,13 @@ export function doctor(projectRoot) {
   // Git hooks active?
   const hooksPath = spawnSync('git', ['config', '--get', 'core.hooksPath'], { cwd: projectRoot, encoding: 'utf8' }).stdout.trim();
   if (!hooksPath.startsWith('.husky')) warnings.push('git hooks not active — run `npx husky` once (sets core.hooksPath to .husky/_)');
+  // Without a prepare script every fresh clone (cloud session, CI, a teammate) starts with the hooks off.
+  if (existsSync(pkgFile) && !/\bhusky\b/.test(readJson(pkgFile).scripts?.prepare ?? '')) {
+    warnings.push('package.json has no "prepare": "husky" script — git hooks stay off in every fresh clone (cloud sessions, CI, teammates) until someone runs `npx husky`');
+  }
+
+  // Paths that exist only on the owner's machine: a fresh clone has none of them.
+  for (const m of machinePaths(projectRoot)) warnings.push(`machine-specific path in ${m.file}:${m.line} (${m.path}) — a fresh clone (cloud session, CI, a teammate) has no such path; use a repo-relative path or name the repo`);
 
   return { errors, warnings, notes };
 }

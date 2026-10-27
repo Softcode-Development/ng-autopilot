@@ -150,7 +150,9 @@ const isInside = (child, parent) => {
 export function autopilotFence() {
   const fences = new Set();
   const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-  fences.add(toPosix(pluginRoot));
+  // A project's synced copy (tools/autopilot/hooks/) is not a plugin: fencing it would put a
+  // fence inside the project, which lets every edit through.
+  if (existsSync(path.join(pluginRoot, '.claude-plugin'))) fences.add(toPosix(pluginRoot));
   for (let d = pluginRoot; path.dirname(d) !== d; d = path.dirname(d)) {
     if (existsSync(path.join(d, '.claude-plugin', 'marketplace.json'))) {
       fences.add(toPosix(d));

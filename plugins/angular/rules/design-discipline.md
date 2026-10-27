@@ -80,12 +80,14 @@ Build it **after the loaded UI is final, in the same change**, from the loaded t
 - **Enforcement:** the visual gate compares loading and loaded side by side; review (rubric F).
 
 ## Visual gate — every UI change
-Before committing UI work, open each changed screen in the connected browser and check it at **desktop and phone width (~360–375 px)**, in **light and dark** theme if the app has both, in every state the change touched (empty, loading, error, filled). Check against the project's `docs/DESIGN_SYSTEM.md`. A failure is fixed in the same scope before committing.
+Before committing UI work, open each changed screen in the project's Playwright browser (MCP server `playwright`) and check it at **desktop and phone width (~360–375 px)**, in **light and dark** theme if the app has both, in every state the change touched (empty, loading, error, filled). Check against the project's `docs/DESIGN_SYSTEM.md`. A failure is fixed in the same scope before committing.
 - **Why:** specs and unit tests can't see overflowing dialogs, missing spinners or dark-mode breakage.
-- **Loading vs loaded:** capture the loading state (hold the request — DevTools network throttling, or a blocked API request) and the loaded state at the same width, and compare them side by side: container, grid, item count, sizes. A mismatch is a failure.
-- **Phone width without the owner:** never ask the owner to resize or un-maximise the browser. Inject a same-origin overlay instead — an `<iframe src="<route>" style="position:fixed;inset:0 auto auto 0;width:375px;height:812px;z-index:2147483647;background:white">` added through the page's JavaScript — and screenshot it.
+- **Loading vs loaded:** capture the loading state and the loaded state at the same width, and compare them side by side: container, grid, item count, sizes. A mismatch is a failure. Hold the request **pending**, never failed (a failed request shows the error state, not the skeleton): `browser_run_code_unsafe` → `await page.route('<api pattern>', () => {})`, then navigate inside the app so only the page's own request waits; `await page.unrouteAll()` afterwards.
+- **Phone width and theme:** `browser_resize` to 375×812; `browser_emulate_media` for the colour scheme (or the app's theme switch when it themes by a class). Never ask the owner to resize anything.
 - Reuse the dev server that is already listening (`node tools/autopilot/server/listening.mjs <port>`); otherwise start it with `npm run start…` as a background task. Never start a second one; never stop or restart one you did not start.
-- Screenshots go to `.claude/tmp/`, never elsewhere on disk.
+- Read `browser_console_messages` on every screen; an error there is a failure.
+- Screenshots go to `.claude/tmp/`, never elsewhere on disk: `browser_take_screenshot` without a `filename` saves to `.claude/tmp/browser/` (a `filename` is relative to the project root — only `.claude/tmp/browser/<name>.png`).
+- The browser uses the owner's saved sign-in; agents never type credentials. Signed out → ask the owner to run `node tools/autopilot/browser/sign-in.mjs <url>`.
 - The project's `.claude/gates.md` § Visual gate names the dev servers, accounts, widths and start points to check.
 
 ## Design skills

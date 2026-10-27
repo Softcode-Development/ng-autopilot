@@ -68,8 +68,36 @@ export function mergeSettings(existing, autopilot, packs) {
     }
   }
   for (const t of TIERS) merged.permissions[t] = result[t];
+  // Autopilot hook entries are added once, recognised by their command; the project's own
+  // hooks, and anything it changed in an autopilot entry, stay as they are. A hook that runs a
+  // tools/autopilot/ script autopilot no longer asks for (cloud switched off) goes.
+  const wanted = new Set(Object.values(autopilot.hooks ?? {}).flat().flatMap((e) => e.hooks.map((h) => h.command)));
+  for (const event of Object.keys(merged.hooks ?? {})) {
+    merged.hooks[event] = merged.hooks[event]
+      .map((e) => ({ ...e, hooks: (e.hooks ?? []).filter((h) => !(h.command?.includes('tools/autopilot/') && !wanted.has(h.command))) }))
+      .filter((e) => e.hooks.length);
+    if (!merged.hooks[event].length) delete merged.hooks[event];
+  }
+  for (const [event, entries] of Object.entries(autopilot.hooks ?? {})) {
+    merged.hooks ??= {};
+    merged.hooks[event] ??= [];
+    const commands = new Set(merged.hooks[event].flatMap((e) => (e.hooks ?? []).map((h) => h.command)));
+    for (const entry of entries) {
+      if (!entry.hooks.every((h) => commands.has(h.command))) merged.hooks[event].push(structuredClone(entry));
+    }
+  }
+  if (merged.hooks && !Object.keys(merged.hooks).length) delete merged.hooks;
+  if (autopilot.enabledMcpjsonServers) merged.enabledMcpjsonServers = [...new Set([...(merged.enabledMcpjsonServers ?? []), ...autopilot.enabledMcpjsonServers])];
   merged.enabledPlugins ??= {};
   for (const p of PACKS) merged.enabledPlugins[pluginId(p)] = packs.includes(p);
+  return merged;
+}
+
+// .mcp.json: autopilot's servers are autopilot-owned entries, rewritten every sync; the
+// project's other servers stay.
+export function mergeMcp(existing, autopilot) {
+  const merged = structuredClone(existing ?? {});
+  merged.mcpServers = { ...merged.mcpServers, ...structuredClone(autopilot.mcpServers) };
   return merged;
 }
 
@@ -112,7 +140,7 @@ export function sync(projectRoot, { dryRun = false } = {}) {
         report.created.push(f.path);
       }
     } else if (f.kind === 'merge') {
-      const merged = mergeSettings(readJson(full, {}), f.content, config.packs);
+      const merged = f.path === '.mcp.json' ? mergeMcp(readJson(full, {}), f.content) : mergeSettings(readJson(full, {}), f.content, config.packs);
       const text = `${JSON.stringify(merged, null, 2)}\n`;
       if (!existsSync(full) || readFileSync(full, 'utf8') !== text) {
         write(f.path, text);
