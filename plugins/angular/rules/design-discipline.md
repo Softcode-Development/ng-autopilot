@@ -87,7 +87,7 @@ Before committing UI work, open each changed screen in the project's Playwright 
 - Reuse the dev server that is already listening (`node tools/autopilot/server/listening.mjs <port>`); otherwise start it with `npm run start…` as a background task. Never start a second one; never stop or restart one you did not start.
 - Read `browser_console_messages` on every screen; an error there is a failure.
 - Screenshots go to `.claude/tmp/`, never elsewhere on disk: `browser_take_screenshot` without a `filename` saves to `.claude/tmp/browser/` (a `filename` is relative to the project root — only `.claude/tmp/browser/<name>.png`).
-- The browser uses the owner's saved sign-in; agents never type credentials. Signed out → ask the owner to run `node tools/autopilot/browser/sign-in.mjs <url>`.
+- Signed out → sign in yourself through the app's login form with a dev/test account from the accounts file `.claude/gates.md` names, and save the session (`await page.context().storageState({ path: '.claude/browser/storage-state.json' })`). Never ask the owner to sign in; never copy account values anywhere.
 - The project's `.claude/gates.md` § Visual gate names the dev servers, accounts, widths and start points to check.
 
 ## Design skills

@@ -59,7 +59,7 @@ Generated files (`CLAUDE.md`, `.claude/rules/autopilot/`, `tools/autopilot/`, `.
 
 The visual gate runs in a Playwright browser, not the owner's Chrome: sync registers the MCP server `playwright` in the project's `.mcp.json` (`tools/autopilot/browser/mcp.mjs` → `@playwright/mcp`, headless, on the installed Chrome or Edge). Agents resize to phone width, switch the colour scheme, hold a request pending for a loading state and read the console themselves. Set `AUTOPILOT_BROWSER_HEADED=1` to watch.
 
-Agents never type credentials. The owner signs in once: `node tools/autopilot/browser/sign-in.mjs <login URL>...` opens a window, and the session is saved to `.claude/browser/storage-state.json` (git-ignored) for every agent browser after it.
+Agents sign in on their own, never asking the owner: through the app's login form, with dev/test accounts from a git-ignored `*.local.md` file that `.claude/gates.md` names. The session is saved to `.claude/browser/storage-state.json` (git-ignored) so later runs start signed in. For an account an agent can't use (SSO, 2FA), the owner can save the session by hand: `node tools/autopilot/browser/sign-in.mjs <login URL>...`.
 
 ### Cloud sessions (optional)
 

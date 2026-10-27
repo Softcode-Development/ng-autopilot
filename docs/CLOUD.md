@@ -26,7 +26,7 @@ Then `/autopilot:sync`. With `cloud: false` (or no key), sync removes what it ad
 ## The owner's steps, once per environment
 
 1. At claude.ai/code, add or edit the project's environment → **Setup script** → **Choose file** → `tools/autopilot/cloud/setup.sh`.
-2. For a signed-in visual gate: put the content of `.claude/browser/storage-state.json` (saved locally by `node tools/autopilot/browser/sign-in.mjs <login URL>...`), or its base64, into the environment variable `AUTOPILOT_BROWSER_STORAGE_STATE`. The browser launcher writes it to the file at start. The session in it expires like any login; without it, the visual gate stops and asks the owner.
+2. For a signed-in visual gate: agents sign in with the accounts file `.claude/gates.md` names, but that file is git-ignored, so a clone doesn't have it. Put a saved session — the content of `.claude/browser/storage-state.json` from a local run, or its base64 — into the environment variable `AUTOPILOT_BROWSER_STORAGE_STATE`; the browser launcher writes it to the file at start. It expires like any login; without a working one, the visual gate stops and asks the owner.
 
 ## What a cloud session does and doesn't have
 

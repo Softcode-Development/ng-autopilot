@@ -117,10 +117,11 @@ Steps for `balanced`. § 4 lists what `fast` and `strict` change.
 - **Smoke:** boot what the change touched, per the smoke map in `.claude/gates.md`. A build is not a smoke test.
 - **Visual** (UI changed): per the design-discipline rule — every changed route × state, desktop and phone width, light and dark, interactions driven, console read, design-critique (+ accessibility-review for new interactive surfaces) on the screenshots. **Loading skeletons are compared side by side with the loaded state** at the same width.
 - **Dev server:** reuse one already listening (`node tools/autopilot/server/listening.mjs <port>`); a server the owner started is the owner's — never stopped or restarted unless the owner says so. Otherwise start it with `npm run start…` as a background task and record it for the process report.
-- **Browser:** the project's Playwright browser — MCP server `playwright` (`browser_*` tools), headless Chrome started by `tools/autopilot/browser/mcp.mjs`, the same locally and in a cloud session. It browses with the owner's saved sign-in (`.claude/browser/storage-state.json`); agents never type credentials.
+- **Browser:** the project's Playwright browser — MCP server `playwright` (`browser_*` tools), headless Chrome started by `tools/autopilot/browser/mcp.mjs`, the same locally and in a cloud session.
+- **Sign-in is the agent's job — never ask the owner to sign in.** A page that needs a login: sign in through the app's own login form with a dev/test account from the local accounts file `.claude/gates.md` names (git-ignored; its values never go into code, docs, commits, logs or reports), then save the session so later runs start signed in: `browser_run_code_unsafe` → `await page.context().storageState({ path: '.claude/browser/storage-state.json' })`. The browser loads that file at start; when the saved session has expired, sign in again the same way.
 - **Never ask the owner for what a tool can do.** Phone width: `browser_resize` to 375×812. Theme: `browser_emulate_media` (`colorScheme`), or the app's own theme switch when it themes by a class. Console: `browser_console_messages`. Loading state: hold the page's request pending with `browser_run_code_unsafe` → `await page.route('<api pattern>', () => {})` (never fulfilled), navigate inside the app, capture, then `await page.unrouteAll()`.
 - Screenshots and gate output go to `.claude/tmp/`: `browser_take_screenshot` without a `filename` saves to `.claude/tmp/browser/`; a `filename` is relative to the project root, so name one only as `.claude/tmp/browser/<name>.png`.
-- Red → implementer fixes in scope, re-run both gates. **The browser does not start, or the app needs a sign-in the owner has not saved → blocked: stop and ask the owner** (the owner runs `node tools/autopilot/browser/sign-in.mjs <url>`). **Never skipped.**
+- Red → implementer fixes in scope, re-run both gates. **The browser does not start, or no account can sign in (no accounts file, login refused) → blocked: stop and ask the owner. Never skipped.**
 - Worklog: one record per screen and round.
 
 ### Step 7 — Review
@@ -169,7 +170,7 @@ Only these:
 2. A scope item that fits neither In scope nor Out of scope — propose a destination and wait.
 3. A mode upgrade.
 4. A review finding that is a product decision (§ 7).
-5. The visual gate's browser does not start, or the app needs a sign-in the owner has not saved.
+5. The visual gate's browser does not start, or no account can sign in (no accounts file, login refused).
 6. A red gate the driver cannot fix within the change's scope.
 7. Merge. Pushing a feature branch and opening, editing or commenting on its PR are not stops.
 

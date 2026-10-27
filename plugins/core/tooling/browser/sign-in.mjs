@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// The owner signs in once; agents then browse signed in. Agents never type credentials.
+// Optional: agents sign in themselves with the project's dev/test accounts. This is for an
+// account they can't use (SSO, 2FA): the owner signs in by hand and agents reuse the session.
 //
 //   node tools/autopilot/browser/sign-in.mjs <url> [<url>...]
 //

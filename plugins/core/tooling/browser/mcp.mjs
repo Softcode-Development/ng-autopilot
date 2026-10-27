@@ -6,8 +6,8 @@
 //
 // - Browser: CHROME_BIN, else Chrome or Edge in the platform's standard location — on a cloud
 //   VM the Chrome for Testing that tools/autopilot/cloud/setup.sh installs. Never downloads one.
-// - Signed in: loads .claude/browser/storage-state.json, which the owner saves once with
-//   `node tools/autopilot/browser/sign-in.mjs <url>`. In a cloud session, the environment
+// - Signed in: loads .claude/browser/storage-state.json — the session an agent saved after
+//   signing in with the project's dev/test accounts (or the owner, with sign-in.mjs). In a cloud session, the environment
 //   variable AUTOPILOT_BROWSER_STORAGE_STATE (that file's JSON, or base64 of it) writes it first.
 // - Output (screenshots, snapshots) goes to .claude/tmp/browser/.
 // - AUTOPILOT_BROWSER_HEADED=1 shows the window, to watch an agent work locally.

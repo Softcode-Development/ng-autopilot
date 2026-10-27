@@ -14,8 +14,8 @@
 # /autopilot:cleanup empties it.
 /tmp/
 
-# The owner's browser sign-in (cookies, local storage) that agents browse with —
-# saved by tools/autopilot/browser/sign-in.mjs. Kept out of /tmp/ so cleanup leaves it.
+# The agents' browser session (cookies, local storage), saved after they sign in
+# with the dev/test accounts. Kept out of /tmp/ so cleanup leaves it.
 /browser/
 
 # Personal settings and local-only notes (credentials for the visual gate, etc.).
